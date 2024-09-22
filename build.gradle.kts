@@ -4,4 +4,9 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid) apply false
     // HILT
     alias(libs.plugins.hilt) apply false
+    // GOOGLE SERVICES
+    alias(libs.plugins.google.services) apply false
+    // FIREBASE
+    alias(libs.plugins.crashlytics) apply false
+
 }
