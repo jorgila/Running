@@ -11,6 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.estholon.running.ui.screen.authentication.RecoverScreen
+import com.estholon.running.ui.screen.authentication.SignInScreen
+import com.estholon.running.ui.screen.authentication.SignUpScreen
+import com.estholon.running.ui.screen.home.HomeScreen
+import com.estholon.running.ui.screen.splash.SplashScreen
 
 @Composable
 fun AppNavigation(
@@ -59,19 +64,23 @@ fun AppNavigation(
                 modifier = modifier
             ){
                 composable(Routes.SplashScreen.route){
-
+                    SplashScreen(
+                        clearNavigation = { navController.popBackStack() },
+                        navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
+                        navigateToSignIn = { navController.navigate(Routes.SignInScreen.route) }
+                    )
                 }
                 composable(Routes.SignInScreen.route){
-
+                    SignInScreen()
                 }
                 composable(Routes.SignUpScreen.route){
-
+                    SignUpScreen()
                 }
                 composable(Routes.RecoverScreen.route){
-
+                    RecoverScreen()
                 }
                 composable(Routes.HomeScreen.route){
-
+                    HomeScreen()
                 }
             }
         }
