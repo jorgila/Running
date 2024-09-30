@@ -86,4 +86,10 @@ class AuthManager @Inject constructor(
         }
     }
 
+    // LOGOUT
+
+    suspend fun signOut(){
+        firebaseAuth.signOut()
+    }
+
 }

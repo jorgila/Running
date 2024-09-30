@@ -71,7 +71,9 @@ fun AppNavigation(
                     )
                 }
                 composable(Routes.SignInScreen.route){
-                    SignInScreen()
+                    SignInScreen(
+                        navigateToHome = { navController.navigate(Routes.HomeScreen.route)}
+                    )
                 }
                 composable(Routes.SignUpScreen.route){
                     SignUpScreen()
@@ -80,7 +82,9 @@ fun AppNavigation(
                     RecoverScreen()
                 }
                 composable(Routes.HomeScreen.route){
-                    HomeScreen()
+                    HomeScreen(
+                        navigateToSignIn = { navController.navigate(Routes.SignInScreen.route)}
+                    )
                 }
             }
         }

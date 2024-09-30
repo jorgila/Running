@@ -1,7 +1,9 @@
 package com.estholon.running.ui.screen.authentication
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -44,10 +47,13 @@ import com.estholon.running.R
 
 @Composable
 fun SignInScreen(
-    signInViewModel: SignInViewModel = hiltViewModel()
+    signInViewModel: SignInViewModel = hiltViewModel(),
+    navigateToHome: () -> Unit
 ) {
 
     // VARIABLES
+
+    val context = LocalContext.current
 
     var email by rememberSaveable {
         mutableStateOf("")
@@ -144,7 +150,14 @@ fun SignInScreen(
         Spacer(modifier = Modifier.height(8.dp))
         Button(
             onClick = {
-
+                signInViewModel.signInEmail(
+                    email = email,
+                    password = password,
+                    navigateToHome = { navigateToHome() },
+                    communicateError = { string ->
+                        Toast.makeText(context,string,Toast.LENGTH_LONG).show()
+                    }
+                )
             },
             enabled = (email != "" && password.length > 5),
             shape = RoundedCornerShape(50.dp),
@@ -165,12 +178,12 @@ fun SignInScreen(
     // LOADING
 
     if(isLoading){
-        Column(
+        Box(
             modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
+            contentAlignment = Alignment.Center
+        ){
             CircularProgressIndicator()
         }
     }
+
 }

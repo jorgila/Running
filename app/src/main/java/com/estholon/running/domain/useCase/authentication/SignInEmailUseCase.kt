@@ -1,17 +1,14 @@
 package com.estholon.running.domain.useCase.authentication
 
-import androidx.lifecycle.viewModelScope
 import com.estholon.running.data.manager.AnalyticsManager
 import com.estholon.running.data.manager.AuthManager
 import com.estholon.running.data.model.AnalyticModel
 import com.estholon.running.data.model.AuthRes
-import com.google.api.Distribution
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class signInEmailUseCase @Inject constructor(
+class SignInEmailUseCase @Inject constructor(
     private val auth: AuthManager,
     private val analytics: AnalyticsManager
 ){
