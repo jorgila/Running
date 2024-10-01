@@ -72,14 +72,23 @@ fun AppNavigation(
                 }
                 composable(Routes.SignInScreen.route){
                     SignInScreen(
-                        navigateToHome = { navController.navigate(Routes.HomeScreen.route)}
+                        clearNavigation = { navController.popBackStack() },
+                        navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
+                        navigateToSignUp = { navController.navigate(Routes.SignUpScreen.route)},
+                        navigateToRecover = { navController.navigate(Routes.RecoverScreen.route)}
                     )
                 }
                 composable(Routes.SignUpScreen.route){
-                    SignUpScreen()
+                    SignUpScreen(
+                        clearNavigation = { navController.popBackStack() },
+                        navigateToSignIn = { navController.navigate(Routes.SignInScreen.route)}
+                    )
                 }
                 composable(Routes.RecoverScreen.route){
-                    RecoverScreen()
+                    RecoverScreen(
+                        clearNavigation = { navController.popBackStack() },
+                        navigateToSignIn = { navController.navigate(Routes.SignInScreen.route)}
+                    )
                 }
                 composable(Routes.HomeScreen.route){
                     HomeScreen(

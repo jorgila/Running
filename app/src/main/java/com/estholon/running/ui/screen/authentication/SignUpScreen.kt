@@ -12,7 +12,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun SignUpScreen(
-    signUpViewModel: SignUpViewModel = hiltViewModel()
+    signUpViewModel: SignUpViewModel = hiltViewModel(),
+    clearNavigation: () -> Unit,
+    navigateToSignIn: () -> Unit
 ){
 
     // VARIABLES

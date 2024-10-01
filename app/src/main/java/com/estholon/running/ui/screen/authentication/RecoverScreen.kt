@@ -12,7 +12,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 
 @Composable
 fun RecoverScreen(
-    recoverViewModel: RecoverViewModel = hiltViewModel()
+    recoverViewModel: RecoverViewModel = hiltViewModel(),
+    clearNavigation: () -> Unit,
+    navigateToSignIn: () -> Unit
 ) {
 
     // VARIABLES

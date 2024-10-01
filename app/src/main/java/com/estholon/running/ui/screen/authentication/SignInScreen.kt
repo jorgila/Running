@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,6 +43,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.running.R
@@ -48,7 +51,10 @@ import com.estholon.running.R
 @Composable
 fun SignInScreen(
     signInViewModel: SignInViewModel = hiltViewModel(),
-    navigateToHome: () -> Unit
+    clearNavigation: () -> Unit,
+    navigateToHome: () -> Unit,
+    navigateToSignUp: () -> Unit,
+    navigateToRecover: () -> Unit
 ) {
 
     // VARIABLES
@@ -172,6 +178,19 @@ fun SignInScreen(
                 .height(50.dp)
         ) {
             Text(text = stringResource(R.string.sign_in).uppercase())
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        TextButton(
+            onClick = {
+                navigateToRecover()
+            },
+            modifier = Modifier.align(Alignment.CenterHorizontally)
+        ) {
+            Text(
+                text = stringResource(R.string.password_forgotten),
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
         }
     }
 
