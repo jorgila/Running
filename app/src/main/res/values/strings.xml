@@ -6,4 +6,5 @@
     <string name="sign_in">Sign In</string>
     <string name="unknown_error">Unknown error</string>
     <string name="password_forgotten">I\'ve forgotten the password</string>
+    <string name="link_to_sign_up">I don\'t have an account, go to Sign Up.</string>
 </resources>

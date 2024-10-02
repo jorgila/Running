@@ -1,5 +1,6 @@
 package com.estholon.running.ui.screen.authentication
 
+import android.provider.CalendarContract.Colors
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -40,6 +42,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -47,6 +50,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.running.R
+import com.estholon.running.ui.theme.Black
+import com.estholon.running.ui.theme.White
 
 @Composable
 fun SignInScreen(
@@ -109,6 +114,7 @@ fun SignInScreen(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
+        Spacer(Modifier.weight(1f))
         TextField(
             value = email,
             label = { Text(text = stringResource(R.string.email)) },
@@ -180,18 +186,39 @@ fun SignInScreen(
             Text(text = stringResource(R.string.sign_in).uppercase())
         }
         Spacer(modifier = Modifier.height(8.dp))
-        TextButton(
+        Button(
             onClick = {
                 navigateToRecover()
             },
-            modifier = Modifier.align(Alignment.CenterHorizontally)
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary
+            )
         ) {
             Text(
                 text = stringResource(R.string.password_forgotten),
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.primary,
             )
         }
+        Spacer(Modifier.weight(1f))
+        TextButton(
+            onClick = {
+                navigateToSignUp()
+            },
+            colors = ButtonColors(
+                contentColor = Black,
+                containerColor = White,
+                disabledContentColor = Color.Gray,
+                disabledContainerColor = White
+            )
+        ) { Text(
+            text = stringResource(R.string.link_to_sign_up),
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )}
     }
 
     // LOADING
