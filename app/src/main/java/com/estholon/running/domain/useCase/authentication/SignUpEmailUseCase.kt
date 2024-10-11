@@ -8,40 +8,45 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class SignInEmailUseCase @Inject constructor(
+class SignUpEmailUseCase @Inject constructor(
     private val auth: AuthManager,
     private val analytics: AnalyticsManager
-){
-    suspend fun signInEmail(
+) {
+    suspend fun signUpEmail(
         email: String,
-        password: String,
-    ) : String {
-        return withContext(Dispatchers.IO){
-            var signIn = auth.signInWithEmail(email, password)
+        password: String
+    ): String {
 
-            when(val result = withContext(Dispatchers.IO){
-                signIn
+        return withContext(Dispatchers.IO){
+            val signUp = auth.signUpWithEmail(email,password)
+
+            when (withContext(Dispatchers.IO) {
+                signUp
             }) {
                 is AuthRes.Success -> {
 
                     val analyticModel = AnalyticModel(
-                        title = "Sign In", analyticsString = listOf(Pair("Email", "Successful Sign In"))
+                        title = "Sign Up",
+                        analyticsString = listOf(Pair("Email", "Successful Sign Up"))
                     )
                     analytics.sendEvent(analyticModel)
                     return@withContext "Success"
                 }
+
                 is AuthRes.Error -> {
                     val analyticModel = AnalyticModel(
-                        title = "Sign In", analyticsString = listOf(Pair("Email", "Failed Sign In: ${result.errorMessage}"))
+                        title = "Sign Up", analyticsString = listOf(Pair("Email", "Failed Sign Up"))
                     )
                     analytics.sendEvent(analyticModel)
-                    signIn.let {
+                    signUp.let {
                         val string = it.toString().substringAfter("errorMessage=")
-                        return@withContext string.substring(0,string.length - 1)
+                        return@withContext string.substring( 0 , string.length - 1 )
                     }
                 }
             }
         }
+
     }
+
 
 }

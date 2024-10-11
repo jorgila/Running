@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -51,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.running.R
 import com.estholon.running.ui.theme.Black
+import com.estholon.running.ui.theme.Orange
 import com.estholon.running.ui.theme.White
 
 @Composable
@@ -104,7 +106,7 @@ fun SignInScreen(
         color = Color.White,
         modifier = Modifier
             .fillMaxSize()
-            .alpha(0.5f)
+            .alpha(0.7f)
     ){
 
     }
@@ -199,8 +201,7 @@ fun SignInScreen(
             Text(
                 text = stringResource(R.string.password_forgotten),
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Black,
-                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Black
             )
         }
         Spacer(Modifier.weight(1f))
@@ -208,12 +209,11 @@ fun SignInScreen(
             onClick = {
                 navigateToSignUp()
             },
-            colors = ButtonColors(
+            colors = ButtonDefaults.buttonColors(
                 contentColor = Black,
-                containerColor = White,
-                disabledContentColor = Color.Gray,
-                disabledContainerColor = White
-            )
+                containerColor = White
+            ),
+            shape = RectangleShape
         ) { Text(
             text = stringResource(R.string.link_to_sign_up),
             modifier = Modifier.fillMaxWidth(),
