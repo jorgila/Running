@@ -2,6 +2,7 @@ package com.estholon.running.ui.navigation
 
 import android.util.Log
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -25,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import com.estholon.running.ui.screen.authentication.RecoverScreen
 import com.estholon.running.ui.screen.authentication.SignInScreen
 import com.estholon.running.ui.screen.authentication.SignUpScreen
+import com.estholon.running.ui.screen.history.HistoryScreen
 import com.estholon.running.ui.screen.home.HomeDrawer
 import com.estholon.running.ui.screen.home.HomeScreen
 import com.estholon.running.ui.screen.home.HomeTopBar
@@ -53,7 +55,9 @@ fun AppNavigation(
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {
-            ModalDrawerSheet {
+            ModalDrawerSheet(
+                modifier = Modifier.fillMaxSize()
+            ) {
                 when (screen.value) {
                     Routes.SplashScreen.route -> {}
                     Routes.SignInScreen.route -> {}
@@ -67,6 +71,31 @@ fun AppNavigation(
                                         if(isOpen) close()
                                     }
                                 }
+                            },
+                            navigateToSignIn = {
+                                scope.launch {
+                                    drawerState.apply {
+                                        if(isOpen) close()
+                                    }
+                                }
+                                navController.popBackStack()
+                                navController.navigate(Routes.SignInScreen.route)
+                            },
+                            navigateToHome = {
+                                scope.launch {
+                                    drawerState.apply {
+                                        if(isOpen) close()
+                                    }
+                                }
+                                navController.navigate(Routes.HomeScreen.route)
+                            },
+                            navigateToHistory = {
+                                scope.launch {
+                                    drawerState.apply {
+                                        if(isOpen) close()
+                                    }
+                                }
+                                navController.navigate(Routes.HistoryScreen.route)
                             }
                         )
                     }
@@ -147,6 +176,9 @@ fun AppNavigation(
                                 navController.navigate(Routes.SignInScreen.route)
                             }
                         )
+                    }
+                    composable(Routes.HistoryScreen.route){
+                        HistoryScreen()
                     }
                 }
             }

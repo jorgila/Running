@@ -24,14 +24,7 @@ fun HomeScreen(
 
     // LAYOUT
 
-    Button(
-        onClick = {
-            homeViewModel.logout()
-            navigateToSignIn()
-        }
-    ) {
-        Text("Logout")
-    }
+    Text("HOME SCREEN")
 
     // LOADING
 
