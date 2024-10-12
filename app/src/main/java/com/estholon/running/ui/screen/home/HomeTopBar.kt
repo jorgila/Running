@@ -1,5 +1,10 @@
 package com.estholon.running.ui.screen.home
 
+import android.util.Log
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
@@ -10,8 +15,8 @@ import com.estholon.running.ui.screen.components.TopBarComponent
 
 @Composable
 fun HomeTopBar(
-
-){
+    showMenu: () -> Unit
+ ){
     TopBarComponent(
         topBarTitle = {
             Text(
@@ -21,7 +26,15 @@ fun HomeTopBar(
             )
         },
         topBarNavigationIcon = {
-
+            IconButton(
+                onClick = {
+                    showMenu() }
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Menu,
+                    contentDescription = stringResource(R.string.menu)
+                )
+            }
         },
         topBarActions = {
 

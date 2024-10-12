@@ -10,4 +10,6 @@
     <string name="reset_password">Reset Password</string>
     <string name="sign_up">Sign Up</string>
     <string name="link_to_sign_in">Go back to Sign In</string>
+    <string name="menu">Menu</string>
+    <string name="close">Close</string>
 </resources>
