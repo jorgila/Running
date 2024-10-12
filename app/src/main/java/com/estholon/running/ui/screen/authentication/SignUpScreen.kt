@@ -167,7 +167,7 @@ fun SignUpScreen(
                     }
                 )
             },
-            enabled = (email != "" && password.length > 5),
+            enabled = (email != "" && password.length > 5 && isEmail == true),
             shape = RoundedCornerShape(50.dp),
             colors = ButtonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
