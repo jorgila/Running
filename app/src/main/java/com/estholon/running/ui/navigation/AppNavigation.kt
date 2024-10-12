@@ -15,6 +15,7 @@ import com.estholon.running.ui.screen.authentication.RecoverScreen
 import com.estholon.running.ui.screen.authentication.SignInScreen
 import com.estholon.running.ui.screen.authentication.SignUpScreen
 import com.estholon.running.ui.screen.home.HomeScreen
+import com.estholon.running.ui.screen.home.HomeTopBar
 import com.estholon.running.ui.screen.splash.SplashScreen
 
 @Composable
@@ -41,7 +42,7 @@ fun AppNavigation(
                 Routes.SignUpScreen.route -> {}
                 Routes.RecoverScreen.route -> {}
                 else -> {
-
+                    HomeTopBar()
                 }
             }
         },
