@@ -179,10 +179,24 @@ fun SignUpScreen(
                 .width(250.dp)
                 .height(50.dp)
         ) {
-            Text(text = stringResource(R.string.sign_in).uppercase())
+            Text(text = stringResource(R.string.sign_up).uppercase())
         }
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(60.dp))
         Spacer(Modifier.weight(1f))
+        TextButton(
+            onClick = {
+                navigateToSignIn()
+            },
+            colors = ButtonDefaults.buttonColors(
+                contentColor = Black,
+                containerColor = White
+            ),
+            shape = RectangleShape
+        ) { Text(
+            text = stringResource(R.string.link_to_sign_in),
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Center
+        )}
     }
 
 

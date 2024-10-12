@@ -7,4 +7,7 @@
     <string name="unknown_error">Unknown error</string>
     <string name="password_forgotten">I\'ve forgotten the password</string>
     <string name="link_to_sign_up">I don\'t have an account, go to Sign Up.</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="link_to_sign_in">Go back to Sign In</string>
 </resources>
