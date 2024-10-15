@@ -16,4 +16,6 @@
     <string name="running">Running</string>
     <string name="history">History</string>
     <string name="reset_preferences">Reset preferences</string>
+    <string name="anonimous">Anonimous</string>
+    <string name="account">Account</string>
 </resources>
