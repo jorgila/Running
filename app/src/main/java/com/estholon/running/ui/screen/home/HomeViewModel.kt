@@ -30,6 +30,12 @@ class HomeViewModel @Inject constructor(
     private var _user = MutableStateFlow<String>(context.getString(R.string.anonimous))
     var user : StateFlow<String> = _user
 
+    private var _level = MutableStateFlow<String>(context.getString(R.string.level_0))
+    var level : StateFlow<String> = _level
+
+    private var _totalRunning = MutableStateFlow<String>(context.getString(R.string.total_0))
+    var totalRunning : StateFlow<String> = _totalRunning
+
     init {
         getUserInfo()
     }
