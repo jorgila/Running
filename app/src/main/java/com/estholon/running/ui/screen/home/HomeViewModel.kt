@@ -1,8 +1,6 @@
 package com.estholon.running.ui.screen.home
 
 import android.content.Context
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
@@ -33,8 +31,22 @@ class HomeViewModel @Inject constructor(
     private var _level = MutableStateFlow<String>(context.getString(R.string.level_0))
     var level : StateFlow<String> = _level
 
-    private var _totalRunning = MutableStateFlow<String>(context.getString(R.string.total_0))
-    var totalRunning : StateFlow<String> = _totalRunning
+    private var _totalTime = MutableStateFlow<String>(context.getString(R.string.total_0))
+    var totalTime : StateFlow<String> = _totalTime
+
+
+    private var _currentKilometers = MutableStateFlow<Int>(0 )
+    var currentKilometers : StateFlow<Int> = _currentKilometers
+
+    private var _currentRuns = MutableStateFlow<Int>(0)
+    var currentRuns : StateFlow<Int> = _currentRuns
+
+
+    private var _totalKilometers = MutableStateFlow<Int>(0)
+    var totalKilometers : StateFlow<Int> = _totalKilometers
+
+    private var _totalRuns = MutableStateFlow<Int>(0)
+    var totalRuns : StateFlow<Int> = _totalRuns
 
     init {
         getUserInfo()

@@ -1,6 +1,5 @@
 package com.estholon.running.ui.screen.home
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -8,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.calculateStartPadding
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,16 +15,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.DirectionsRun
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.SettingsBackupRestore
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
@@ -38,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -56,7 +51,11 @@ fun HomeDrawer(
 
     val email = homeViewModel.user.collectAsState().value
     val level = homeViewModel.level.collectAsState().value
-    val totalRunning = homeViewModel.totalRunning.collectAsState().value
+    val totalRunning = homeViewModel.totalTime.collectAsState().value
+    val currentKilometers = homeViewModel.currentKilometers.collectAsState().value
+    val totalKilometers = homeViewModel.totalKilometers.collectAsState().value
+    val currentRuns = homeViewModel.currentRuns.collectAsState().value
+    val totalRuns = homeViewModel.totalRuns.collectAsState().value
 
     Box(
         modifier = Modifier
@@ -130,7 +129,25 @@ fun HomeDrawer(
                     )
                 )
             ) {
-
+                Text(
+                    text = stringResource(R.string.distance),
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp
+                )
+                Text(
+                    "$currentKilometers / $totalKilometers km"
+                )
+                Spacer(
+                    modifier = Modifier.height(8.dp)
+                )
+                Text(
+                    text = stringResource(R.string.runs),
+                    fontWeight = FontWeight.Black,
+                    fontSize = 18.sp
+                )
+                Text(
+                    "$currentRuns / $totalRuns runs"
+                )
             }
         }
     }
