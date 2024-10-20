@@ -26,4 +26,15 @@
     <string name="runs_0">0 runs</string>
     <string name="distance">Distance</string>
     <string name="runs">Runs</string>
+    <string name="options">Options</string>
+    <string name="date_most_recent_first">Date (Most recent first)</string>
+    <string name="date_oldest_first">Date (Oldest first)</string>
+    <string name="duration_longest_first">Duration (Longest first)</string>
+    <string name="duration_shortest_first">Duration (Shortest first)</string>
+    <string name="distance_longest_first">Distance (Longest first)</string>
+    <string name="distance_shortest_first">Distance (Shortest first)</string>
+    <string name="speed_fastest_first">Speed (Fastest first)</string>
+    <string name="speed_slowest_first">Speed (Slowest first)</string>
+    <string name="average_speed_fastest_first">Average speed (Fastest first)</string>
+    <string name="average_speed_slowest_first">Average speed (Slowest first)</string>
 </resources>

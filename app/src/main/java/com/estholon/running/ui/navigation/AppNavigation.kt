@@ -27,6 +27,7 @@ import com.estholon.running.ui.screen.authentication.RecoverScreen
 import com.estholon.running.ui.screen.authentication.SignInScreen
 import com.estholon.running.ui.screen.authentication.SignUpScreen
 import com.estholon.running.ui.screen.history.HistoryScreen
+import com.estholon.running.ui.screen.history.HistoryTopBar
 import com.estholon.running.ui.screen.home.HomeDrawer
 import com.estholon.running.ui.screen.home.HomeScreen
 import com.estholon.running.ui.screen.home.HomeTopBar
@@ -111,6 +112,17 @@ fun AppNavigation(
                     Routes.SignInScreen.route -> {}
                     Routes.SignUpScreen.route -> {}
                     Routes.RecoverScreen.route -> {}
+                    Routes.HistoryScreen.route -> {
+                        HistoryTopBar(
+                            showMenu = {
+                                scope.launch {
+                                    drawerState.apply {
+                                        if(isClosed) open() else close()
+                                    }
+                                }
+                            }
+                        )
+                    }
                     else -> {
                         HomeTopBar(
                             showMenu = {
