@@ -73,6 +73,8 @@ dependencies {
     // ICONS
     implementation(libs.androidx.material.icons.extended)
 
+    // CIRCULAR SEEK BAR
+    implementation(libs.circular.seek.bar)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

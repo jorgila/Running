@@ -35,15 +35,29 @@ class HomeViewModel @Inject constructor(
     var totalTime : StateFlow<String> = _totalTime
 
 
-    private var _currentKilometers = MutableStateFlow<Int>(0 )
-    var currentKilometers : StateFlow<Int> = _currentKilometers
+    private var _currentKilometers = MutableStateFlow<Double>(0.0 )
+    var currentKilometers : StateFlow<Double> = _currentKilometers
+
+    private var _currentAverageSpeed = MutableStateFlow<Double>(0.0 )
+    var currentAverageSpeed : StateFlow<Double> = _currentAverageSpeed
+
+    private var _currentSpeed = MutableStateFlow<Double>(0.0 )
+    var currentSpeed : StateFlow<Double> = _currentSpeed
 
     private var _currentRuns = MutableStateFlow<Int>(0)
     var currentRuns : StateFlow<Int> = _currentRuns
 
+    private var _recordKilometers = MutableStateFlow<Double>(0.0 )
+    var recordKilometers : StateFlow<Double> = _recordKilometers
 
-    private var _totalKilometers = MutableStateFlow<Int>(0)
-    var totalKilometers : StateFlow<Int> = _totalKilometers
+    private var _recordAverageSpeed = MutableStateFlow<Double>(0.0)
+    var recordAverageSpeed : StateFlow<Double> = _recordAverageSpeed
+
+    private var _recordSpeed = MutableStateFlow<Double>(0.0)
+    var recordSpeed : StateFlow<Double> = _recordSpeed
+
+    private var _totalKilometers = MutableStateFlow<Double>(0.0)
+    var totalKilometers : StateFlow<Double> = _totalKilometers
 
     private var _totalRuns = MutableStateFlow<Int>(0)
     var totalRuns : StateFlow<Int> = _totalRuns

@@ -37,4 +37,6 @@
     <string name="speed_slowest_first">Speed (Slowest first)</string>
     <string name="average_speed_fastest_first">Average speed (Fastest first)</string>
     <string name="average_speed_slowest_first">Average speed (Slowest first)</string>
+    <string name="average_speed">Av. Speed</string>
+    <string name="speed">Speed</string>
 </resources>
