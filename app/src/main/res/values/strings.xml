@@ -39,4 +39,5 @@
     <string name="average_speed_slowest_first">Average speed (Slowest first)</string>
     <string name="average_speed">Av. Speed</string>
     <string name="speed">Speed</string>
+    <string name="center">Center</string>
 </resources>
