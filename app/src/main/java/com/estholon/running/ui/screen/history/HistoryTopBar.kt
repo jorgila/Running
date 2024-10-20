@@ -92,6 +92,7 @@ fun HistoryTopBar(
                         },
                         onClick = {
                             date = !date
+                            showDropdownMenu = !showDropdownMenu
                         }
                     )
                     DropdownMenuItem(
@@ -104,6 +105,7 @@ fun HistoryTopBar(
                         },
                         onClick = {
                             duration = !duration
+                            showDropdownMenu = !showDropdownMenu
                         }
                     )
                     DropdownMenuItem(
@@ -114,7 +116,10 @@ fun HistoryTopBar(
                                 Text(stringResource(R.string.distance_longest_first))
                             }
                         },
-                        onClick = { distance = !distance }
+                        onClick = {
+                            distance = !distance
+                            showDropdownMenu = !showDropdownMenu
+                        }
                     )
                     DropdownMenuItem(
                         text = {
@@ -124,7 +129,11 @@ fun HistoryTopBar(
                                 Text(stringResource(R.string.average_speed_fastest_first))
                             }
                         },
-                        onClick = { averageSpeed = !averageSpeed }
+                        onClick = {
+                            averageSpeed = !averageSpeed
+                            showDropdownMenu = !showDropdownMenu
+
+                        }
                     )
                     DropdownMenuItem(
                         text = {
@@ -134,7 +143,10 @@ fun HistoryTopBar(
                                 Text(stringResource(R.string.speed_fastest_first))
                             }
                         },
-                        onClick = { speed = !speed }
+                        onClick = {
+                            speed = !speed
+                            showDropdownMenu = !showDropdownMenu
+                        }
                     )
                 }
             }
