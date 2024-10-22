@@ -40,4 +40,9 @@
     <string name="average_speed">Av. Speed</string>
     <string name="speed">Speed</string>
     <string name="center">Center</string>
+    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyA_5FO0xBnfbpz5ceprHePFOQ0pmJEZfOE</string>
+    <string name="hide">Hide</string>
+    <string name="unhide">Unhide</string>
+    <string name="start">Start</string>
+    <string name="make_photo">Make photo</string>
 </resources>

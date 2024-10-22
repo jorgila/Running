@@ -1,6 +1,10 @@
 package com.estholon.running.ui.screen.home
 
+import android.graphics.Paint.Align
+import android.widget.ImageButton
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +20,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +35,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -34,6 +44,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.running.R
+import com.estholon.running.ui.theme.Black
+import com.estholon.running.ui.theme.Grey
+import com.estholon.running.ui.theme.White
+import com.google.android.gms.maps.GoogleMap
+import com.google.maps.android.compose.GoogleMap
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
 
 @Composable
@@ -58,7 +73,9 @@ fun HomeScreen(
 
     val recordSpeed = homeViewModel.recordSpeed.collectAsState().value
 
-
+    var mapVisibility by rememberSaveable {
+        mutableStateOf(true)
+    }
 
 
     var kilometersKPI by rememberSaveable {
@@ -93,7 +110,8 @@ fun HomeScreen(
     // LAYOUT
 
     Column(
-        modifier = Modifier.verticalScroll(rememberScrollState())
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
     ) {
         Spacer(modifier = Modifier.height(18.dp))
         Row {
@@ -210,20 +228,89 @@ fun HomeScreen(
                     .padding(18.dp)
             )
         }
-        Box(
-            contentAlignment = Alignment.BottomStart,
+        if(mapVisibility==true){
+            Box(
+                contentAlignment = Alignment.BottomStart,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp)
+            ){
+                Button(
+                    onClick = { },
+                    shape = RoundedCornerShape(0.dp),
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text(stringResource(R.string.center).uppercase())
+                }
+            }
+
+            HomeGoogleMaps()
+
+        }
+        HorizontalDivider(modifier = Modifier
+            .background(MaterialTheme.colorScheme.primary)
+            .height(8.dp)
+        )
+
+        val text = if(mapVisibility){
+            stringResource(R.string.hide)
+        } else {
+            stringResource(R.string.unhide)
+        }
+
+        Text(
+            text = text,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(100.dp)
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                .clickable { mapVisibility = !mapVisibility }
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxWidth()
         ){
-            Button(
-                onClick = { },
-                shape = RoundedCornerShape(0.dp),
-                modifier = Modifier.padding(8.dp)
-            ) {
-                Text(stringResource(R.string.center).uppercase())
+            Box(
+                contentAlignment = Alignment.Center
+            ){
+                Button(
+                    onClick = { },
+                    shape = RoundedCornerShape(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.primary
+                    ),
+                    modifier = Modifier
+                        .height(100.dp)
+                        .width(100.dp)
+                ) {
+                    Text(stringResource(R.string.start).uppercase())
+                }
+            }
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.padding(top = 70.dp,start=70.dp)
+            ){
+                IconButton(
+                    onClick = { },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = White
+                    ),
+                    modifier = Modifier
+                        .height(50.dp)
+                        .width(50.dp)
+                ){
+                    Image(
+                        painter = painterResource(R.drawable.ic_camera),
+                        contentDescription = stringResource(R.string.make_photo),
+                        colorFilter = ColorFilter.tint(Black)
+                    )
+                }
             }
         }
+
+
     }
 
     // LOADING
@@ -238,4 +325,11 @@ fun HomeScreen(
     }
 
 
+}
+
+@Composable
+fun HomeGoogleMaps(){
+    GoogleMap(modifier = Modifier
+        .fillMaxWidth()
+        .height(300.dp))
 }
