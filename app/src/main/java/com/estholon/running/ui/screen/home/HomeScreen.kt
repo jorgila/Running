@@ -2,6 +2,7 @@ package com.estholon.running.ui.screen.home
 
 import android.graphics.Paint.Align
 import android.widget.ImageButton
+import android.widget.NumberPicker
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,25 +22,31 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -77,6 +84,29 @@ fun HomeScreen(
         mutableStateOf(true)
     }
 
+    var intervalSwitch by rememberSaveable {
+        mutableStateOf(true)
+    }
+
+    var intervalDurationSeekbar by rememberSaveable {
+        mutableStateOf(0f)
+    }
+
+    var goalSwitch by rememberSaveable {
+        mutableStateOf(true)
+    }
+
+    var notifyGoalCheck by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var automaticFinishCheck by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var audioSwitch by rememberSaveable {
+        mutableStateOf(true)
+    }
 
     var kilometersKPI by rememberSaveable {
         mutableStateOf(0f)
@@ -309,8 +339,139 @@ fun HomeScreen(
                 }
             }
         }
+        Spacer(modifier = Modifier.height(80.dp))
+        Text(
+            text = stringResource(R.string.settings),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Black,
+            color = White,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Black)
+                .padding(16.dp)
+        )
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            Column(
+                modifier = Modifier.width(300.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.interval_running),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = intervalSwitch,
+                        onCheckedChange = { intervalSwitch = it },
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                if(intervalSwitch){
+                    Text(stringResource(R.string.intervals_duration))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                    ){
+                        CircularSeekbarView(
+                            value = intervalDurationSeekbar,
+                            onChange = { intervalDurationSeekbar = it},
+                            startAngle = -90f,
+                            fullAngle = 180f,
+                            lineWeight = 5.dp,
+                            activeColor = MaterialTheme.colorScheme.primary
+                        )
+                        Box(
+                            modifier = Modifier.padding(top = 180.dp)
+                        ){
+                            Text("IN PROGRESS")
+                        }
+                    }
+                }
+                Row(
+                    modifier = Modifier.width(300.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.goal_settings),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = goalSwitch,
+                        onCheckedChange = { goalSwitch = it },
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                if(goalSwitch){
+                    Text(
+                        text = stringResource(R.string.duration)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("IN PROGRESS")
+                    /*TODO*/
+                    Spacer(modifier = Modifier.height(18.dp))
+                    Text(
+                        text = stringResource(R.string.distance)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("IN PROGRESS")
+                    /*TODO*/
+                    Spacer(modifier = Modifier.height(18.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = notifyGoalCheck,
+                            onCheckedChange = { notifyGoalCheck = it }
+                        )
+                        Text(
+                            text = stringResource(R.string.notify_goal_when_finish)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = automaticFinishCheck,
+                            onCheckedChange = { automaticFinishCheck = it }
+                        )
+                        Text(
+                            text = stringResource(R.string.automatic_run_finish)
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+                Row(
+                    modifier = Modifier.width(300.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.audio_settings),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = audioSwitch,
+                        onCheckedChange = { audioSwitch = it },
+                    )
+                }
+            }
+        }
 
+        Box(
+            modifier = Modifier.height(100.dp)
+        ){
 
+        }
     }
 
     // LOADING
