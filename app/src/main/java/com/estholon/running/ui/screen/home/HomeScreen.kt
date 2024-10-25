@@ -1,12 +1,9 @@
 package com.estholon.running.ui.screen.home
 
-import android.graphics.Paint.Align
-import android.widget.ImageButton
-import android.widget.NumberPicker
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,22 +38,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.running.R
+import com.estholon.running.ui.screen.components.Picker
+import com.estholon.running.ui.screen.components.rememberPickerState
 import com.estholon.running.ui.theme.Black
-import com.estholon.running.ui.theme.Grey
 import com.estholon.running.ui.theme.White
-import com.google.android.gms.maps.GoogleMap
 import com.google.maps.android.compose.GoogleMap
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
+import java.text.DecimalFormat
 
 @Composable
 fun HomeScreen(
@@ -92,7 +89,50 @@ fun HomeScreen(
         mutableStateOf(0f)
     }
 
+    val intervalMinutes = remember {
+        (1..60).map {
+            it.toString()
+        }
+    }
+    val intervalMinutesPickerState = rememberPickerState()
+
+    val formatter = DecimalFormat("00")
+
+    val hour = remember {
+        (0..24).map {
+            formatter.format(it).toString()
+        }
+    }
+    val hourPickerState = rememberPickerState()
+
+
+    val minute = remember {
+        (0..59).map {
+            formatter.format(it).toString()
+        }
+    }
+    val minutePickerState = rememberPickerState()
+
+    val second = remember {
+        (0..59).map {
+            formatter.format(it).toString()
+        }
+    }
+    val secondPickerState = rememberPickerState()
+
+    val kilometers = remember{
+        (0..1000).map {
+            it.toString()
+        }
+    }
+
+    val kilometerPickerState = rememberPickerState()
+
     var goalSwitch by rememberSaveable {
+        mutableStateOf(true)
+    }
+
+    var durationSelected by rememberSaveable {
         mutableStateOf(true)
     }
 
@@ -376,6 +416,16 @@ fun HomeScreen(
                 if(intervalSwitch){
                     Text(stringResource(R.string.intervals_duration))
                     Spacer(modifier = Modifier.height(8.dp))
+                    Picker(
+                        state = intervalMinutesPickerState,
+                        items = intervalMinutes,
+                        visibleItemsCount = 1,
+                        textModifier = Modifier.padding(8.dp),
+                        textStyle = TextStyle(fontSize = 32.sp),
+                        dividerColor = Color(0xFFE8E8E8)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(stringResource(R.string.run_walk_distribution))
                     Box(
                     ){
                         CircularSeekbarView(
@@ -389,7 +439,13 @@ fun HomeScreen(
                         Box(
                             modifier = Modifier.padding(top = 180.dp)
                         ){
-                            Text("IN PROGRESS")
+                            Column {
+                                Text("Run:")
+                                Text("00:00")
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("Walk:")
+                                Text("00:00")
+                            }
                         }
                     }
                 }
@@ -410,19 +466,78 @@ fun HomeScreen(
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 if(goalSwitch){
-                    Text(
-                        text = stringResource(R.string.duration)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("IN PROGRESS")
-                    /*TODO*/
+                    Row {
+                        Button(
+                            onClick = { durationSelected = true },
+                            shape = RoundedCornerShape(0),
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if(durationSelected){ MaterialTheme.colorScheme.primary } else { Color.Transparent }
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.duration)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Button(
+                            onClick = { durationSelected = false },
+                            shape = RoundedCornerShape(0),
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if(!durationSelected){ MaterialTheme.colorScheme.primary } else { Color.Transparent }
+                            )
+                        ) {
+                            Text(
+                                text = stringResource(R.string.distance)
+                            )
+                        }
+                    }
                     Spacer(modifier = Modifier.height(18.dp))
-                    Text(
-                        text = stringResource(R.string.distance)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("IN PROGRESS")
-                    /*TODO*/
+                    if(durationSelected){
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Picker(
+                                state = hourPickerState,
+                                items = hour,
+                                visibleItemsCount = 1,
+                                modifier = Modifier.weight(1f),
+                                textModifier = Modifier.padding(8.dp),
+                                textStyle = TextStyle(fontSize = 32.sp),
+                                dividerColor = Color(0xFFE8E8E8)
+                            )
+                            Text(":")
+                            Picker(
+                                state = minutePickerState,
+                                items = minute,
+                                visibleItemsCount = 1,
+                                modifier = Modifier.weight(1f),
+                                textModifier = Modifier.padding(8.dp),
+                                textStyle = TextStyle(fontSize = 32.sp),
+                                dividerColor = Color(0xFFE8E8E8)
+                            )
+                            Text(":")
+                            Picker(
+                                state = secondPickerState,
+                                items = second,
+                                visibleItemsCount = 1,
+                                modifier = Modifier.weight(1f),
+                                textModifier = Modifier.padding(8.dp),
+                                textStyle = TextStyle(fontSize = 32.sp),
+                                dividerColor = Color(0xFFE8E8E8)
+                            )
+                        }
+                    } else {
+                        Picker(
+                            state = kilometerPickerState,
+                            items = kilometers,
+                            visibleItemsCount = 1,
+                            textModifier = Modifier.padding(8.dp),
+                            textStyle = TextStyle(fontSize = 32.sp),
+                            dividerColor = Color(0xFFE8E8E8)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(18.dp))
                     Row(
                         verticalAlignment = Alignment.CenterVertically

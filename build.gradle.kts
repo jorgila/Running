@@ -8,5 +8,4 @@ plugins {
     alias(libs.plugins.google.services) apply false
     // FIREBASE
     alias(libs.plugins.crashlytics) apply false
-
 }
