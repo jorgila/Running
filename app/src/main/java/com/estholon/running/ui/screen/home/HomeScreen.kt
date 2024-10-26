@@ -24,12 +24,16 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -146,6 +150,18 @@ fun HomeScreen(
 
     var audioSwitch by rememberSaveable {
         mutableStateOf(true)
+    }
+
+    var runVolumeSliderPosition by rememberSaveable {
+        mutableFloatStateOf(0f)
+    }
+
+    var walkVolumeSliderPosition by rememberSaveable {
+        mutableFloatStateOf(0f)
+    }
+
+    var notificationVolumeSliderPosition by rememberSaveable {
+        mutableFloatStateOf(0f)
     }
 
     var kilometersKPI by rememberSaveable {
@@ -528,6 +544,11 @@ fun HomeScreen(
                                 dividerColor = Color(0xFFE8E8E8)
                             )
                         }
+                        Text(
+                            text="HH:MM:SS",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     } else {
                         Picker(
                             state = kilometerPickerState,
@@ -536,6 +557,11 @@ fun HomeScreen(
                             textModifier = Modifier.padding(8.dp),
                             textStyle = TextStyle(fontSize = 32.sp),
                             dividerColor = Color(0xFFE8E8E8)
+                        )
+                        Text(
+                            text="KM",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                     Spacer(modifier = Modifier.height(18.dp))
@@ -578,6 +604,35 @@ fun HomeScreen(
                         checked = audioSwitch,
                         onCheckedChange = { audioSwitch = it },
                     )
+                }
+                if(audioSwitch){
+                    Text(
+                        text = stringResource(R.string.audio_settings_for_run)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Slider(
+                        value = runVolumeSliderPosition,
+                        onValueChange = { runVolumeSliderPosition = it }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.audio_settings_for_walk)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Slider(
+                        value = walkVolumeSliderPosition,
+                        onValueChange = { walkVolumeSliderPosition = it }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(R.string.audio_settings_for_notifications)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Slider(
+                        value = notificationVolumeSliderPosition,
+                        onValueChange = { notificationVolumeSliderPosition = it }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
