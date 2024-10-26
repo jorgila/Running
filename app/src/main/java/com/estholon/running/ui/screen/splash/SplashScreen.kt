@@ -23,7 +23,6 @@ import kotlinx.coroutines.delay
 @Composable
 fun SplashScreen(
     splashViewModel: SplashViewModel = hiltViewModel(),
-    clearNavigation: () -> Unit,
     navigateToHome: () -> Unit,
     navigateToSignIn: () -> Unit
 ){
@@ -32,7 +31,6 @@ fun SplashScreen(
 
     LaunchedEffect(key1 = true) {
         delay(1000)
-        clearNavigation()
         if(splashViewModel.isUserLogged()){
             navigateToHome()
         } else {

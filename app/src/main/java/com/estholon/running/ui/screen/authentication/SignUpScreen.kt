@@ -54,7 +54,6 @@ import com.estholon.running.ui.theme.White
 @Composable
 fun SignUpScreen(
     signUpViewModel: SignUpViewModel = hiltViewModel(),
-    clearNavigation: () -> Unit,
     navigateToSignIn: () -> Unit
 ){
 

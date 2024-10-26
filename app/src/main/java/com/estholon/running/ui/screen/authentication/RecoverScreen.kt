@@ -53,7 +53,6 @@ import com.estholon.running.ui.theme.White
 @Composable
 fun RecoverScreen(
     recoverViewModel: RecoverViewModel = hiltViewModel(),
-    clearNavigation: () -> Unit,
     navigateToSignIn: () -> Unit
 ) {
 

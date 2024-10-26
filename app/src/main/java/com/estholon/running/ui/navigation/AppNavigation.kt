@@ -20,12 +20,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.dialog
 import androidx.navigation.compose.rememberNavController
 import com.estholon.running.ui.screen.authentication.RecoverScreen
 import com.estholon.running.ui.screen.authentication.SignInScreen
 import com.estholon.running.ui.screen.authentication.SignUpScreen
+import com.estholon.running.ui.screen.finished.FinishedScreen
 import com.estholon.running.ui.screen.history.HistoryScreen
 import com.estholon.running.ui.screen.history.HistoryTopBar
 import com.estholon.running.ui.screen.home.HomeDrawer
@@ -156,41 +159,62 @@ fun AppNavigation(
                 ){
                     composable(Routes.SplashScreen.route){
                         SplashScreen(
-                            clearNavigation = { navController.popBackStack() },
-                            navigateToHome = { navController.navigate(Routes.HomeScreen.route) },
-                            navigateToSignIn = { navController.navigate(Routes.SignInScreen.route) }
-                        )
-                    }
-                    composable(Routes.SignInScreen.route){
-                        SignInScreen(
-                            clearNavigation = { navController.popBackStack() },
-                            navigateToHome = { navController.navigate(Routes.HomeScreen.route)},
-                            navigateToSignUp = { navController.navigate(Routes.SignUpScreen.route)},
-                            navigateToRecover = { navController.navigate(Routes.RecoverScreen.route)}
-                        )
-                    }
-                    composable(Routes.SignUpScreen.route){
-                        SignUpScreen(
-                            clearNavigation = { navController.popBackStack() },
-                            navigateToSignIn = { navController.navigate(Routes.SignInScreen.route)}
-                        )
-                    }
-                    composable(Routes.RecoverScreen.route){
-                        RecoverScreen(
-                            clearNavigation = { navController.popBackStack() },
-                            navigateToSignIn = { navController.navigate(Routes.SignInScreen.route)}
-                        )
-                    }
-                    composable(Routes.HomeScreen.route){
-                        HomeScreen(
+                            navigateToHome = {
+                                navController.popBackStack()
+                                navController.navigate(Routes.HomeScreen.route)
+                            },
                             navigateToSignIn = {
                                 navController.popBackStack()
                                 navController.navigate(Routes.SignInScreen.route)
                             }
                         )
                     }
+                    composable(Routes.SignInScreen.route){
+                        SignInScreen(
+                            navigateToHome = {
+                                navController.popBackStack()
+                                navController.navigate(Routes.HomeScreen.route)
+                            },
+                            navigateToSignUp = { navController.navigate(Routes.SignUpScreen.route)},
+                            navigateToRecover = { navController.navigate(Routes.RecoverScreen.route)}
+                        )
+                    }
+                    composable(Routes.SignUpScreen.route){
+                        SignUpScreen(
+                            navigateToSignIn = {
+                                navController.popBackStack()
+                                navController.navigate(Routes.SignInScreen.route)
+                            }
+                        )
+                    }
+                    composable(Routes.RecoverScreen.route){
+                        RecoverScreen(
+                            navigateToSignIn = {
+                                navController.popBackStack()
+                                navController.navigate(Routes.SignInScreen.route)
+                            }
+                        )
+                    }
+                    composable(Routes.HomeScreen.route){
+                        HomeScreen(
+                            navigateToFinishedScreen = {
+                                navController.navigate(Routes.FinishedScreen.route)
+                            }
+                        )
+                    }
                     composable(Routes.HistoryScreen.route){
                         HistoryScreen()
+                    }
+                    dialog(
+                        route = Routes.FinishedScreen.route,
+                        dialogProperties = DialogProperties(
+                            dismissOnBackPress = true,
+                            dismissOnClickOutside = true,
+                            usePlatformDefaultWidth = false,
+                            decorFitsSystemWindows = true
+                        )
+                    ){
+                        FinishedScreen()
                     }
                 }
             }

@@ -62,8 +62,10 @@ import java.text.DecimalFormat
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
-    navigateToSignIn: () -> Unit
+    navigateToFinishedScreen: () -> Unit
 ){
+
+    navigateToFinishedScreen()
 
     // VARIABLES
 
@@ -153,15 +155,15 @@ fun HomeScreen(
     }
 
     var runVolumeSliderPosition by rememberSaveable {
-        mutableFloatStateOf(0f)
+        mutableFloatStateOf(70f)
     }
 
     var walkVolumeSliderPosition by rememberSaveable {
-        mutableFloatStateOf(0f)
+        mutableFloatStateOf(70f)
     }
 
     var notificationVolumeSliderPosition by rememberSaveable {
-        mutableFloatStateOf(0f)
+        mutableFloatStateOf(70f)
     }
 
     var kilometersKPI by rememberSaveable {
@@ -612,7 +614,8 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Slider(
                         value = runVolumeSliderPosition,
-                        onValueChange = { runVolumeSliderPosition = it }
+                        onValueChange = { runVolumeSliderPosition = it },
+                        valueRange = 0f..100f
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -621,7 +624,8 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Slider(
                         value = walkVolumeSliderPosition,
-                        onValueChange = { walkVolumeSliderPosition = it }
+                        onValueChange = { walkVolumeSliderPosition = it },
+                        valueRange = 0f..100f
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -630,7 +634,8 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Slider(
                         value = notificationVolumeSliderPosition,
-                        onValueChange = { notificationVolumeSliderPosition = it }
+                        onValueChange = { notificationVolumeSliderPosition = it },
+                        valueRange = 0f..100f
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
