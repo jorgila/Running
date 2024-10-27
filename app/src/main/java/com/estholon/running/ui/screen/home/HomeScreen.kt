@@ -1,6 +1,8 @@
 package com.estholon.running.ui.screen.home
 
 
+import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -65,8 +67,6 @@ fun HomeScreen(
     navigateToFinishedScreen: () -> Unit
 ){
 
-    navigateToFinishedScreen()
-
     // VARIABLES
 
     val isLoading = homeViewModel.isLoading.collectAsState().value
@@ -84,11 +84,11 @@ fun HomeScreen(
     val recordSpeed = homeViewModel.recordSpeed.collectAsState().value
 
     var mapVisibility by rememberSaveable {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
 
     var intervalSwitch by rememberSaveable {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
 
     var intervalDurationSeekbar by rememberSaveable {
@@ -135,7 +135,7 @@ fun HomeScreen(
     val kilometerPickerState = rememberPickerState()
 
     var goalSwitch by rememberSaveable {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
 
     var durationSelected by rememberSaveable {
@@ -151,7 +151,7 @@ fun HomeScreen(
     }
 
     var audioSwitch by rememberSaveable {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
 
     var runVolumeSliderPosition by rememberSaveable {
@@ -316,7 +316,7 @@ fun HomeScreen(
                     .padding(18.dp)
             )
         }
-        if(mapVisibility==true){
+        if(mapVisibility){
             Box(
                 contentAlignment = Alignment.BottomStart,
                 modifier = Modifier
@@ -431,38 +431,40 @@ fun HomeScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                if(intervalSwitch){
-                    Text(stringResource(R.string.intervals_duration))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Picker(
-                        state = intervalMinutesPickerState,
-                        items = intervalMinutes,
-                        visibleItemsCount = 1,
-                        textModifier = Modifier.padding(8.dp),
-                        textStyle = TextStyle(fontSize = 32.sp),
-                        dividerColor = Color(0xFFE8E8E8)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(stringResource(R.string.run_walk_distribution))
-                    Box(
-                    ){
-                        CircularSeekbarView(
-                            value = intervalDurationSeekbar,
-                            onChange = { intervalDurationSeekbar = it},
-                            startAngle = -90f,
-                            fullAngle = 180f,
-                            lineWeight = 5.dp,
-                            activeColor = MaterialTheme.colorScheme.primary
+                AnimatedVisibility(intervalSwitch){
+                    Column {
+                        Text(stringResource(R.string.intervals_duration))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Picker(
+                            state = intervalMinutesPickerState,
+                            items = intervalMinutes,
+                            visibleItemsCount = 1,
+                            textModifier = Modifier.padding(8.dp),
+                            textStyle = TextStyle(fontSize = 32.sp),
+                            dividerColor = Color(0xFFE8E8E8)
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(stringResource(R.string.run_walk_distribution))
                         Box(
-                            modifier = Modifier.padding(top = 180.dp)
                         ){
-                            Column {
-                                Text("Run:")
-                                Text("00:00")
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("Walk:")
-                                Text("00:00")
+                            CircularSeekbarView(
+                                value = intervalDurationSeekbar,
+                                onChange = { intervalDurationSeekbar = it},
+                                startAngle = -90f,
+                                fullAngle = 180f,
+                                lineWeight = 5.dp,
+                                activeColor = MaterialTheme.colorScheme.primary
+                            )
+                            Box(
+                                modifier = Modifier.padding(top = 180.dp)
+                            ){
+                                Column {
+                                    Text("Run:")
+                                    Text("00:00")
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Walk:")
+                                    Text("00:00")
+                                }
                             }
                         }
                     }
@@ -483,113 +485,126 @@ fun HomeScreen(
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                if(goalSwitch){
-                    Row {
-                        Button(
-                            onClick = { durationSelected = true },
-                            shape = RoundedCornerShape(0),
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if(durationSelected){ MaterialTheme.colorScheme.primary } else { Color.Transparent }
+                AnimatedVisibility(goalSwitch){
+                    Column {
+                        Row {
+                            Button(
+                                onClick = { durationSelected = true },
+                                shape = RoundedCornerShape(0),
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if(durationSelected){ MaterialTheme.colorScheme.primary } else { Color.Transparent }
+                                )
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.duration)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Button(
+                                onClick = { durationSelected = false },
+                                shape = RoundedCornerShape(0),
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = if(!durationSelected){ MaterialTheme.colorScheme.primary } else { Color.Transparent }
+                                )
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.distance)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(18.dp))
+                        if(durationSelected){
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Picker(
+                                    state = hourPickerState,
+                                    items = hour,
+                                    visibleItemsCount = 1,
+                                    modifier = Modifier.weight(1f),
+                                    textModifier = Modifier.padding(8.dp),
+                                    textStyle = TextStyle(fontSize = 32.sp),
+                                    dividerColor = Color(0xFFE8E8E8)
+                                )
+                                Text(":")
+                                Picker(
+                                    state = minutePickerState,
+                                    items = minute,
+                                    visibleItemsCount = 1,
+                                    modifier = Modifier.weight(1f),
+                                    textModifier = Modifier.padding(8.dp),
+                                    textStyle = TextStyle(fontSize = 32.sp),
+                                    dividerColor = Color(0xFFE8E8E8)
+                                )
+                                Text(":")
+                                Picker(
+                                    state = secondPickerState,
+                                    items = second,
+                                    visibleItemsCount = 1,
+                                    modifier = Modifier.weight(1f),
+                                    textModifier = Modifier.padding(8.dp),
+                                    textStyle = TextStyle(fontSize = 32.sp),
+                                    dividerColor = Color(0xFFE8E8E8)
+                                )
+                            }
+                            Row(
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "${hourPickerState.selectedItem}:${minutePickerState.selectedItem}:${secondPickerState.selectedItem}",
+                                    modifier = Modifier.weight(1f),
+                                    textAlign = TextAlign.End
+                                )
+                                Text(" | ")
+                                Text(
+                                    text="HH:MM:SS",
+                                    modifier = Modifier.weight(1f),
+                                    textAlign = TextAlign.Start
+                                )
+                            }
+
+                        } else {
+                            Picker(
+                                state = kilometerPickerState,
+                                items = kilometers,
+                                visibleItemsCount = 1,
+                                textModifier = Modifier.padding(8.dp),
+                                textStyle = TextStyle(fontSize = 32.sp),
+                                dividerColor = Color(0xFFE8E8E8)
                             )
-                        ) {
                             Text(
-                                text = stringResource(R.string.duration)
+                                text="KM",
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Button(
-                            onClick = { durationSelected = false },
-                            shape = RoundedCornerShape(0),
-                            modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if(!durationSelected){ MaterialTheme.colorScheme.primary } else { Color.Transparent }
-                            )
-                        ) {
-                            Text(
-                                text = stringResource(R.string.distance)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(18.dp))
-                    if(durationSelected){
+                        Spacer(modifier = Modifier.height(18.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Picker(
-                                state = hourPickerState,
-                                items = hour,
-                                visibleItemsCount = 1,
-                                modifier = Modifier.weight(1f),
-                                textModifier = Modifier.padding(8.dp),
-                                textStyle = TextStyle(fontSize = 32.sp),
-                                dividerColor = Color(0xFFE8E8E8)
+                            Checkbox(
+                                checked = notifyGoalCheck,
+                                onCheckedChange = { notifyGoalCheck = it }
                             )
-                            Text(":")
-                            Picker(
-                                state = minutePickerState,
-                                items = minute,
-                                visibleItemsCount = 1,
-                                modifier = Modifier.weight(1f),
-                                textModifier = Modifier.padding(8.dp),
-                                textStyle = TextStyle(fontSize = 32.sp),
-                                dividerColor = Color(0xFFE8E8E8)
+                            Text(
+                                text = stringResource(R.string.notify_goal_when_finish)
                             )
-                            Text(":")
-                            Picker(
-                                state = secondPickerState,
-                                items = second,
-                                visibleItemsCount = 1,
-                                modifier = Modifier.weight(1f),
-                                textModifier = Modifier.padding(8.dp),
-                                textStyle = TextStyle(fontSize = 32.sp),
-                                dividerColor = Color(0xFFE8E8E8)
-                            )
+                            Spacer(modifier = Modifier.weight(1f))
                         }
-                        Text(
-                            text="HH:MM:SS",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    } else {
-                        Picker(
-                            state = kilometerPickerState,
-                            items = kilometers,
-                            visibleItemsCount = 1,
-                            textModifier = Modifier.padding(8.dp),
-                            textStyle = TextStyle(fontSize = 32.sp),
-                            dividerColor = Color(0xFFE8E8E8)
-                        )
-                        Text(
-                            text="KM",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(18.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = notifyGoalCheck,
-                            onCheckedChange = { notifyGoalCheck = it }
-                        )
-                        Text(
-                            text = stringResource(R.string.notify_goal_when_finish)
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Checkbox(
-                            checked = automaticFinishCheck,
-                            onCheckedChange = { automaticFinishCheck = it }
-                        )
-                        Text(
-                            text = stringResource(R.string.automatic_run_finish)
-                        )
-                        Spacer(modifier = Modifier.weight(1f))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = automaticFinishCheck,
+                                onCheckedChange = { automaticFinishCheck = it }
+                            )
+                            Text(
+                                text = stringResource(R.string.automatic_run_finish)
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
                 }
                 Row(
@@ -607,37 +622,45 @@ fun HomeScreen(
                         onCheckedChange = { audioSwitch = it },
                     )
                 }
-                if(audioSwitch){
-                    Text(
-                        text = stringResource(R.string.audio_settings_for_run)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Slider(
-                        value = runVolumeSliderPosition,
-                        onValueChange = { runVolumeSliderPosition = it },
-                        valueRange = 0f..100f
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.audio_settings_for_walk)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Slider(
-                        value = walkVolumeSliderPosition,
-                        onValueChange = { walkVolumeSliderPosition = it },
-                        valueRange = 0f..100f
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = stringResource(R.string.audio_settings_for_notifications)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Slider(
-                        value = notificationVolumeSliderPosition,
-                        onValueChange = { notificationVolumeSliderPosition = it },
-                        valueRange = 0f..100f
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                AnimatedVisibility(audioSwitch){
+                    Column(
+
+                    ) {
+                        Text(
+                            text = stringResource(R.string.audio_settings_for_run)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Slider(
+                            value = runVolumeSliderPosition,
+                            onValueChange = { runVolumeSliderPosition = it },
+                            valueRange = 0f..100f
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        AnimatedVisibility(intervalSwitch){
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.audio_settings_for_walk)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Slider(
+                                    value = walkVolumeSliderPosition,
+                                    onValueChange = { walkVolumeSliderPosition = it },
+                                    valueRange = 0f..100f
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                        Text(
+                            text = stringResource(R.string.audio_settings_for_notifications)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Slider(
+                            value = notificationVolumeSliderPosition,
+                            onValueChange = { notificationVolumeSliderPosition = it },
+                            valueRange = 0f..100f
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
                 }
             }
         }
