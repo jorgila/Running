@@ -1,5 +1,6 @@
 package com.estholon.running.ui.screen.finished
 
+import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -27,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.running.R
 import com.estholon.running.ui.navigation.Routes
+import com.estholon.running.ui.theme.White
 
 @Composable
 fun FinishedScreen(
@@ -40,11 +43,12 @@ fun FinishedScreen(
     val currentRuns = finishedViewModel.currentRuns.collectAsState().value
     val totalRuns = finishedViewModel.totalRuns.collectAsState().value
 
-
-    Box(modifier = Modifier
-        .fillMaxWidth()
+    Column(
+        modifier = Modifier
+        .width(400.dp)
         .background(MaterialTheme.colorScheme.primary)
-    ){
+    ) {
+        Spacer(modifier = Modifier.height(8.dp))
         Row {
             Column(modifier = Modifier
                 .width(117.dp)
@@ -117,6 +121,66 @@ fun FinishedScreen(
                 Text(
                     "$currentRuns / $totalRuns runs"
                 )
+            }
+        }
+        Row(
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(White)
+                    .padding(8.dp)
+            ) {
+                Text(stringResource(R.string.duration))
+                Text(
+                    text = "00:00:00",
+                    fontSize = 32.sp
+                )
+                Text("Goal")
+                Text("00:00:00")
+                Text("Intervals")
+                Text("0 (00:00 / 00:00)")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .background(White)
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Text(stringResource(R.string.distance))
+                    Text(
+                        text = "0.00 Km",
+                        fontSize = 32.sp
+                    )
+                    Text("Goal")
+                    Text("0.00 Km")
+                    Text("Slope")
+                    Text("min: 0 / max: 0")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Column(
+                    modifier = Modifier
+                        .background(White)
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ){
+                    Text("Average Speed")
+                    Text(
+                        text = "0.00 Km/H",
+                        fontSize = 32.sp
+                    )
+                    Text("Maximum Speed")
+                    Text(
+                        text = "0.00 Km/H",
+                        fontSize = 32.sp
+                    )
+                }
             }
         }
     }
