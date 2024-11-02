@@ -26,10 +26,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -83,6 +81,12 @@ fun HomeScreen(
 
     val recordSpeed = homeViewModel.recordSpeed.collectAsState().value
 
+    val secondsFromWatch = homeViewModel.secondsFromWatch.collectAsState().value
+
+    val runIntervalDuration = homeViewModel.runIntervalDuration.collectAsState().value
+
+    val walkIntervalDuration = homeViewModel.walkIntervalDuration.collectAsState().value
+
     var mapVisibility by rememberSaveable {
         mutableStateOf(false)
     }
@@ -92,7 +96,7 @@ fun HomeScreen(
     }
 
     var intervalDurationSeekbar by rememberSaveable {
-        mutableStateOf(0f)
+        mutableStateOf(0.5f)
     }
 
     val intervalMinutes = remember {
@@ -125,6 +129,7 @@ fun HomeScreen(
         }
     }
     val secondPickerState = rememberPickerState()
+
 
     val kilometers = remember{
         (0..1000).map {
@@ -305,16 +310,31 @@ fun HomeScreen(
         Box(modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.secondary)){
-            Text(
-                text = "00:00:00",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSecondary,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "00:00:00",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Black,
+                    textAlign = if(intervalSwitch) TextAlign.End else TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(18.dp)
+                )
+                if(intervalSwitch){
+                    Text(
+                        text = "Round 1",
+                        fontWeight = FontWeight.Black,
+                        textAlign = TextAlign.Start,
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(18.dp)
+                    )
+                }
+            }
         }
         if(mapVisibility){
             Box(
@@ -413,62 +433,10 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ){
+            Spacer(modifier = Modifier.height(24.dp))
             Column(
                 modifier = Modifier.width(300.dp),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.interval_running),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Switch(
-                        checked = intervalSwitch,
-                        onCheckedChange = { intervalSwitch = it },
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                AnimatedVisibility(intervalSwitch){
-                    Column {
-                        Text(stringResource(R.string.intervals_duration))
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Picker(
-                            state = intervalMinutesPickerState,
-                            items = intervalMinutes,
-                            visibleItemsCount = 1,
-                            textModifier = Modifier.padding(8.dp),
-                            textStyle = TextStyle(fontSize = 32.sp),
-                            dividerColor = Color(0xFFE8E8E8)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(stringResource(R.string.run_walk_distribution))
-                        Box(
-                        ){
-                            CircularSeekbarView(
-                                value = intervalDurationSeekbar,
-                                onChange = { intervalDurationSeekbar = it},
-                                startAngle = -90f,
-                                fullAngle = 180f,
-                                lineWeight = 5.dp,
-                                activeColor = MaterialTheme.colorScheme.primary
-                            )
-                            Box(
-                                modifier = Modifier.padding(top = 180.dp)
-                            ){
-                                Column {
-                                    Text("Run:")
-                                    Text("00:00")
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Text("Walk:")
-                                    Text("00:00")
-                                }
-                            }
-                        }
-                    }
-                }
                 Row(
                     modifier = Modifier.width(300.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -559,12 +527,11 @@ fun HomeScreen(
                                 )
                                 Text(" | ")
                                 Text(
-                                    text="HH:MM:SS",
+                                    text = "HH:MM:SS",
                                     modifier = Modifier.weight(1f),
                                     textAlign = TextAlign.Start
                                 )
                             }
-
                         } else {
                             Picker(
                                 state = kilometerPickerState,
@@ -580,6 +547,12 @@ fun HomeScreen(
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
+                        homeViewModel.getSecondsFromWatch(
+                            "${if(hourPickerState.selectedItem.isNullOrEmpty()) "00" else hourPickerState.selectedItem}:" +
+                                    "${if(minutePickerState.selectedItem.isNullOrEmpty()) "00" else minutePickerState.selectedItem}:" +
+                                    "${if(secondPickerState.selectedItem.isNullOrEmpty()) "00" else secondPickerState.selectedItem}"
+                        )
+
                         Spacer(modifier = Modifier.height(18.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically
@@ -604,6 +577,80 @@ fun HomeScreen(
                                 text = stringResource(R.string.automatic_run_finish)
                             )
                             Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.interval_running),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Switch(
+                        checked = intervalSwitch,
+                        onCheckedChange = { intervalSwitch = it },
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                AnimatedVisibility(intervalSwitch){
+                    Column {
+                        Text(
+                            stringResource(R.string.intervals_duration),
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Picker(
+                            state = intervalMinutesPickerState,
+                            items = intervalMinutes,
+                            visibleItemsCount = 1,
+                            textModifier = Modifier.padding(8.dp),
+                            textStyle = TextStyle(fontSize = 32.sp),
+                            dividerColor = Color(0xFFE8E8E8)
+                        )
+                        if(!intervalMinutesPickerState.selectedItem.isNullOrEmpty()){
+                            homeViewModel.getRunIntervalDuration(
+                                intervalMinutesPickerState.selectedItem.toLong(),
+                                intervalDurationSeekbar
+                            )
+                            homeViewModel.getWalkIntervalDuration(
+                                intervalMinutesPickerState.selectedItem.toLong(),
+                                intervalDurationSeekbar
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(stringResource(R.string.run_walk_distribution))
+                        Box(
+                        ){
+                            CircularSeekbarView(
+                                value = intervalDurationSeekbar,
+                                onChange = { intervalDurationSeekbar = it},
+                                startAngle = -90f,
+                                fullAngle = 180f,
+                                steps =
+                                    if(!intervalMinutesPickerState.selectedItem.isNullOrEmpty()){
+                                        intervalMinutesPickerState.selectedItem.toInt() * 60 / 15
+                                    } else {
+                                        1
+                                    },
+                                lineWeight = 5.dp,
+                                activeColor = MaterialTheme.colorScheme.primary
+                            )
+                            Log.e("HomeScreen",intervalDurationSeekbar.toString())
+                            Box(
+                                modifier = Modifier.padding(top = 180.dp)
+                            ){
+                                Column {
+                                    Text("Run:")
+                                    Text("$runIntervalDuration")
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text("Walk:")
+                                    Text("$walkIntervalDuration")
+                                }
+                            }
                         }
                     }
                 }
