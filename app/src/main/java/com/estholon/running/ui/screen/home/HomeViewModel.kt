@@ -1,6 +1,7 @@
 package com.estholon.running.ui.screen.home
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
@@ -59,11 +60,17 @@ class HomeViewModel @Inject constructor(
     private val _recordSpeed = MutableStateFlow<Double>(0.0)
     var recordSpeed : StateFlow<Double> = _recordSpeed
 
+    private val _goalKilometers = MutableStateFlow<Double>(0.0)
+    var goalKilometers : StateFlow<Double> = _goalKilometers
+
     private val _totalKilometers = MutableStateFlow<Double>(0.0)
     var totalKilometers : StateFlow<Double> = _totalKilometers
 
     private val _totalRuns = MutableStateFlow<Int>(0)
     var totalRuns : StateFlow<Int> = _totalRuns
+
+    private val _kilometersKPI = MutableStateFlow<Float>(0f)
+    var kmKPI : StateFlow<Float> = _kilometersKPI
 
     private val _secondsFromWatch = MutableStateFlow<Int>(0)
     var secondsFromWatch : StateFlow<Int> = _secondsFromWatch
@@ -76,6 +83,7 @@ class HomeViewModel @Inject constructor(
 
     init {
         getUserInfo()
+        setKPI()
     }
 
     fun logout() {
@@ -110,5 +118,23 @@ class HomeViewModel @Inject constructor(
         val ms = (interval * 1000 * 60 * (1.0 - intervalDurationSeekbar) - 60 * 60 * 1000).toLong()
         _walkIntervalDuration.value = getFormattedStopWatchUseCase.getFormattedStopWatch(ms)
     }
+
+    fun setKPI(){
+        _kilometersKPI.value =
+           if(_recordKilometers.value<_goalKilometers.value){
+            if(_currentKilometers.value < _goalKilometers.value) {
+                (_currentKilometers.value / _goalKilometers.value).toFloat()
+            } else {
+                1f
+            }
+        } else {
+            if(_currentKilometers.value < _recordKilometers.value) {
+                (_currentKilometers.value / _recordKilometers.value).toFloat()
+            } else {
+                1f
+            }
+        }
+    }
+
 
 }

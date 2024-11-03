@@ -26,6 +26,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
@@ -54,6 +55,7 @@ import com.estholon.running.R
 import com.estholon.running.ui.screen.components.Picker
 import com.estholon.running.ui.screen.components.rememberPickerState
 import com.estholon.running.ui.theme.Black
+import com.estholon.running.ui.theme.Grey
 import com.estholon.running.ui.theme.White
 import com.google.maps.android.compose.GoogleMap
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
@@ -70,21 +72,20 @@ fun HomeScreen(
     val isLoading = homeViewModel.isLoading.collectAsState().value
 
     val currentKilometers = homeViewModel.currentKilometers.collectAsState().value
-
-    val recordKilometers = homeViewModel.recordKilometers.collectAsState().value
-
     val currentAverageSpeed = homeViewModel.currentAverageSpeed.collectAsState().value
-
-    val recordAverageSpeed = homeViewModel.recordAverageSpeed.collectAsState().value
-
     val currentSpeed = homeViewModel.currentSpeed.collectAsState().value
 
+    val recordKilometers = homeViewModel.recordKilometers.collectAsState().value
+    val recordAverageSpeed = homeViewModel.recordAverageSpeed.collectAsState().value
     val recordSpeed = homeViewModel.recordSpeed.collectAsState().value
+
+    val goalKilometers = homeViewModel.goalKilometers.collectAsState().value
+
+    val kilometersKPI = homeViewModel.kmKPI.collectAsState().value
 
     val secondsFromWatch = homeViewModel.secondsFromWatch.collectAsState().value
 
     val runIntervalDuration = homeViewModel.runIntervalDuration.collectAsState().value
-
     val walkIntervalDuration = homeViewModel.walkIntervalDuration.collectAsState().value
 
     var mapVisibility by rememberSaveable {
@@ -132,7 +133,7 @@ fun HomeScreen(
 
 
     val kilometers = remember{
-        (0..1000).map {
+        (0..300).map {
             it.toString()
         }
     }
@@ -171,20 +172,11 @@ fun HomeScreen(
         mutableFloatStateOf(70f)
     }
 
-    var kilometersKPI by rememberSaveable {
-        mutableStateOf(0f)
-    }
     var averageSpeedKPI by rememberSaveable {
         mutableStateOf(0f)
     }
     var speedKPI by rememberSaveable {
         mutableStateOf(0f)
-    }
-
-    kilometersKPI = if(currentKilometers < recordKilometers){
-        (currentKilometers / recordKilometers).toFloat()
-    } else {
-        1f
     }
 
     averageSpeedKPI = if(currentAverageSpeed < recordAverageSpeed){
@@ -199,6 +191,9 @@ fun HomeScreen(
         1f
     }
 
+    var started by rememberSaveable {
+        mutableStateOf(false)
+    }
 
     // LAYOUT
 
@@ -215,6 +210,7 @@ fun HomeScreen(
                 Box(
                     contentAlignment = Alignment.Center
                 ){
+
                     CircularSeekbarView(
                         value = kilometersKPI,
                         onChange = { },
@@ -229,7 +225,7 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(text = currentKilometers.toString(), fontSize = 18.sp, fontWeight = FontWeight.Black)
-                            Text(text = "/$recordKilometers", fontSize = 10.sp)
+                            Text(text = "/${if(recordKilometers<goalKilometers) goalKilometers else recordKilometers}", fontSize = 10.sp)
                         }
                         Text(stringResource(R.string.distance), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
@@ -307,33 +303,41 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
+        LinearProgressIndicator(
+            progress = { 0.5f },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(modifier = Modifier.height(24.dp))
         Box(modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.secondary)){
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "00:00:00",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Black,
-                    textAlign = if(intervalSwitch) TextAlign.End else TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onSecondary,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(18.dp)
-                )
-                if(intervalSwitch){
+            Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     Text(
-                        text = "Round 1",
+                        text = "00:00:00",
+                        fontSize = 32.sp,
                         fontWeight = FontWeight.Black,
-                        textAlign = TextAlign.Start,
+                        textAlign = if(intervalSwitch) TextAlign.End else TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSecondary,
                         modifier = Modifier
                             .weight(1f)
                             .padding(18.dp)
                     )
+                    if(intervalSwitch){
+                        Text(
+                            text = "Round 1",
+                            fontWeight = FontWeight.Black,
+                            textAlign = TextAlign.Start,
+                            color = MaterialTheme.colorScheme.onSecondary,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(18.dp)
+                        )
+                    }
                 }
+
             }
         }
         if(mapVisibility){
@@ -356,7 +360,7 @@ fun HomeScreen(
 
         }
         HorizontalDivider(modifier = Modifier
-            .background(MaterialTheme.colorScheme.primary)
+            .background(Grey)
             .height(8.dp)
         )
 
@@ -369,7 +373,7 @@ fun HomeScreen(
         Text(
             text = text,
             modifier = Modifier
-                .background(MaterialTheme.colorScheme.primary)
+                .background(Grey)
                 .padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
                 .clickable { mapVisibility = !mapVisibility }
         )
@@ -383,7 +387,16 @@ fun HomeScreen(
                 contentAlignment = Alignment.Center
             ){
                 Button(
-                    onClick = { },
+                    onClick = {
+
+                        if(started){
+                            navigateToFinishedScreen()
+                            started = false
+                        } else {
+                            started = true
+                        }
+
+                    },
                     shape = RoundedCornerShape(50.dp),
                     colors = ButtonDefaults.buttonColors(
                         contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -393,7 +406,11 @@ fun HomeScreen(
                         .height(100.dp)
                         .width(100.dp)
                 ) {
-                    Text(stringResource(R.string.start).uppercase())
+
+                    val progressButton =
+                        if(started) stringResource(R.string.finish) else stringResource(R.string.start)
+
+                    Text(progressButton.uppercase())
                 }
             }
             Box(
@@ -632,14 +649,22 @@ fun HomeScreen(
                                 fullAngle = 180f,
                                 steps =
                                     if(!intervalMinutesPickerState.selectedItem.isNullOrEmpty()){
-                                        intervalMinutesPickerState.selectedItem.toInt() * 60 / 15
+                                        if(intervalMinutesPickerState.selectedItem.toInt()>10){
+                                            if(intervalMinutesPickerState.selectedItem.toInt()>30){
+                                                intervalMinutesPickerState.selectedItem.toInt() * 60 / 300
+                                            } else {
+                                                intervalMinutesPickerState.selectedItem.toInt() * 60 / 60
+                                            }
+                                        } else {
+                                            intervalMinutesPickerState.selectedItem.toInt() * 60 / 15
+                                        }
+
                                     } else {
                                         1
                                     },
                                 lineWeight = 5.dp,
                                 activeColor = MaterialTheme.colorScheme.primary
                             )
-                            Log.e("HomeScreen",intervalDurationSeekbar.toString())
                             Box(
                                 modifier = Modifier.padding(top = 180.dp)
                             ){

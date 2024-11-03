@@ -56,4 +56,5 @@
     <string name="audio_settings_for_run">Audio settings for run</string>
     <string name="audio_settings_for_walk">Audio settings for walk</string>
     <string name="audio_settings_for_notifications">Audio settings for notifications</string>
+    <string name="finish">Finish</string>
 </resources>
