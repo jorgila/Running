@@ -1,6 +1,7 @@
 package com.estholon.running.ui.screen.home
 
 import android.content.Context
+import android.os.Handler
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -81,9 +82,17 @@ class HomeViewModel @Inject constructor(
     private val _walkIntervalDuration = MutableStateFlow("00:00")
     var walkIntervalDuration : StateFlow<String> = _walkIntervalDuration
 
+    private val _chrono = MutableStateFlow<String>("00:00:00")
+    var chrono : StateFlow<String> = _chrono
+
+    private var mHandler : Handler? = null
+    private var mInterval = 1000
+    private var timeInSeconds = 0L
+
     init {
         getUserInfo()
         setKPI()
+        mHandler = Handler()
     }
 
     fun logout() {
@@ -134,6 +143,34 @@ class HomeViewModel @Inject constructor(
                 1f
             }
         }
+    }
+
+
+    var chronometer: Runnable = object : Runnable {
+        override fun run() {
+            try {
+                timeInSeconds += 1
+                _chrono.value = getFormattedStopWatchUseCase.getFormattedStopWatch(timeInSeconds * 1000 - 1000 * 60 * 60)
+            } finally {
+                mHandler!!.postDelayed(this,mInterval.toLong())
+            }
+        }
+    }
+
+    fun runChrono() {
+        mHandler?.let{
+            chronometer.run()
+        }
+    }
+
+    fun stopChrono() {
+        mHandler!!.removeCallbacks(chronometer)
+    }
+
+    fun resetChrono() {
+
+        timeInSeconds = 0
+        _chrono.value = "00:00:00"
     }
 
 

@@ -1,7 +1,6 @@
 package com.estholon.running.ui.screen.home
 
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -61,6 +61,7 @@ import com.google.maps.android.compose.GoogleMap
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
 import java.text.DecimalFormat
 
+
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
@@ -84,6 +85,8 @@ fun HomeScreen(
     val kilometersKPI = homeViewModel.kmKPI.collectAsState().value
 
     val secondsFromWatch = homeViewModel.secondsFromWatch.collectAsState().value
+
+    val chrono : String = homeViewModel.chrono.collectAsState().value
 
     val runIntervalDuration = homeViewModel.runIntervalDuration.collectAsState().value
     val walkIntervalDuration = homeViewModel.walkIntervalDuration.collectAsState().value
@@ -189,6 +192,10 @@ fun HomeScreen(
         (currentSpeed / recordSpeed).toFloat()
     } else {
         1f
+    }
+
+    var stopped by rememberSaveable {
+        mutableStateOf(true)
     }
 
     var started by rememberSaveable {
@@ -316,7 +323,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "00:00:00",
+                        text = chrono,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Black,
                         textAlign = if(intervalSwitch) TextAlign.End else TextAlign.Center,
@@ -389,11 +396,13 @@ fun HomeScreen(
                 Button(
                     onClick = {
 
-                        if(started){
-                            navigateToFinishedScreen()
-                            started = false
+                        if(!stopped){
+                            stopped = true
+                            homeViewModel.stopChrono()
                         } else {
+                            stopped = false
                             started = true
+                            homeViewModel.runChrono()
                         }
 
                     },
@@ -408,29 +417,33 @@ fun HomeScreen(
                 ) {
 
                     val progressButton =
-                        if(started) stringResource(R.string.finish) else stringResource(R.string.start)
+                        if(!stopped) stringResource(R.string.stop) else stringResource(R.string.start)
 
                     Text(progressButton.uppercase())
                 }
             }
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.padding(top = 70.dp,start=70.dp)
-            ){
-                IconButton(
-                    onClick = { },
-                    colors = IconButtonDefaults.iconButtonColors(
-                        containerColor = White
-                    ),
-                    modifier = Modifier
-                        .height(50.dp)
-                        .width(50.dp)
-                ){
-                    Image(
-                        painter = painterResource(R.drawable.ic_camera),
-                        contentDescription = stringResource(R.string.make_photo),
-                        colorFilter = ColorFilter.tint(Black)
-                    )
+                modifier = Modifier
+                    .padding(top = 70.dp, start = 70.dp)
+                    .height(50.dp)
+                    .width(50.dp)
+            ) {
+                if(!stopped) {
+                    IconButton(
+                        onClick = { },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            containerColor = White
+                        ),
+                        modifier = Modifier
+
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.ic_camera),
+                            contentDescription = stringResource(R.string.make_photo),
+                            colorFilter = ColorFilter.tint(Black)
+                        )
+                    }
                 }
             }
         }
@@ -467,6 +480,7 @@ fun HomeScreen(
                     Switch(
                         checked = goalSwitch,
                         onCheckedChange = { goalSwitch = it },
+                        enabled = if(started) false else true
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -479,7 +493,8 @@ fun HomeScreen(
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if(durationSelected){ MaterialTheme.colorScheme.primary } else { Color.Transparent }
-                                )
+                                ),
+                                enabled = if(started) false else true
                             ) {
                                 Text(
                                     text = stringResource(R.string.duration)
@@ -492,7 +507,8 @@ fun HomeScreen(
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = if(!durationSelected){ MaterialTheme.colorScheme.primary } else { Color.Transparent }
-                                )
+                                ),
+                                enabled = if(started) false else true
                             ) {
                                 Text(
                                     text = stringResource(R.string.distance)
@@ -501,38 +517,40 @@ fun HomeScreen(
                         }
                         Spacer(modifier = Modifier.height(18.dp))
                         if(durationSelected){
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Picker(
-                                    state = hourPickerState,
-                                    items = hour,
-                                    visibleItemsCount = 1,
-                                    modifier = Modifier.weight(1f),
-                                    textModifier = Modifier.padding(8.dp),
-                                    textStyle = TextStyle(fontSize = 32.sp),
-                                    dividerColor = Color(0xFFE8E8E8)
-                                )
-                                Text(":")
-                                Picker(
-                                    state = minutePickerState,
-                                    items = minute,
-                                    visibleItemsCount = 1,
-                                    modifier = Modifier.weight(1f),
-                                    textModifier = Modifier.padding(8.dp),
-                                    textStyle = TextStyle(fontSize = 32.sp),
-                                    dividerColor = Color(0xFFE8E8E8)
-                                )
-                                Text(":")
-                                Picker(
-                                    state = secondPickerState,
-                                    items = second,
-                                    visibleItemsCount = 1,
-                                    modifier = Modifier.weight(1f),
-                                    textModifier = Modifier.padding(8.dp),
-                                    textStyle = TextStyle(fontSize = 32.sp),
-                                    dividerColor = Color(0xFFE8E8E8)
-                                )
+                            if(!started){
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Picker(
+                                        state = hourPickerState,
+                                        items = hour,
+                                        visibleItemsCount = 1,
+                                        modifier = Modifier.weight(1f),
+                                        textModifier = Modifier.padding(8.dp),
+                                        textStyle = TextStyle(fontSize = 32.sp),
+                                        dividerColor = Color(0xFFE8E8E8)
+                                    )
+                                    Text(":")
+                                    Picker(
+                                        state = minutePickerState,
+                                        items = minute,
+                                        visibleItemsCount = 1,
+                                        modifier = Modifier.weight(1f),
+                                        textModifier = Modifier.padding(8.dp),
+                                        textStyle = TextStyle(fontSize = 32.sp),
+                                        dividerColor = Color(0xFFE8E8E8)
+                                    )
+                                    Text(":")
+                                    Picker(
+                                        state = secondPickerState,
+                                        items = second,
+                                        visibleItemsCount = 1,
+                                        modifier = Modifier.weight(1f),
+                                        textModifier = Modifier.padding(8.dp),
+                                        textStyle = TextStyle(fontSize = 32.sp),
+                                        dividerColor = Color(0xFFE8E8E8)
+                                    )
+                                }
                             }
                             Row(
                                 horizontalArrangement = Arrangement.Center
@@ -744,6 +762,28 @@ fun HomeScreen(
         }
     }
 
+
+    if(chrono!="00:00:00"){
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd){
+            FloatingActionButton(
+                onClick = {
+                    navigateToFinishedScreen()
+                    homeViewModel.stopChrono()
+                    homeViewModel.resetChrono()
+                    stopped = true
+                    started = false
+                },
+                modifier = Modifier.fillMaxWidth(),
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Text(
+                    text = stringResource(R.string.finish)
+                )
+            }
+        }
+    }
+
     // LOADING
 
     if(isLoading){
@@ -764,3 +804,4 @@ fun HomeGoogleMaps(){
         .fillMaxWidth()
         .height(300.dp))
 }
+

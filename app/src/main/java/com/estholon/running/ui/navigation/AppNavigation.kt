@@ -214,7 +214,8 @@ fun AppNavigation(
                             decorFitsSystemWindows = true
                         )
                     ){
-                        FinishedScreen()
+                        // TODO
+                        FinishedScreen("00:00:00")
                     }
                 }
             }

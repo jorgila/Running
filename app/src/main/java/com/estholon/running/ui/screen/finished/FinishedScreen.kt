@@ -33,6 +33,7 @@ import com.estholon.running.ui.theme.White
 
 @Composable
 fun FinishedScreen(
+    chrono: String,
     finishedViewModel: FinishedViewModel = hiltViewModel()
 ){
 
