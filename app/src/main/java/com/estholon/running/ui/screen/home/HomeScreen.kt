@@ -568,19 +568,31 @@ fun HomeScreen(
                                 )
                             }
                         } else {
-                            Picker(
-                                state = kilometerPickerState,
-                                items = kilometers,
-                                visibleItemsCount = 1,
-                                textModifier = Modifier.padding(8.dp),
-                                textStyle = TextStyle(fontSize = 32.sp),
-                                dividerColor = Color(0xFFE8E8E8)
-                            )
-                            Text(
-                                text="KM",
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            if(!started){
+                                Picker(
+                                    state = kilometerPickerState,
+                                    items = kilometers,
+                                    visibleItemsCount = 1,
+                                    textModifier = Modifier.padding(8.dp),
+                                    textStyle = TextStyle(fontSize = 32.sp),
+                                    dividerColor = Color(0xFFE8E8E8)
+                                )
+                            }
+                            Row(
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "${kilometerPickerState.selectedItem}",
+                                    modifier = Modifier.weight(1f),
+                                    textAlign = TextAlign.End
+                                )
+                                Text(" | ")
+                                Text(
+                                    text = "KM",
+                                    textAlign = TextAlign.Start,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                         homeViewModel.getSecondsFromWatch(
                             "${if(hourPickerState.selectedItem.isNullOrEmpty()) "00" else hourPickerState.selectedItem}:" +
@@ -594,7 +606,8 @@ fun HomeScreen(
                         ) {
                             Checkbox(
                                 checked = notifyGoalCheck,
-                                onCheckedChange = { notifyGoalCheck = it }
+                                onCheckedChange = { notifyGoalCheck = it },
+                                enabled = if(started) false else true
                             )
                             Text(
                                 text = stringResource(R.string.notify_goal_when_finish)
@@ -606,7 +619,8 @@ fun HomeScreen(
                         ) {
                             Checkbox(
                                 checked = automaticFinishCheck,
-                                onCheckedChange = { automaticFinishCheck = it }
+                                onCheckedChange = { automaticFinishCheck = it },
+                                enabled = if(started) false else true
                             )
                             Text(
                                 text = stringResource(R.string.automatic_run_finish)
@@ -628,6 +642,7 @@ fun HomeScreen(
                     Switch(
                         checked = intervalSwitch,
                         onCheckedChange = { intervalSwitch = it },
+                        enabled = if(started) false else true,
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
@@ -638,13 +653,20 @@ fun HomeScreen(
                             stringResource(R.string.intervals_duration),
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Picker(
-                            state = intervalMinutesPickerState,
-                            items = intervalMinutes,
-                            visibleItemsCount = 1,
-                            textModifier = Modifier.padding(8.dp),
-                            textStyle = TextStyle(fontSize = 32.sp),
-                            dividerColor = Color(0xFFE8E8E8)
+                        if(!started){
+                            Picker(
+                                state = intervalMinutesPickerState,
+                                items = intervalMinutes,
+                                visibleItemsCount = 1,
+                                textModifier = Modifier.padding(8.dp),
+                                textStyle = TextStyle(fontSize = 32.sp),
+                                dividerColor = Color(0xFFE8E8E8)
+                            )
+                        }
+                        Text(
+                            text = "The interval will last ${intervalMinutesPickerState.selectedItem} Minute/s",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                         if(!intervalMinutesPickerState.selectedItem.isNullOrEmpty()){
                             homeViewModel.getRunIntervalDuration(
@@ -662,7 +684,7 @@ fun HomeScreen(
                         ){
                             CircularSeekbarView(
                                 value = intervalDurationSeekbar,
-                                onChange = { intervalDurationSeekbar = it},
+                                onChange = { if(!started){intervalDurationSeekbar = it}},
                                 startAngle = -90f,
                                 fullAngle = 180f,
                                 steps =
@@ -681,7 +703,8 @@ fun HomeScreen(
                                         1
                                     },
                                 lineWeight = 5.dp,
-                                activeColor = MaterialTheme.colorScheme.primary
+                                activeColor = if(started) Color.DarkGray else MaterialTheme.colorScheme.primary,
+                                dotColor = if(started) Color.DarkGray else MaterialTheme.colorScheme.primary
                             )
                             Box(
                                 modifier = Modifier.padding(top = 180.dp)
@@ -751,6 +774,34 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+                var runTrackSliderPosition by rememberSaveable {
+                    mutableStateOf(0f)
+                }
+                var walkTrackSliderPosition by rememberSaveable {
+                    mutableStateOf(0f)
+                }
+                Slider(
+                    value = runTrackSliderPosition,
+                    onValueChange = { },
+                    valueRange = 0f .. 100f
+                )
+                Row {
+                    Text("0:00:00")
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text("1:00:00")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Slider(
+                    value = walkTrackSliderPosition,
+                    onValueChange = { },
+                    valueRange = 0f .. 100f
+                )
+                Row {
+                    Text("0:00:00")
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text("1:00:00")
                 }
             }
         }

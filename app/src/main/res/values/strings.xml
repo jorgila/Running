@@ -53,9 +53,9 @@
     <string name="automatic_run_finish">Automatic run finish</string>
     <string name="duration">Duration</string>
     <string name="run_walk_distribution">Run / Walk distribution</string>
-    <string name="audio_settings_for_run">Audio settings for run</string>
-    <string name="audio_settings_for_walk">Audio settings for walk</string>
-    <string name="audio_settings_for_notifications">Audio settings for notifications</string>
+    <string name="audio_settings_for_run">Volume for run audio</string>
+    <string name="audio_settings_for_walk">Volume for walk audio</string>
+    <string name="audio_settings_for_notifications">Volume for notifications</string>
     <string name="finish">Finish</string>
     <string name="stop">Stop</string>
 </resources>
