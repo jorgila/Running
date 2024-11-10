@@ -88,14 +88,16 @@ fun HomeScreen(
 
     val chrono : String = homeViewModel.chrono.collectAsState().value
 
+    val intervalSwitch = homeViewModel.intervalSwitch.collectAsState().value
+    val intervalDuration = homeViewModel.intervalDuration.collectAsState().value
+    val rounds = homeViewModel.rounds.collectAsState().value
+    val isWalkingInterval = homeViewModel.isWalkingInterval.collectAsState().value
     val runIntervalDuration = homeViewModel.runIntervalDuration.collectAsState().value
     val walkIntervalDuration = homeViewModel.walkIntervalDuration.collectAsState().value
 
-    var mapVisibility by rememberSaveable {
-        mutableStateOf(false)
-    }
+    val runningProgress = homeViewModel.runningProgress.collectAsState().value
 
-    var intervalSwitch by rememberSaveable {
+    var mapVisibility by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -310,14 +312,16 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
+        val intervalColor = if(isWalkingInterval) Color.Blue else Color.Red
         LinearProgressIndicator(
-            progress = { 0.5f },
-            modifier = Modifier.fillMaxWidth()
+            progress = { runningProgress },
+            modifier = Modifier.fillMaxWidth(),
+            color = intervalColor
         )
         Spacer(modifier = Modifier.height(24.dp))
         Box(modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.secondary)){
+            .background(intervalColor)){
             Column {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
@@ -334,7 +338,7 @@ fun HomeScreen(
                     )
                     if(intervalSwitch){
                         Text(
-                            text = "Round 1",
+                            text = "Round $rounds",
                             fontWeight = FontWeight.Black,
                             textAlign = TextAlign.Start,
                             color = MaterialTheme.colorScheme.onSecondary,
@@ -641,7 +645,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     Switch(
                         checked = intervalSwitch,
-                        onCheckedChange = { intervalSwitch = it },
+                        onCheckedChange = { homeViewModel.changeIntervalSwitch() },
                         enabled = if(started) false else true,
                     )
                 }
@@ -662,6 +666,9 @@ fun HomeScreen(
                                 textStyle = TextStyle(fontSize = 32.sp),
                                 dividerColor = Color(0xFFE8E8E8)
                             )
+                        }
+                        if(!intervalMinutesPickerState.selectedItem.isNullOrEmpty()){
+                            homeViewModel.changeIntervalDuration(intervalMinutesPickerState.selectedItem.toString().toLong())
                         }
                         Text(
                             text = "The interval will last ${intervalMinutesPickerState.selectedItem} Minute/s",

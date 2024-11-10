@@ -85,6 +85,25 @@ class HomeViewModel @Inject constructor(
     private val _chrono = MutableStateFlow<String>("00:00:00")
     var chrono : StateFlow<String> = _chrono
 
+    private val _intervalSwitch = MutableStateFlow<Boolean>(false)
+    val intervalSwitch : StateFlow<Boolean> get() = _intervalSwitch
+
+    private val _intervalDuration = MutableStateFlow<Long>(1)
+    val intervalDuration : StateFlow<Long> get() = _intervalDuration
+
+    private val _timeRunning = MutableStateFlow<Long>(0)
+    val timeRunning : StateFlow<Long> get() = _timeRunning
+
+
+    private val _isWalkingInterval = MutableStateFlow<Boolean>(false)
+    val isWalkingInterval : StateFlow<Boolean> get() = _isWalkingInterval
+
+    private val _rounds = MutableStateFlow<Int>(1)
+    val rounds : StateFlow<Int> get() = _rounds
+
+    private val _runningProgress = MutableStateFlow<Float>(0f)
+    var runningProgress : StateFlow<Float> = _runningProgress
+
     private var mHandler : Handler? = null
     private var mInterval = 1000
     private var timeInSeconds = 0L
@@ -149,6 +168,13 @@ class HomeViewModel @Inject constructor(
     var chronometer: Runnable = object : Runnable {
         override fun run() {
             try {
+
+                if(_intervalSwitch.value){
+                    checkStopRun(timeInSeconds)
+                    checkNewRun(timeInSeconds)
+                }
+
+
                 timeInSeconds += 1
                 _chrono.value = getFormattedStopWatchUseCase.getFormattedStopWatch(timeInSeconds * 1000 - 1000 * 60 * 60)
             } finally {
@@ -170,8 +196,55 @@ class HomeViewModel @Inject constructor(
     fun resetChrono() {
 
         timeInSeconds = 0
+        _rounds.value = 1
         _chrono.value = "00:00:00"
     }
 
+    fun changeIntervalSwitch(){
+        _intervalSwitch.value = !_intervalSwitch.value
+    }
+
+    fun changeIntervalDuration(minutes: Long) {
+        _intervalDuration.value = minutes * 60
+    }
+
+    private fun checkStopRun(secs: Long){
+        var seconds : Long = secs
+        while(seconds > _intervalDuration.value) seconds -= _intervalDuration.value
+        _timeRunning.value = getSecondsFromWatchUseCase.getSecondsFromWatch(_runIntervalDuration.value).toLong()
+
+        if(seconds ==_timeRunning.value){
+            _isWalkingInterval.value = true
+        } else {
+            updateProgressBarRound(seconds)
+        }
+    }
+
+    private fun checkNewRun(secs: Long){
+        var seconds : Long = secs
+        if(seconds.toInt() % _intervalDuration.value.toInt() == 0 && secs > 0){
+            _rounds.value++
+            _isWalkingInterval.value = false
+        } else {
+            updateProgressBarRound(seconds)
+        }
+    }
+
+    private fun updateProgressBarRound(secs: Long) {
+
+        var s = secs.toDouble()
+        while(s>=_intervalDuration.value.toDouble()) s-=_intervalDuration.value
+
+        Log.i("HomeViewModel s",s.toString())
+        if(_isWalkingInterval.value){
+            var f = (s + 1 - _timeRunning.value.toDouble()) / (_intervalDuration.value.toDouble()-timeRunning.value.toDouble())
+            _runningProgress.value = f.toFloat()
+        } else {
+            var f = (s + 1) / timeRunning.value.toDouble()
+            _runningProgress.value = f.toFloat()
+        }
+
+
+    }
 
 }
