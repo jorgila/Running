@@ -97,6 +97,18 @@ fun HomeScreen(
 
     val runningProgress = homeViewModel.runningProgress.collectAsState().value
 
+    //// General
+
+    val started = homeViewModel.started.collectAsState().value
+    val stopped = homeViewModel.stopped.collectAsState().value
+
+    //// Volumes
+
+    val notificationVolume = homeViewModel.notificationVolume.collectAsState().value
+    val runVolume = homeViewModel.runVolume.collectAsState().value
+    val walkVolume = homeViewModel.walkVolume.collectAsState().value
+
+
     var mapVisibility by rememberSaveable {
         mutableStateOf(false)
     }
@@ -165,18 +177,6 @@ fun HomeScreen(
         mutableStateOf(false)
     }
 
-    var runVolumeSliderPosition by rememberSaveable {
-        mutableFloatStateOf(70f)
-    }
-
-    var walkVolumeSliderPosition by rememberSaveable {
-        mutableFloatStateOf(70f)
-    }
-
-    var notificationVolumeSliderPosition by rememberSaveable {
-        mutableFloatStateOf(70f)
-    }
-
     var averageSpeedKPI by rememberSaveable {
         mutableStateOf(0f)
     }
@@ -196,13 +196,7 @@ fun HomeScreen(
         1f
     }
 
-    var stopped by rememberSaveable {
-        mutableStateOf(true)
-    }
 
-    var started by rememberSaveable {
-        mutableStateOf(false)
-    }
 
     // LAYOUT
 
@@ -401,11 +395,11 @@ fun HomeScreen(
                     onClick = {
 
                         if(!stopped){
-                            stopped = true
+                            homeViewModel.changeStopped(true)
                             homeViewModel.stopChrono()
                         } else {
-                            stopped = false
-                            started = true
+                            homeViewModel.changeStopped(false)
+                            homeViewModel.changeStarted(true)
                             homeViewModel.runChrono()
                         }
 
@@ -751,8 +745,8 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Slider(
-                            value = runVolumeSliderPosition,
-                            onValueChange = { runVolumeSliderPosition = it },
+                            value = runVolume,
+                            onValueChange = { homeViewModel.changeRunVolume(it) },
                             valueRange = 0f..100f
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -763,8 +757,8 @@ fun HomeScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Slider(
-                                    value = walkVolumeSliderPosition,
-                                    onValueChange = { walkVolumeSliderPosition = it },
+                                    value = walkVolume,
+                                    onValueChange = { homeViewModel.changeWalkVolume(it) },
                                     valueRange = 0f..100f
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -775,8 +769,8 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Slider(
-                            value = notificationVolumeSliderPosition,
-                            onValueChange = { notificationVolumeSliderPosition = it },
+                            value = notificationVolume,
+                            onValueChange = { homeViewModel.changeNotificationVolume(it) },
                             valueRange = 0f..100f
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -828,8 +822,9 @@ fun HomeScreen(
                     navigateToFinishedScreen()
                     homeViewModel.stopChrono()
                     homeViewModel.resetChrono()
-                    stopped = true
-                    started = false
+                    homeViewModel.changeStopped(true)
+                    homeViewModel.changeStarted(false)
+
                 },
                 modifier = Modifier.fillMaxWidth(),
                 containerColor = MaterialTheme.colorScheme.primary,

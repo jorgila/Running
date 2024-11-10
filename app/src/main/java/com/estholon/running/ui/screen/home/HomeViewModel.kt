@@ -1,8 +1,10 @@
 package com.estholon.running.ui.screen.home
 
 import android.content.Context
+import android.media.MediaPlayer
 import android.os.Handler
 import android.util.Log
+import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
@@ -27,6 +29,14 @@ class HomeViewModel @Inject constructor(
     private val getFormattedStopWatchUseCase: GetFormattedStopWatchUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    private val _stopped = MutableStateFlow<Boolean>(true)
+    var stopped : StateFlow<Boolean> = _stopped
+
+    private val _started = MutableStateFlow<Boolean>(false)
+    var started : StateFlow<Boolean> = _started
+
+
 
     private val _isLoading = MutableStateFlow<Boolean>(false)
     var isLoading : StateFlow<Boolean> = _isLoading
@@ -101,6 +111,7 @@ class HomeViewModel @Inject constructor(
     private val _rounds = MutableStateFlow<Int>(1)
     val rounds : StateFlow<Int> get() = _rounds
 
+
     private val _runningProgress = MutableStateFlow<Float>(0f)
     var runningProgress : StateFlow<Float> = _runningProgress
 
@@ -108,10 +119,34 @@ class HomeViewModel @Inject constructor(
     private var mInterval = 1000
     private var timeInSeconds = 0L
 
+
+    private var mpNotify : MediaPlayer? = null
+    private var mpHard : MediaPlayer? = null
+    private var mpSoft : MediaPlayer? = null
+
+    private val _notificationVolume = MutableStateFlow<Float>(70.0f)
+    val notificationVolume : StateFlow<Float> get() = _notificationVolume
+
+    private val _runVolume = MutableStateFlow<Float>(70.0f)
+    val runVolume : StateFlow<Float> get() = _runVolume
+
+    private val _walkVolume = MutableStateFlow<Float>(70.0f)
+    val walkVolume : StateFlow<Float> get() = _walkVolume
+
+
+
     init {
         getUserInfo()
         setKPI()
         mHandler = Handler()
+    }
+
+    private fun setVolumes() {
+        mpNotify?.setVolume(_notificationVolume.value/100.0f, _notificationVolume.value/100.0f)
+        mpSoft?.setVolume(_walkVolume.value/100.0f, _walkVolume.value/100.0f)
+        mpHard?.setVolume(_runVolume.value/100.0f, _runVolume.value/100.0f)
+
+        Log.i("HomeViewModel 1", _walkVolume.value.toString())
     }
 
     fun logout() {
@@ -172,6 +207,8 @@ class HomeViewModel @Inject constructor(
                 if(_intervalSwitch.value){
                     checkStopRun(timeInSeconds)
                     checkNewRun(timeInSeconds)
+                } else {
+                    mpHard?.start()
                 }
 
 
@@ -208,13 +245,34 @@ class HomeViewModel @Inject constructor(
         _intervalDuration.value = minutes * 60
     }
 
+    fun changeNotificationVolume(newPosition: Float) {
+        _notificationVolume.value = newPosition
+        setVolumes()
+    }
+
+    fun changeRunVolume(newPosition: Float) {
+        _runVolume.value = newPosition
+        setVolumes()
+    }
+
+    fun changeWalkVolume(newPosition: Float) {
+        _walkVolume.value = newPosition
+        setVolumes()
+    }
+
+
     private fun checkStopRun(secs: Long){
         var seconds : Long = secs
         while(seconds > _intervalDuration.value) seconds -= _intervalDuration.value
         _timeRunning.value = getSecondsFromWatchUseCase.getSecondsFromWatch(_runIntervalDuration.value).toLong()
 
+
+
         if(seconds ==_timeRunning.value){
             _isWalkingInterval.value = true
+            mpHard?.pause()
+            mpNotify?.start()
+            mpSoft?.start()
         } else {
             updateProgressBarRound(seconds)
         }
@@ -222,12 +280,20 @@ class HomeViewModel @Inject constructor(
 
     private fun checkNewRun(secs: Long){
         var seconds : Long = secs
-        if(seconds.toInt() % _intervalDuration.value.toInt() == 0 && secs > 0){
-            _rounds.value++
-            _isWalkingInterval.value = false
+        if(seconds.toInt() % _intervalDuration.value.toInt() == 0){
+            if(secs > 0){
+                _rounds.value++
+                _isWalkingInterval.value = false
+            }
+            mpSoft?.start()
+            mpSoft?.pause()
+            mpNotify?.start()
+            mpHard?.start()
         } else {
             updateProgressBarRound(seconds)
         }
+
+
     }
 
     private fun updateProgressBarRound(secs: Long) {
@@ -245,6 +311,53 @@ class HomeViewModel @Inject constructor(
         }
 
 
+    }
+
+    fun changeStarted(b: Boolean) {
+        _started.value = b
+        if(_started.value){
+            if(mpNotify==null){
+                initMusic()
+            }
+        } else {
+            mpHard?.stop()
+            mpSoft?.stop()
+            mpNotify?.stop()
+            mpNotify = null
+            mpHard = null
+            mpSoft = null
+        }
+    }
+
+    fun changeStopped(b: Boolean) {
+        _stopped.value = b
+
+        if(_stopped.value){
+            if(_isWalkingInterval.value){
+                mpSoft?.pause()
+            } else {
+                mpHard?.pause()
+            }
+        } else {
+            if(_isWalkingInterval.value){
+                mpSoft?.start()
+            } else {
+                mpHard?.start()
+            }
+        }
+
+
+    }
+
+    private fun initMusic() {
+        mpNotify = MediaPlayer.create(context,R.raw.micmic)
+        mpHard = MediaPlayer.create(context,R.raw.hardmusic)
+        mpSoft = MediaPlayer.create(context,R.raw.softmusic)
+
+        mpHard?.isLooping = true
+        mpSoft?.isLooping = true
+
+        setVolumes()
     }
 
 }
