@@ -133,6 +133,23 @@ class HomeViewModel @Inject constructor(
     private val _walkVolume = MutableStateFlow<Float>(70.0f)
     val walkVolume : StateFlow<Float> get() = _walkVolume
 
+    private val _hardTrack = MutableStateFlow<Float>(0f)
+    val hardTrack : StateFlow<Float> get() = _hardTrack
+
+    private val _hardTrackPosition = MutableStateFlow<String>("00:00:00")
+    val hardTrackPosition : StateFlow<String> get() = _hardTrackPosition
+
+    private val _hardTrackRemaining = MutableStateFlow<String>("00:00:00")
+    val hardTrackRemaining : StateFlow<String> get() = _hardTrackRemaining
+
+    private val _softTrack = MutableStateFlow<Float>(0f)
+    val softTrack : StateFlow<Float> get() = _softTrack
+
+    private val _softTrackPosition = MutableStateFlow<String>("00:00:00")
+    val softTrackPosition : StateFlow<String> get() = _softTrackPosition
+
+    private val _softTrackRemaining = MutableStateFlow<String>("00:00:00")
+    val softTrackRemaining : StateFlow<String> get() = _softTrackRemaining
 
 
     init {
@@ -145,8 +162,6 @@ class HomeViewModel @Inject constructor(
         mpNotify?.setVolume(_notificationVolume.value/100.0f, _notificationVolume.value/100.0f)
         mpSoft?.setVolume(_walkVolume.value/100.0f, _walkVolume.value/100.0f)
         mpHard?.setVolume(_runVolume.value/100.0f, _runVolume.value/100.0f)
-
-        Log.i("HomeViewModel 1", _walkVolume.value.toString())
     }
 
     fun logout() {
@@ -184,25 +199,35 @@ class HomeViewModel @Inject constructor(
 
     fun setKPI(){
         _kilometersKPI.value =
-           if(_recordKilometers.value<_goalKilometers.value){
-            if(_currentKilometers.value < _goalKilometers.value) {
-                (_currentKilometers.value / _goalKilometers.value).toFloat()
+            if(_recordKilometers.value<_goalKilometers.value){
+                if(_currentKilometers.value < _goalKilometers.value) {
+                    (_currentKilometers.value / _goalKilometers.value).toFloat()
+                } else {
+                    1f
+                }
             } else {
-                1f
+                if(_currentKilometers.value < _recordKilometers.value) {
+                    (_currentKilometers.value / _recordKilometers.value).toFloat()
+                } else {
+                    1f
+                }
             }
-        } else {
-            if(_currentKilometers.value < _recordKilometers.value) {
-                (_currentKilometers.value / _recordKilometers.value).toFloat()
-            } else {
-                1f
-            }
-        }
     }
 
 
     var chronometer: Runnable = object : Runnable {
         override fun run() {
             try {
+
+                if(mpHard!!.isPlaying){
+                    _hardTrack.value = (mpHard!!.currentPosition).toFloat() / (mpHard!!.duration-60*60*1000).toFloat()
+                }
+
+                if(mpSoft!!.isPlaying){
+                    _softTrack.value = (mpSoft!!.currentPosition).toFloat() / (mpSoft!!.duration-60*60*1000).toFloat()
+                }
+
+                updateTimesTrack(true,true)
 
                 if(_intervalSwitch.value){
                     checkStopRun(timeInSeconds)
@@ -301,7 +326,6 @@ class HomeViewModel @Inject constructor(
         var s = secs.toDouble()
         while(s>=_intervalDuration.value.toDouble()) s-=_intervalDuration.value
 
-        Log.i("HomeViewModel s",s.toString())
         if(_isWalkingInterval.value){
             var f = (s + 1 - _timeRunning.value.toDouble()) / (_intervalDuration.value.toDouble()-timeRunning.value.toDouble())
             _runningProgress.value = f.toFloat()
@@ -358,6 +382,42 @@ class HomeViewModel @Inject constructor(
         mpSoft?.isLooping = true
 
         setVolumes()
+        updateTimesTrack(true,true)
+    }
+
+    private fun updateTimesTrack(timesH: Boolean, timesS: Boolean){
+        if(timesH){
+            _hardTrackPosition.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.currentPosition-1*60*60*1000).toLong())
+            _hardTrackRemaining.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.duration-1*60*60*1000 - mpHard!!.currentPosition).toLong())
+        }
+        if(timesS){
+            _softTrackPosition.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.currentPosition-1*60*60*1000).toLong())
+            _softTrackRemaining.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.duration-1*60*60*1000- mpSoft!!.currentPosition).toLong())
+        }
+    }
+
+    fun changePositionHardTrack(newPosition: Float) {
+        if (_started.value){
+            if (!_isWalkingInterval.value){
+                mpHard?.pause()
+                mpHard?.seekTo(((mpHard!!.duration-1*60*60*1000)*newPosition).toInt())
+                mpHard?.start()
+
+                updateTimesTrack(true,false)
+            }
+        }
+    }
+
+    fun changePositionSoftTrack(newPosition: Float) {
+        if(_started.value){
+            if(_isWalkingInterval.value){
+                mpSoft?.pause()
+                mpSoft?.seekTo(((mpSoft!!.duration-1*60*60*1000)*newPosition).toInt())
+                mpSoft?.start()
+
+                updateTimesTrack(false,true)
+            }
+        }
     }
 
 }

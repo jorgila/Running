@@ -1,4 +1,4 @@
-package com.estholon.running
+package com.estholon.running.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

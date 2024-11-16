@@ -1,6 +1,7 @@
 package com.estholon.running.ui.screen.home
 
 
+import android.widget.SeekBar
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -107,6 +108,16 @@ fun HomeScreen(
     val notificationVolume = homeViewModel.notificationVolume.collectAsState().value
     val runVolume = homeViewModel.runVolume.collectAsState().value
     val walkVolume = homeViewModel.walkVolume.collectAsState().value
+
+    //// Tracks
+
+    val hardTrack = homeViewModel.hardTrack.collectAsState().value
+    val hardTrackPosition = homeViewModel.hardTrackPosition.collectAsState().value
+    val hardTrackRemaining = homeViewModel.hardTrackRemaining.collectAsState().value
+
+    val softTrack = homeViewModel.softTrack.collectAsState().value
+    val softTrackPosition = homeViewModel.softTrackPosition.collectAsState().value
+    val softTrackRemaining = homeViewModel.softTrackRemaining.collectAsState().value
 
 
     var mapVisibility by rememberSaveable {
@@ -689,20 +700,20 @@ fun HomeScreen(
                                 startAngle = -90f,
                                 fullAngle = 180f,
                                 steps =
-                                    if(!intervalMinutesPickerState.selectedItem.isNullOrEmpty()){
-                                        if(intervalMinutesPickerState.selectedItem.toInt()>10){
-                                            if(intervalMinutesPickerState.selectedItem.toInt()>30){
-                                                intervalMinutesPickerState.selectedItem.toInt() * 60 / 300
-                                            } else {
-                                                intervalMinutesPickerState.selectedItem.toInt() * 60 / 60
-                                            }
+                                if(!intervalMinutesPickerState.selectedItem.isNullOrEmpty()){
+                                    if(intervalMinutesPickerState.selectedItem.toInt()>10){
+                                        if(intervalMinutesPickerState.selectedItem.toInt()>30){
+                                            intervalMinutesPickerState.selectedItem.toInt() * 60 / 300
                                         } else {
-                                            intervalMinutesPickerState.selectedItem.toInt() * 60 / 15
+                                            intervalMinutesPickerState.selectedItem.toInt() * 60 / 60
                                         }
-
                                     } else {
-                                        1
-                                    },
+                                        intervalMinutesPickerState.selectedItem.toInt() * 60 / 15
+                                    }
+
+                                } else {
+                                    1
+                                },
                                 lineWeight = 5.dp,
                                 activeColor = if(started) Color.DarkGray else MaterialTheme.colorScheme.primary,
                                 dotColor = if(started) Color.DarkGray else MaterialTheme.colorScheme.primary
@@ -777,32 +788,29 @@ fun HomeScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
-                var runTrackSliderPosition by rememberSaveable {
-                    mutableStateOf(0f)
-                }
-                var walkTrackSliderPosition by rememberSaveable {
-                    mutableStateOf(0f)
-                }
+
                 Slider(
-                    value = runTrackSliderPosition,
-                    onValueChange = { },
+                    value = hardTrack,
+                    onValueChange = { homeViewModel.changePositionHardTrack(it) },
                     valueRange = 0f .. 100f
                 )
                 Row {
-                    Text("0:00:00")
+                    Text("$hardTrackPosition")
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("1:00:00")
+                    Text("-$hardTrackRemaining")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Slider(
-                    value = walkTrackSliderPosition,
-                    onValueChange = { },
-                    valueRange = 0f .. 100f
-                )
-                Row {
-                    Text("0:00:00")
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text("1:00:00")
+                if(intervalSwitch){
+                    Slider(
+                        value = softTrack,
+                        onValueChange = { homeViewModel.changePositionSoftTrack(it)},
+                        valueRange = 0f .. 100f
+                    )
+                    Row {
+                        Text("$softTrackPosition")
+                        Spacer(modifier = Modifier.weight(1f))
+                        Text("-$softTrackRemaining")
+                    }
                 }
             }
         }
