@@ -188,12 +188,12 @@ class HomeViewModel @Inject constructor(
     }
 
     fun getRunIntervalDuration(interval: Long, intervalDurationSeekbar: Float){
-        val ms = (interval * 1000 * 60 * intervalDurationSeekbar - 60 * 60 * 1000).toLong()
+        val ms = (interval * 1000 * 60 * intervalDurationSeekbar).toLong()
         _runIntervalDuration.value = getFormattedStopWatchUseCase.getFormattedStopWatch(ms)
     }
 
     fun getWalkIntervalDuration(interval: Long, intervalDurationSeekbar: Float){
-        val ms = (interval * 1000 * 60 * (1.0 - intervalDurationSeekbar) - 60 * 60 * 1000).toLong()
+        val ms = (interval * 1000 * 60 * (1.0 - intervalDurationSeekbar)).toLong()
         _walkIntervalDuration.value = getFormattedStopWatchUseCase.getFormattedStopWatch(ms)
     }
 
@@ -220,11 +220,11 @@ class HomeViewModel @Inject constructor(
             try {
 
                 if(mpHard!!.isPlaying){
-                    _hardTrack.value = (mpHard!!.currentPosition).toFloat() / (mpHard!!.duration-60*60*1000).toFloat()
+                    _hardTrack.value = (mpHard!!.currentPosition.toFloat() / mpHard!!.duration.toFloat())*100
                 }
 
                 if(mpSoft!!.isPlaying){
-                    _softTrack.value = (mpSoft!!.currentPosition).toFloat() / (mpSoft!!.duration-60*60*1000).toFloat()
+                    _softTrack.value = (mpSoft!!.currentPosition.toFloat() / mpSoft!!.duration.toFloat())*100
                 }
 
                 updateTimesTrack(true,true)
@@ -235,10 +235,8 @@ class HomeViewModel @Inject constructor(
                 } else {
                     mpHard?.start()
                 }
-
-
                 timeInSeconds += 1
-                _chrono.value = getFormattedStopWatchUseCase.getFormattedStopWatch(timeInSeconds * 1000 - 1000 * 60 * 60)
+                _chrono.value = getFormattedStopWatchUseCase.getFormattedStopWatch(timeInSeconds*1000)
             } finally {
                 mHandler!!.postDelayed(this,mInterval.toLong())
             }
@@ -387,20 +385,21 @@ class HomeViewModel @Inject constructor(
 
     private fun updateTimesTrack(timesH: Boolean, timesS: Boolean){
         if(timesH){
-            _hardTrackPosition.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.currentPosition-1*60*60*1000).toLong())
-            _hardTrackRemaining.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.duration-1*60*60*1000 - mpHard!!.currentPosition).toLong())
+            _hardTrackPosition.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.currentPosition).toLong())
+            _hardTrackRemaining.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.duration - mpHard!!.currentPosition).toLong())
         }
         if(timesS){
-            _softTrackPosition.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.currentPosition-1*60*60*1000).toLong())
-            _softTrackRemaining.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.duration-1*60*60*1000- mpSoft!!.currentPosition).toLong())
+            _softTrackPosition.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.currentPosition).toLong())
+            _softTrackRemaining.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.duration - mpSoft!!.currentPosition).toLong())
         }
     }
 
     fun changePositionHardTrack(newPosition: Float) {
         if (_started.value){
             if (!_isWalkingInterval.value){
+
                 mpHard?.pause()
-                mpHard?.seekTo(((mpHard!!.duration-1*60*60*1000)*newPosition).toInt())
+                mpHard?.seekTo(((mpHard!!.duration.toFloat())*newPosition/100).toInt())
                 mpHard?.start()
 
                 updateTimesTrack(true,false)
@@ -412,7 +411,7 @@ class HomeViewModel @Inject constructor(
         if(_started.value){
             if(_isWalkingInterval.value){
                 mpSoft?.pause()
-                mpSoft?.seekTo(((mpSoft!!.duration-1*60*60*1000)*newPosition).toInt())
+                mpSoft?.seekTo(((mpSoft!!.duration.toFloat())*newPosition/100).toInt())
                 mpSoft?.start()
 
                 updateTimesTrack(false,true)

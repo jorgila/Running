@@ -2,8 +2,6 @@ package com.estholon.running.domain.useCase.others
 
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.text.SimpleDateFormat
-import java.util.Date
 import javax.inject.Inject
 
 class GetFormattedStopWatchUseCase @Inject constructor(
@@ -11,10 +9,15 @@ class GetFormattedStopWatchUseCase @Inject constructor(
 ) {
 
     fun getFormattedStopWatch(ms: Long) : String {
-        val date: Date = Date(ms)
-        val formatter = SimpleDateFormat("HH:mm:ss")
-        return formatter.format(date)
+        return formatTime(ms)
+    }
 
+    private fun formatTime(ms: Long): String = buildString {
+        append("%02d".format(ms / 3600000L))
+        append(":")
+        append("%02d".format((ms % 3600000L) / 60000))
+        append(":")
+        append("%02d".format((ms % 60000) / 1000))
     }
 
 }
