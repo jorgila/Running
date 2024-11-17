@@ -1,9 +1,13 @@
 package com.estholon.running.ui.screen.home
 
 import android.content.Context
+import android.content.Intent
+import android.location.LocationManager
 import android.media.MediaPlayer
 import android.os.Handler
+import android.provider.Settings
 import android.util.Log
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -151,6 +155,12 @@ class HomeViewModel @Inject constructor(
     private val _softTrackRemaining = MutableStateFlow<String>("00:00:00")
     val softTrackRemaining : StateFlow<String> get() = _softTrackRemaining
 
+    private val _showGPSAlertDialog = MutableStateFlow<Boolean>(false)
+    val showGPSAlertDialog : StateFlow<Boolean> get() = _showGPSAlertDialog
+
+    private val _isGPSActivated = MutableStateFlow<Boolean>(true)
+    val isGPSActivated : StateFlow<Boolean> get() = _isGPSActivated
+
 
     init {
         getUserInfo()
@@ -258,6 +268,7 @@ class HomeViewModel @Inject constructor(
         timeInSeconds = 0
         _rounds.value = 1
         _chrono.value = "00:00:00"
+        _isGPSActivated.value = true
     }
 
     fun changeIntervalSwitch(){
@@ -336,7 +347,19 @@ class HomeViewModel @Inject constructor(
     }
 
     fun changeStarted(b: Boolean) {
+
+        if(timeInSeconds==0L && isLocationEnabled()==false){
+            _showGPSAlertDialog.value = true
+        } else {
+            startOrStopRun(b)
+        }
+
+    }
+
+    private fun startOrStopRun(b:Boolean){
+
         _started.value = b
+
         if(_started.value){
             if(mpNotify==null){
                 initMusic()
@@ -349,6 +372,12 @@ class HomeViewModel @Inject constructor(
             mpHard = null
             mpSoft = null
         }
+
+    }
+
+    private fun isLocationEnabled(): Boolean {
+        val locationManager : LocationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
     fun changeStopped(b: Boolean) {
@@ -416,6 +445,31 @@ class HomeViewModel @Inject constructor(
 
                 updateTimesTrack(false,true)
             }
+        }
+    }
+
+    fun executeGPSActivation() {
+        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+        context.startActivity(intent)
+    }
+
+    fun dismissGPSActivation(b: Boolean) {
+
+        _showGPSAlertDialog.value = false
+        _isGPSActivated.value = false
+        _started.value = b
+
+        if(_started.value){
+            if(mpNotify==null){
+                initMusic()
+            }
+        } else {
+            mpHard?.stop()
+            mpSoft?.stop()
+            mpNotify?.stop()
+            mpNotify = null
+            mpHard = null
+            mpSoft = null
         }
     }
 

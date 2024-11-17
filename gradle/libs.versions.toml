@@ -21,6 +21,7 @@ crashlytics = "3.0.2"
 materialIconsExtended = "1.7.5"
 
 mapsCompose = "1.0.0"
+playServicesLocation = "21.3.0"
 playServicesMaps = "19.0.0"
 
 [libraries]
@@ -52,6 +53,7 @@ firebase-firestore = { module = "com.google.firebase:firebase-firestore-ktx"}
 
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended", version.ref = "materialIconsExtended" }
 maps-compose = { module = "com.google.maps.android:maps-compose", version.ref = "mapsCompose" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { module = "com.google.android.gms:play-services-maps", version.ref = "playServicesMaps" }
 
 

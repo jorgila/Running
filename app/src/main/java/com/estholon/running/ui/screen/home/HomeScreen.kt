@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -32,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -118,6 +120,9 @@ fun HomeScreen(
     val softTrack = homeViewModel.softTrack.collectAsState().value
     val softTrackPosition = homeViewModel.softTrackPosition.collectAsState().value
     val softTrackRemaining = homeViewModel.softTrackRemaining.collectAsState().value
+
+    // AlertDialog
+    val showGPSAlertDialog = homeViewModel.showGPSAlertDialog.collectAsState().value
 
 
     var mapVisibility by rememberSaveable {
@@ -856,6 +861,37 @@ fun HomeScreen(
         }
     }
 
+    if(showGPSAlertDialog){
+        AlertDialog(
+            title = {
+                Text("Allow access to location")
+            },
+            text = {
+                Text("If you want to obtain run data like distance or speed, it is necessary to activate the gps")
+            },
+            onDismissRequest = {
+
+            },
+            confirmButton = {
+                TextButton (
+                    onClick = {
+                        homeViewModel.executeGPSActivation()
+                    }
+                ){
+                    Text("Activate")
+                }
+            },
+            dismissButton = {
+                TextButton (
+                    onClick = {
+                        homeViewModel.dismissGPSActivation(started)
+                    }
+                ){
+                    Text("Ignore")
+                }
+            }
+        )
+    }
 
 }
 
