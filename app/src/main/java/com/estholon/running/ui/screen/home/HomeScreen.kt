@@ -1,7 +1,14 @@
 package com.estholon.running.ui.screen.home
 
 
-import android.widget.SeekBar
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -37,7 +44,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -46,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -53,6 +60,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.running.R
 import com.estholon.running.ui.screen.components.Picker
@@ -71,6 +79,10 @@ fun HomeScreen(
     navigateToFinishedScreen: () -> Unit
 ){
 
+    // CONTEXTO
+
+    val context = LocalContext.current
+
     // VARIABLES
 
     val isLoading = homeViewModel.isLoading.collectAsState().value
@@ -85,7 +97,7 @@ fun HomeScreen(
 
     val goalKilometers = homeViewModel.goalKilometers.collectAsState().value
 
-    val kilometersKPI = homeViewModel.kmKPI.collectAsState().value
+    val kilometersKPI = homeViewModel.kilometersKPI.collectAsState().value
 
     val secondsFromWatch = homeViewModel.secondsFromWatch.collectAsState().value
 
@@ -120,10 +132,6 @@ fun HomeScreen(
     val softTrack = homeViewModel.softTrack.collectAsState().value
     val softTrackPosition = homeViewModel.softTrackPosition.collectAsState().value
     val softTrackRemaining = homeViewModel.softTrackRemaining.collectAsState().value
-
-    // AlertDialog
-    val showGPSAlertDialog = homeViewModel.showGPSAlertDialog.collectAsState().value
-
 
     var mapVisibility by rememberSaveable {
         mutableStateOf(false)
@@ -212,7 +220,55 @@ fun HomeScreen(
         1f
     }
 
+    // ALERT DIALOG
 
+    var showAlertDialog by rememberSaveable {
+        mutableStateOf(
+            false
+        )
+    }
+
+    // PERMISSIONS
+
+    var hasFineLocationPermission by rememberSaveable {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    var hasCoarseLocationPermission by rememberSaveable {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher1 = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        showAlertDialog = false
+        if(granted) {
+            hasFineLocationPermission = true
+            homeViewModel.initPermissionGPS()
+        } else {
+            hasFineLocationPermission = false
+        }
+    }
+
+    val permissionLauncher2 = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        showAlertDialog = false
+        if(granted) {
+            hasCoarseLocationPermission = true
+        } else {
+            hasCoarseLocationPermission = false
+        }
+    }
 
     // LAYOUT
 
@@ -414,11 +470,28 @@ fun HomeScreen(
                             homeViewModel.changeStopped(true)
                             homeViewModel.stopChrono()
                         } else {
-                            homeViewModel.changeStopped(false)
-                            homeViewModel.changeStarted(true)
-                            homeViewModel.runChrono()
-                        }
+                            if(hasFineLocationPermission) {
+                                if (CheckLocationServices(context)) {
+                                    homeViewModel.changeLocationStatus(true)
+                                    homeViewModel.changeStopped(false)
+                                    homeViewModel.changeStarted(true)
+                                    homeViewModel.runChrono()
+                                } else {
+                                    showAlertDialog = true
+                                }
+                            } else {
+                                if(hasCoarseLocationPermission){
+                                    permissionLauncher1.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                                } else {
+                                    permissionLauncher2.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
+                                }
+                            }
 
+                            //    homeViewModel.changeLocationStatus(false)
+                            //    homeViewModel.changeStopped(false)
+                            //    homeViewModel.changeStarted(true)
+                            //    homeViewModel.runChrono()
+                        }
                     },
                     shape = RoundedCornerShape(50.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -837,6 +910,7 @@ fun HomeScreen(
                     homeViewModel.resetChrono()
                     homeViewModel.changeStopped(true)
                     homeViewModel.changeStarted(false)
+                    homeViewModel.changeLocationStatus(false)
 
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -861,7 +935,7 @@ fun HomeScreen(
         }
     }
 
-    if(showGPSAlertDialog){
+    if(showAlertDialog){
         AlertDialog(
             title = {
                 Text("Allow access to location")
@@ -870,12 +944,13 @@ fun HomeScreen(
                 Text("If you want to obtain run data like distance or speed, it is necessary to activate the gps")
             },
             onDismissRequest = {
-
+                showAlertDialog = false
             },
             confirmButton = {
                 TextButton (
                     onClick = {
-                        homeViewModel.executeGPSActivation()
+                        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                        context.startActivity(intent)
                     }
                 ){
                     Text("Activate")
@@ -884,7 +959,11 @@ fun HomeScreen(
             dismissButton = {
                 TextButton (
                     onClick = {
-                        homeViewModel.dismissGPSActivation(started)
+                        homeViewModel.changeLocationStatus(false)
+                        homeViewModel.changeStopped(false)
+                        homeViewModel.changeStarted(true)
+                        homeViewModel.runChrono()
+                        showAlertDialog = false
                     }
                 ){
                     Text("Ignore")
@@ -901,4 +980,25 @@ fun HomeGoogleMaps(){
         .fillMaxWidth()
         .height(300.dp))
 }
+
+
+fun isLocationGranted(context: Context) : Boolean {
+
+    return ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+    && ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+}
+
+fun CheckLocationServices(context: Context) : Boolean {
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+}
+
 

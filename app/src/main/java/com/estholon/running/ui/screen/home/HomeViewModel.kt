@@ -1,21 +1,33 @@
 package com.estholon.running.ui.screen.home
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
-import android.content.Intent
-import android.location.LocationManager
+import android.content.pm.PackageManager
+import android.location.Location
 import android.media.MediaPlayer
 import android.os.Handler
-import android.provider.Settings
+import android.os.Looper
 import android.util.Log
-import androidx.core.content.ContextCompat.startActivity
-import androidx.lifecycle.VIEW_MODEL_STORE_OWNER_KEY
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
+import com.estholon.running.common.Constants.INTERVAL_LOCATION
 import com.estholon.running.domain.useCase.authentication.SignOutUseCase
 import com.estholon.running.domain.useCase.others.GetFormattedStopWatchUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetUserInfoUseCase
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +45,14 @@ class HomeViewModel @Inject constructor(
     private val getFormattedStopWatchUseCase: GetFormattedStopWatchUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
+
+    companion object {
+        val REQUIRED_PERMISSIONS_GPS =
+            arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+    }
 
     private val _stopped = MutableStateFlow<Boolean>(true)
     var stopped : StateFlow<Boolean> = _stopped
@@ -83,9 +103,6 @@ class HomeViewModel @Inject constructor(
 
     private val _totalRuns = MutableStateFlow<Int>(0)
     var totalRuns : StateFlow<Int> = _totalRuns
-
-    private val _kilometersKPI = MutableStateFlow<Float>(0f)
-    var kmKPI : StateFlow<Float> = _kilometersKPI
 
     private val _secondsFromWatch = MutableStateFlow<Int>(0)
     var secondsFromWatch : StateFlow<Int> = _secondsFromWatch
@@ -155,17 +172,55 @@ class HomeViewModel @Inject constructor(
     private val _softTrackRemaining = MutableStateFlow<String>("00:00:00")
     val softTrackRemaining : StateFlow<String> get() = _softTrackRemaining
 
-    private val _showGPSAlertDialog = MutableStateFlow<Boolean>(false)
-    val showGPSAlertDialog : StateFlow<Boolean> get() = _showGPSAlertDialog
+    private val _locationStatus = MutableStateFlow<Boolean>(false)
+    val locationStatus : StateFlow<Boolean> get() = _locationStatus
 
-    private val _isGPSActivated = MutableStateFlow<Boolean>(true)
-    val isGPSActivated : StateFlow<Boolean> get() = _isGPSActivated
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
+    private val PERMISSION_ID = 42
+    private var flagSavedLocation = false
+    private var latitude: Double = 0.0
+    private var longitude: Double = 0.0
+    private var init_lt: Double = 0.0
+    private var init_ln: Double = 0.0
+
+    private var distance: Double = 0.0
+    private var maxSpeed: Double = 0.0
+    private var avgSpeed: Double = 0.0
+    private var speed: Double = 0.0
+
+    // KPIs
+
+    private val _kilometersKPI = MutableStateFlow<Float>(0f)
+    var kilometersKPI : StateFlow<Float> = _kilometersKPI
+
+    private val _speedKPI = MutableStateFlow<Float>(0f)
+    var speedKPI : StateFlow<Float> = _speedKPI
+
+    private val _avgSpeedKPI = MutableStateFlow<Float>(0f)
+    var avgSpeedKPI : StateFlow<Float> = _avgSpeedKPI
 
     init {
         getUserInfo()
         setKPI()
         mHandler = Handler()
+        initPermissionGPS()
+    }
+
+    fun initPermissionGPS() {
+        
+        if(allPermissionsGrantedGPS())
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        else
+            requestPermissionLocation()
+    }
+
+    private fun requestPermissionLocation() {
+        _currentKilometers.value = 100.0
+    }
+
+    private fun allPermissionsGrantedGPS() = REQUIRED_PERMISSIONS_GPS.all {
+        ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
 
     private fun setVolumes() {
@@ -224,7 +279,6 @@ class HomeViewModel @Inject constructor(
             }
     }
 
-
     var chronometer: Runnable = object : Runnable {
         override fun run() {
             try {
@@ -239,6 +293,18 @@ class HomeViewModel @Inject constructor(
 
                 updateTimesTrack(true,true)
 
+                if(timeInSeconds==0L){
+                    flagSavedLocation = false
+                    manageLocation()
+                    flagSavedLocation = true
+                    manageLocation()
+                }
+
+                if(
+                    _locationStatus.value &&
+                    timeInSeconds.toInt() % INTERVAL_LOCATION == 0
+                ) manageLocation()
+
                 if(_intervalSwitch.value){
                     checkStopRun(timeInSeconds)
                     checkNewRun(timeInSeconds)
@@ -247,10 +313,128 @@ class HomeViewModel @Inject constructor(
                 }
                 timeInSeconds += 1
                 _chrono.value = getFormattedStopWatchUseCase.getFormattedStopWatch(timeInSeconds*1000)
+
             } finally {
                 mHandler!!.postDelayed(this,mInterval.toLong())
             }
         }
+    }
+
+    private fun manageLocation() {
+        if(checkPermission()){
+            if(CheckLocationServices(context)){
+                if(
+                    ActivityCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_COARSE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == PackageManager.PERMISSION_GRANTED
+                ){
+                    fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                        requestNewLocationData()
+                    }
+                } //else activateLocation()
+            }
+        } else requestPermissionLocation()
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun requestNewLocationData(){
+        var mLocationRequest = LocationRequest()
+        mLocationRequest.priority = Priority.PRIORITY_HIGH_ACCURACY
+        mLocationRequest.interval = 0
+        mLocationRequest.fastestInterval = 0
+        mLocationRequest.numUpdates = 1
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+        fusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback, Looper.myLooper())
+
+    }
+
+    private val mLocationCallback = object: LocationCallback(){
+        override fun onLocationResult(locationResult: LocationResult) {
+
+            if(locationResult!=null) {
+                var mLastLocation : Location = locationResult.lastLocation!!
+                init_lt = mLastLocation.latitude
+                init_ln = mLastLocation.longitude
+
+                if(timeInSeconds > 0) registerNewLocation(mLastLocation)
+
+            }
+        }
+    }
+
+    private fun registerNewLocation(location: Location) {
+        var new_latitude: Double = location.latitude
+        var new_longitude: Double = location.longitude
+
+        if(flagSavedLocation){
+            if (timeInSeconds >= INTERVAL_LOCATION){
+                var distanceInterval = calculateDistance(new_latitude,new_longitude)
+
+                updateSpeeds(distanceInterval)
+                refreshInterfaceData()
+
+            }
+        }
+
+
+    }
+
+    private fun refreshInterfaceData() {
+        _currentKilometers.value = Math.round(distance * 100).toDouble()/100
+        _currentAverageSpeed.value = Math.round(avgSpeed * 10).toDouble()/10
+        _currentSpeed.value = Math.round(speed * 10).toDouble()/10
+
+        Log.i("HomeViewModel Distance",distance.toString())
+        Log.i("HomeViewModel CKm",_currentKilometers.value.toString())
+        Log.i("HomeViewModel avgSpeed",avgSpeed.toString())
+        Log.i("HomeViewModel CAS",_currentAverageSpeed.value.toString())
+        Log.i("HomeViewModel CS",_currentSpeed.value.toString())
+    }
+
+    private fun updateSpeeds(d: Double) {
+        speed = ((d + 1000) / INTERVAL_LOCATION) * 3.6
+        if(speed > maxSpeed) maxSpeed = speed
+        avgSpeed = ((distance*1000)/timeInSeconds) * 3.6
+    }
+
+    private fun calculateDistance(n_lt: Double, n_ln: Double): Double {
+        val radioTierra = 6371.0 // en Kilometros
+
+        val dLat = Math.toRadians(n_lt - latitude)
+        val dLng = Math.toRadians(n_ln - longitude)
+        val sindLat = Math.sin(dLat/2)
+        val sindLng = Math.sin(dLng/2)
+        val va1 =
+            Math.pow(sindLat, 2.0) + (
+                Math.pow(sindLng, 2.0)
+                + Math.cos(Math.toRadians(latitude))
+                + Math.cos(Math.toRadians(n_lt))
+            )
+        Log.i("HomeViewModel va1",va1.toString())
+        val va2 = 2 * Math.atan2(
+            if(va1<0){-Math.sqrt(Math.abs(va1))}else{Math.sqrt(Math.abs(va1))},
+            if(1-va1<0){-Math.sqrt(Math.abs(1-va1))}else{Math.sqrt(Math.abs(1-va1))}
+        )
+        Log.i("HomeViewModel va2",va2.toString())
+        var n_distance = radioTierra + va2
+
+        Log.i("HomeViewModel radioTierra",radioTierra.toString())
+        Log.i("HomeViewModel n_distance",n_distance.toString())
+        //if (n_distance < LIMIT_DISTANCE_ACCEPTED) distance += n_distance
+        Log.i("HomeViewModel n_distance",n_distance.toString())
+        distance += n_distance
+        return n_distance
+    }
+
+    private fun checkPermission() : Boolean {
+        return ContextCompat.checkSelfPermission(context,Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context,Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     fun runChrono() {
@@ -268,31 +452,10 @@ class HomeViewModel @Inject constructor(
         timeInSeconds = 0
         _rounds.value = 1
         _chrono.value = "00:00:00"
-        _isGPSActivated.value = true
+
     }
 
-    fun changeIntervalSwitch(){
-        _intervalSwitch.value = !_intervalSwitch.value
-    }
 
-    fun changeIntervalDuration(minutes: Long) {
-        _intervalDuration.value = minutes * 60
-    }
-
-    fun changeNotificationVolume(newPosition: Float) {
-        _notificationVolume.value = newPosition
-        setVolumes()
-    }
-
-    fun changeRunVolume(newPosition: Float) {
-        _runVolume.value = newPosition
-        setVolumes()
-    }
-
-    fun changeWalkVolume(newPosition: Float) {
-        _walkVolume.value = newPosition
-        setVolumes()
-    }
 
 
     private fun checkStopRun(secs: Long){
@@ -348,16 +511,6 @@ class HomeViewModel @Inject constructor(
 
     fun changeStarted(b: Boolean) {
 
-        if(timeInSeconds==0L && isLocationEnabled()==false){
-            _showGPSAlertDialog.value = true
-        } else {
-            startOrStopRun(b)
-        }
-
-    }
-
-    private fun startOrStopRun(b:Boolean){
-
         _started.value = b
 
         if(_started.value){
@@ -373,11 +526,6 @@ class HomeViewModel @Inject constructor(
             mpSoft = null
         }
 
-    }
-
-    private fun isLocationEnabled(): Boolean {
-        val locationManager : LocationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
     }
 
     fun changeStopped(b: Boolean) {
@@ -423,6 +571,31 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    // CHANGES
+
+    fun changeIntervalSwitch(){
+        _intervalSwitch.value = !_intervalSwitch.value
+    }
+
+    fun changeIntervalDuration(minutes: Long) {
+        _intervalDuration.value = minutes * 60
+    }
+
+    fun changeNotificationVolume(newPosition: Float) {
+        _notificationVolume.value = newPosition
+        setVolumes()
+    }
+
+    fun changeRunVolume(newPosition: Float) {
+        _runVolume.value = newPosition
+        setVolumes()
+    }
+
+    fun changeWalkVolume(newPosition: Float) {
+        _walkVolume.value = newPosition
+        setVolumes()
+    }
+
     fun changePositionHardTrack(newPosition: Float) {
         if (_started.value){
             if (!_isWalkingInterval.value){
@@ -448,29 +621,8 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun executeGPSActivation() {
-        val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
-        context.startActivity(intent)
-    }
-
-    fun dismissGPSActivation(b: Boolean) {
-
-        _showGPSAlertDialog.value = false
-        _isGPSActivated.value = false
-        _started.value = b
-
-        if(_started.value){
-            if(mpNotify==null){
-                initMusic()
-            }
-        } else {
-            mpHard?.stop()
-            mpSoft?.stop()
-            mpNotify?.stop()
-            mpNotify = null
-            mpHard = null
-            mpSoft = null
-        }
+    fun changeLocationStatus(b: Boolean) {
+        _locationStatus.value = b
     }
 
 }
