@@ -301,8 +301,8 @@ class HomeViewModel @Inject constructor(
                 }
 
                 if(
-                    _locationStatus.value &&
-                    timeInSeconds.toInt() % INTERVAL_LOCATION == 0
+                    _locationStatus.value
+                    && timeInSeconds.toInt() % INTERVAL_LOCATION == 0
                 ) manageLocation()
 
                 if(_intervalSwitch.value){
@@ -372,17 +372,20 @@ class HomeViewModel @Inject constructor(
         var new_latitude: Double = location.latitude
         var new_longitude: Double = location.longitude
 
-        if(flagSavedLocation){
-            if (timeInSeconds >= INTERVAL_LOCATION){
-                var distanceInterval = calculateDistance(new_latitude,new_longitude)
+        // if(latitude != new_latitude || longitude != new_longitude){
+            if(flagSavedLocation){
+                if (timeInSeconds >= INTERVAL_LOCATION){
+                    var distanceInterval = calculateDistance(new_latitude,new_longitude)
 
-                updateSpeeds(distanceInterval)
-                refreshInterfaceData()
+                    updateSpeeds(distanceInterval)
+                    refreshInterfaceData()
 
+                }
             }
-        }
+        // }
 
-
+        latitude = new_latitude
+        longitude = new_longitude
     }
 
     private fun refreshInterfaceData() {
@@ -398,9 +401,12 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun updateSpeeds(d: Double) {
-        speed = ((d + 1000) / INTERVAL_LOCATION) * 3.6
+
+        // Se pasa la distancia a metros para calcular los m/s y se convierte a km/h
+
+        speed = ((d * 1000) / INTERVAL_LOCATION) * 3.6
         if(speed > maxSpeed) maxSpeed = speed
-        avgSpeed = ((distance*1000)/timeInSeconds) * 3.6
+        avgSpeed = ((distance * 1000) / timeInSeconds) * 3.6
     }
 
     private fun calculateDistance(n_lt: Double, n_ln: Double): Double {
@@ -413,22 +419,17 @@ class HomeViewModel @Inject constructor(
         val va1 =
             Math.pow(sindLat, 2.0) + (
                 Math.pow(sindLng, 2.0)
-                + Math.cos(Math.toRadians(latitude))
-                + Math.cos(Math.toRadians(n_lt))
+                * Math.cos(Math.toRadians(latitude))
+                * Math.cos(Math.toRadians(n_lt))
             )
-        Log.i("HomeViewModel va1",va1.toString())
         val va2 = 2 * Math.atan2(
-            if(va1<0){-Math.sqrt(Math.abs(va1))}else{Math.sqrt(Math.abs(va1))},
-            if(1-va1<0){-Math.sqrt(Math.abs(1-va1))}else{Math.sqrt(Math.abs(1-va1))}
+            Math.sqrt(va1),
+            Math.sqrt(1-va1)
         )
-        Log.i("HomeViewModel va2",va2.toString())
-        var n_distance = radioTierra + va2
+        var n_distance = radioTierra * va2
 
-        Log.i("HomeViewModel radioTierra",radioTierra.toString())
-        Log.i("HomeViewModel n_distance",n_distance.toString())
-        //if (n_distance < LIMIT_DISTANCE_ACCEPTED) distance += n_distance
-        Log.i("HomeViewModel n_distance",n_distance.toString())
-        distance += n_distance
+        if (n_distance < 100) distance += n_distance
+
         return n_distance
     }
 
@@ -514,6 +515,7 @@ class HomeViewModel @Inject constructor(
         _started.value = b
 
         if(_started.value){
+            refreshInterfaceData()
             if(mpNotify==null){
                 initMusic()
             }
@@ -524,6 +526,9 @@ class HomeViewModel @Inject constructor(
             mpNotify = null
             mpHard = null
             mpSoft = null
+            distance = 0.0
+            avgSpeed = 0.0
+            speed = 0.0
         }
 
     }
