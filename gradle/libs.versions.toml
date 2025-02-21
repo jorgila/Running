@@ -20,9 +20,9 @@ crashlytics = "3.0.2"
 
 materialIconsExtended = "1.7.5"
 
-mapsCompose = "1.0.0"
+mapsCompose = "2.2.0"
 playServicesLocation = "21.3.0"
-playServicesMaps = "19.0.0"
+playServicesMaps = "19.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
