@@ -68,7 +68,9 @@ import com.estholon.running.ui.screen.components.rememberPickerState
 import com.estholon.running.ui.theme.Black
 import com.estholon.running.ui.theme.Grey
 import com.estholon.running.ui.theme.White
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
 import java.text.DecimalFormat
 
@@ -976,9 +978,12 @@ fun HomeScreen(
 
 @Composable
 fun HomeGoogleMaps(){
+    val marker = LatLng(28.270833,-16.63916)
     GoogleMap(modifier = Modifier
         .fillMaxWidth()
-        .height(300.dp))
+        .height(300.dp)){
+        Marker(position = marker, title = "EL TEIDE", snippet = "Aún no te has suscrito")
+    }
 }
 
 
