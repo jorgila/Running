@@ -5,6 +5,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Paint.Align
 import android.location.LocationManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,10 +23,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.SatelliteAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,6 +38,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
@@ -68,6 +74,7 @@ import com.estholon.running.ui.screen.components.rememberPickerState
 import com.estholon.running.ui.theme.Black
 import com.estholon.running.ui.theme.Grey
 import com.estholon.running.ui.theme.White
+import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -129,6 +136,11 @@ fun HomeScreen(
     val notificationVolume = homeViewModel.notificationVolume.collectAsState().value
     val runVolume = homeViewModel.runVolume.collectAsState().value
     val walkVolume = homeViewModel.walkVolume.collectAsState().value
+
+    //// MAP
+
+    val latlng = homeViewModel.latlng.collectAsState().value
+    val mapType = homeViewModel.mapType.collectAsState().value
 
     //// Tracks
 
@@ -425,8 +437,8 @@ fun HomeScreen(
             }
         }
         if(mapVisibility){
-            Box(
-                contentAlignment = Alignment.BottomStart,
+            Row (
+                verticalAlignment = Alignment.Bottom,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
@@ -438,9 +450,30 @@ fun HomeScreen(
                 ) {
                     Text(stringResource(R.string.center).uppercase())
                 }
+                Spacer(modifier = Modifier.weight(1f))
+                Button(
+                    onClick = {
+                        if(mapType == MapType.NORMAL){
+                            homeViewModel.changeMapType(false)
+                        } else {
+                            homeViewModel.changeMapType(true)
+                        }
+                    },
+                    shape = RoundedCornerShape(0.dp),
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    if(mapType == MapType.NORMAL){
+                        Icon(imageVector = Icons.Filled.SatelliteAlt, contentDescription = "Hybrid")
+                    } else {
+                        Icon(imageVector = Icons.Filled.Map, contentDescription = "Normal")
+                    }
+                }
             }
 
-            HomeGoogleMaps()
+            HomeGoogleMaps(
+                latlng,
+                mapType
+            )
 
         }
         HorizontalDivider(modifier = Modifier
@@ -982,17 +1015,18 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeGoogleMaps(){
-    val marker = LatLng(28.270833,-16.63916)
-    val cameraPositionState = rememberCameraPositionState()
-//    val properties by remember { mutableStateOf() }
+fun HomeGoogleMaps(latlng: LatLng, mapType: MapType){
+    val cameraPositionState = rememberCameraPositionState{
+        position = CameraPosition.fromLatLngZoom(latlng, 5f)
+    }
+    val properties by remember { mutableStateOf(MapProperties(mapType = mapType)) }
     GoogleMap(modifier = Modifier
         .fillMaxWidth()
         .height(300.dp),
-        properties = MapProperties(mapType = MapType.HYBRID),
+        properties = properties,
         cameraPositionState = cameraPositionState
     ){
-        Marker(state = MarkerState(position = marker), title = "EL TEIDE", snippet = "Esto es una prueba")
+        Marker(state = MarkerState(position = latlng), title = "EL TEIDE", snippet = "Esto es una prueba")
     }
 }
 

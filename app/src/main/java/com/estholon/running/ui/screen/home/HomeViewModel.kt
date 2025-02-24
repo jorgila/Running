@@ -28,6 +28,8 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.MapType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +37,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.Thread.State
 import javax.inject.Inject
 
 @HiltViewModel
@@ -188,6 +191,14 @@ class HomeViewModel @Inject constructor(
     private var maxSpeed: Double = 0.0
     private var avgSpeed: Double = 0.0
     private var speed: Double = 0.0
+
+    // MAP
+
+    private val _latlng = MutableStateFlow<LatLng>(LatLng(0.0,0.0))
+    val latlng : StateFlow<LatLng> get() = _latlng
+
+    private val _mapType = MutableStateFlow<MapType>(MapType.NORMAL)
+    val mapType : StateFlow<MapType> get() = _mapType
 
     // KPIs
 
@@ -379,7 +390,7 @@ class HomeViewModel @Inject constructor(
 
                     updateSpeeds(distanceInterval)
                     refreshInterfaceData()
-
+                    _latlng.value = LatLng(new_latitude,new_longitude)
                 }
             }
         // }
@@ -629,5 +640,14 @@ class HomeViewModel @Inject constructor(
     fun changeLocationStatus(b: Boolean) {
         _locationStatus.value = b
     }
+
+    fun changeMapType(b:Boolean){
+        if(b){
+            _mapType.value = MapType.NORMAL
+        } else {
+            _mapType.value = MapType.HYBRID
+        }
+    }
+
 
 }
