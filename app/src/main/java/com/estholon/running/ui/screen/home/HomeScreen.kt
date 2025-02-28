@@ -11,6 +11,8 @@ import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -76,6 +78,7 @@ import com.estholon.running.ui.theme.Grey
 import com.estholon.running.ui.theme.White
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
@@ -83,6 +86,7 @@ import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
 import java.text.DecimalFormat
 
@@ -140,7 +144,18 @@ fun HomeScreen(
     //// MAP
 
     val latlng = homeViewModel.latlng.collectAsState().value
+    val markerState = rememberMarkerState(position = latlng)
+
+
     val mapType = homeViewModel.mapType.collectAsState().value
+    val cameraPositionState = rememberCameraPositionState{
+        position = CameraPosition.fromLatLngZoom(latlng, 10f)
+    }
+    var isMapLoaded by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+
 
     //// Tracks
 
@@ -288,6 +303,11 @@ fun HomeScreen(
             hasCoarseLocationPermission = false
         }
     }
+
+
+
+
+
 
     // LAYOUT
 
@@ -453,11 +473,9 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
                     onClick = {
-                        if(mapType == MapType.NORMAL){
-                            homeViewModel.changeMapType(false)
-                        } else {
-                            homeViewModel.changeMapType(true)
-                        }
+
+                        homeViewModel.changeMapType(mapType != MapType.NORMAL)
+
                     },
                     shape = RoundedCornerShape(0.dp),
                     modifier = Modifier.padding(8.dp)
@@ -470,10 +488,42 @@ fun HomeScreen(
                 }
             }
 
-            HomeGoogleMaps(
-                latlng,
-                mapType
-            )
+            Box(modifier = Modifier.fillMaxWidth().height(300.dp)){
+                HomeGoogleMaps(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    mapType = mapType,
+                    onMapLoaded = {
+                        isMapLoaded = true
+                    },
+                    content = {
+                        Marker(state = markerState)
+                    }
+                )
+
+                if(!isMapLoaded){
+
+                    this@Column.AnimatedVisibility(
+                        modifier = Modifier.matchParentSize(),
+                        visible = !isMapLoaded,
+                        enter = EnterTransition.None,
+                        exit = fadeOut()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ){
+                            CircularProgressIndicator(
+                                modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                            )
+                        }
+                    }
+                }
+
+
+
+            }
 
         }
         HorizontalDivider(modifier = Modifier
@@ -1015,18 +1065,20 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeGoogleMaps(latlng: LatLng, mapType: MapType){
-    val cameraPositionState = rememberCameraPositionState{
-        position = CameraPosition.fromLatLngZoom(latlng, 5f)
-    }
+fun HomeGoogleMaps(
+    modifier: Modifier,
+    cameraPositionState: CameraPositionState,
+    mapType: MapType,
+    onMapLoaded:() -> Unit = {},
+    content: @Composable () -> Unit = {}
+){
     val properties by remember { mutableStateOf(MapProperties(mapType = mapType)) }
-    GoogleMap(modifier = Modifier
-        .fillMaxWidth()
-        .height(300.dp),
+    GoogleMap(modifier = modifier,
         properties = properties,
-        cameraPositionState = cameraPositionState
+        cameraPositionState = cameraPositionState,
+        onMapLoaded = onMapLoaded
     ){
-        Marker(state = MarkerState(position = latlng), title = "EL TEIDE", snippet = "Esto es una prueba")
+        content()
     }
 }
 
