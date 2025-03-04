@@ -85,6 +85,7 @@ import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
@@ -498,6 +499,14 @@ fun HomeScreen(
                     },
                     content = {
                         Marker(state = markerState)
+                        Polyline(
+                            points = listOf(
+                                LatLng(1.35,103.87),
+                                LatLng(1.29,103.85),
+                                LatLng(1.30,103.88),
+                                LatLng(1.35,103.87),
+                            )
+                        )
                     }
                 )
 
