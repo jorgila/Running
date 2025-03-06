@@ -33,8 +33,11 @@ import com.google.maps.android.compose.MapType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Thread.State
@@ -649,5 +652,38 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    // GOOGLE MAP
+
+    private val _eventChannel = Channel<HomeViewModelEvent>()
+
+    // Event channel to send events to the UI
+    internal fun getEventChannel() = _eventChannel.receiveAsFlow()
+
+    val coordinates : List<LatLng> = listOf()
+
+    val homeScreenViewState =
+            if (coordinates.isEmpty()) {
+                HomeScreenViewState.Loading
+            } else {
+                val boundingBox = coordinates.toLatLngBounds()
+                HomeScreenViewState.LatLongList(
+                    coordinates = coordinates,
+                    boundingBox = boundingBox
+                )
+            }
+
+    fun onEvent(event: HomeViewModelEvent){
+        when(event){
+            HomeViewModelEvent.OnZoomAll -> onZoomAll()
+        }
+    }
+
+    private fun onZoomAll(){
+        sendScreenEvent(HomeViewModelEvent.OnZoomAll)
+    }
+
+    private fun sendScreenEvent(event: HomeViewModelEvent){
+        viewModelScope.launch { _eventChannel.send(event) }
+    }
 
 }

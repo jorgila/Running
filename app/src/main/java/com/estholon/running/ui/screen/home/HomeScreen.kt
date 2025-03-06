@@ -50,10 +50,12 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -76,8 +78,10 @@ import com.estholon.running.ui.screen.components.rememberPickerState
 import com.estholon.running.ui.theme.Black
 import com.estholon.running.ui.theme.Grey
 import com.estholon.running.ui.theme.White
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
@@ -89,6 +93,8 @@ import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
 
@@ -151,9 +157,6 @@ fun HomeScreen(
     val mapType = homeViewModel.mapType.collectAsState().value
     val cameraPositionState = rememberCameraPositionState{
         position = CameraPosition.fromLatLngZoom(latlng, 10f)
-    }
-    var isMapLoaded by rememberSaveable {
-        mutableStateOf(false)
     }
 
 
@@ -489,14 +492,13 @@ fun HomeScreen(
                 }
             }
 
-            Box(modifier = Modifier.fillMaxWidth().height(300.dp)){
+            Box(modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)){
                 HomeGoogleMaps(
                     modifier = Modifier.fillMaxSize(),
                     cameraPositionState = cameraPositionState,
                     mapType = mapType,
-                    onMapLoaded = {
-                        isMapLoaded = true
-                    },
                     content = {
                         Marker(state = markerState)
                         Polyline(
@@ -510,25 +512,7 @@ fun HomeScreen(
                     }
                 )
 
-                if(!isMapLoaded){
 
-                    this@Column.AnimatedVisibility(
-                        modifier = Modifier.matchParentSize(),
-                        visible = !isMapLoaded,
-                        enter = EnterTransition.None,
-                        exit = fadeOut()
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ){
-                            CircularProgressIndicator(
-                                modifier = Modifier.background(MaterialTheme.colorScheme.background)
-                            )
-                        }
-                    }
-                }
 
 
 
@@ -1078,19 +1062,80 @@ fun HomeGoogleMaps(
     modifier: Modifier,
     cameraPositionState: CameraPositionState,
     mapType: MapType,
-    onMapLoaded:() -> Unit = {},
-    content: @Composable () -> Unit = {}
+    content: @Composable () -> Unit = {},
+    viewState: HomeScreenViewState.LatLongList
 ){
-    val properties by remember { mutableStateOf(MapProperties(mapType = mapType)) }
-    GoogleMap(modifier = modifier,
-        properties = properties,
-        cameraPositionState = cameraPositionState,
-        onMapLoaded = onMapLoaded
-    ){
-        content()
+
+    var isMapLoaded by rememberSaveable {
+        mutableStateOf(false)
     }
+
+    // Create properties with mapType
+    val properties by remember { mutableStateOf(MapProperties(mapType = mapType)) }
+
+    // Create scope
+    val scope = rememberCoroutineScope()
+
+    // Add LaunchedEffect to zoom when the bounding box changes
+    LaunchedEffect(key1 = viewState.boundingBox) {
+        zoomAll(scope, cameraPositionState, viewState.boundingBox)
+    }
+
+    // Google Map View
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ){
+
+        GoogleMap(
+            modifier = modifier,
+            properties = properties,
+            cameraPositionState = cameraPositionState,
+            onMapLoaded = { isMapLoaded = true }
+        ){
+            content()
+        }
+
+        if(!isMapLoaded){
+
+            AnimatedVisibility(
+                modifier = Modifier.matchParentSize(),
+                visible = !isMapLoaded,
+                enter = EnterTransition.None,
+                exit = fadeOut()
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ){
+                    CircularProgressIndicator(
+                        modifier = Modifier.background(MaterialTheme.colorScheme.background)
+                    )
+                }
+            }
+        }
+
+    }
+
+
+
+
+
 }
 
+fun zoomAll(
+    scope: CoroutineScope,
+    cameraPositionState: CameraPositionState,
+    boundingBox: LatLngBounds
+) {
+    scope.launch {
+        cameraPositionState.animate(
+            update = CameraUpdateFactory.newLatLngBounds(boundingBox, 64),
+            durationMs = 1000
+        )
+    }
+}
 
 fun isLocationGranted(context: Context) : Boolean {
 
