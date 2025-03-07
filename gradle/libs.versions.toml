@@ -18,14 +18,19 @@ google-services = "4.4.2"
 firebaseBom = "33.6.0"
 crashlytics = "3.0.2"
 
+lifecycleRuntimeKtxVersion = "2.6.2"
 materialIconsExtended = "1.7.5"
 
 mapsCompose = "2.2.0"
 playServicesLocation = "21.3.0"
 playServicesMaps = "19.1.0"
+runtimeLivedata = "1.7.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-runtime-ktx-v262 = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtxVersion" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
+androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "runtimeLivedata" }
 circular-seek-bar = { module = "io.github.ningyuv:circular-seek-bar", version.ref = "circularSeekBar" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

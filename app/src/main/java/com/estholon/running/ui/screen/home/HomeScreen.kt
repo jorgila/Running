@@ -50,6 +50,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -72,7 +73,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.estholon.running.R
+import com.estholon.running.ui.screen.components.BigSpinner
+import com.estholon.running.ui.screen.components.CoordinatesMap
 import com.estholon.running.ui.screen.components.Picker
 import com.estholon.running.ui.screen.components.rememberPickerState
 import com.estholon.running.ui.theme.Black
@@ -105,8 +109,11 @@ fun HomeScreen(
 ){
 
     // CONTEXTO
-
     val context = LocalContext.current
+
+    // VIEW STATE
+    val screenViewState = homeViewModel.homeScreenViewState.collectAsState()
+    val viewState = screenViewState.value
 
     // VARIABLES
 
@@ -495,26 +502,21 @@ fun HomeScreen(
             Box(modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp)){
-                HomeGoogleMaps(
-                    modifier = Modifier.fillMaxSize(),
-                    cameraPositionState = cameraPositionState,
-                    mapType = mapType,
-                    content = {
-                        Marker(state = markerState)
-                        Polyline(
-                            points = listOf(
-                                LatLng(1.35,103.87),
-                                LatLng(1.29,103.85),
-                                LatLng(1.30,103.88),
-                                LatLng(1.35,103.87),
-                            )
+
+                when(viewState){
+                    HomeScreenViewState.Loading -> BigSpinner()
+                    is HomeScreenViewState.LatLongList -> {
+                        CoordinatesMap(
+                            modifier = Modifier.fillMaxSize(),
+                            cameraPositionState = cameraPositionState,
+                            mapType = mapType,
+                            content = {
+
+                            },
+                            viewState = viewState
                         )
                     }
-                )
-
-
-
-
+                }
 
             }
 
@@ -1057,85 +1059,6 @@ fun HomeScreen(
 
 }
 
-@Composable
-fun HomeGoogleMaps(
-    modifier: Modifier,
-    cameraPositionState: CameraPositionState,
-    mapType: MapType,
-    content: @Composable () -> Unit = {},
-    viewState: HomeScreenViewState.LatLongList
-){
-
-    var isMapLoaded by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    // Create properties with mapType
-    val properties by remember { mutableStateOf(MapProperties(mapType = mapType)) }
-
-    // Create scope
-    val scope = rememberCoroutineScope()
-
-    // Add LaunchedEffect to zoom when the bounding box changes
-    LaunchedEffect(key1 = viewState.boundingBox) {
-        zoomAll(scope, cameraPositionState, viewState.boundingBox)
-    }
-
-    // Google Map View
-
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ){
-
-        GoogleMap(
-            modifier = modifier,
-            properties = properties,
-            cameraPositionState = cameraPositionState,
-            onMapLoaded = { isMapLoaded = true }
-        ){
-            content()
-        }
-
-        if(!isMapLoaded){
-
-            AnimatedVisibility(
-                modifier = Modifier.matchParentSize(),
-                visible = !isMapLoaded,
-                enter = EnterTransition.None,
-                exit = fadeOut()
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ){
-                    CircularProgressIndicator(
-                        modifier = Modifier.background(MaterialTheme.colorScheme.background)
-                    )
-                }
-            }
-        }
-
-    }
-
-
-
-
-
-}
-
-fun zoomAll(
-    scope: CoroutineScope,
-    cameraPositionState: CameraPositionState,
-    boundingBox: LatLngBounds
-) {
-    scope.launch {
-        cameraPositionState.animate(
-            update = CameraUpdateFactory.newLatLngBounds(boundingBox, 64),
-            durationMs = 1000
-        )
-    }
-}
 
 fun isLocationGranted(context: Context) : Boolean {
 

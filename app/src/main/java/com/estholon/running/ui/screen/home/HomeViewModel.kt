@@ -29,6 +29,7 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.MapType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,7 +38,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Thread.State
@@ -654,23 +657,37 @@ class HomeViewModel @Inject constructor(
 
     // GOOGLE MAP
 
+    private val _coordinates = MutableStateFlow(emptyList<LatLng>())
+    val coordinates: StateFlow<List<LatLng>> = _coordinates
+
+    // Whether or not to show all of the high peaks
+    private var showAllCoordinates = MutableStateFlow(true)
+
     private val _eventChannel = Channel<HomeViewModelEvent>()
 
     // Event channel to send events to the UI
     internal fun getEventChannel() = _eventChannel.receiveAsFlow()
 
-    val coordinates : List<LatLng> = listOf()
-
     val homeScreenViewState =
-            if (coordinates.isEmpty()) {
+
+        coordinates.combine(showAllCoordinates){ allCoordinates, showAllCordinates ->
+            if(allCoordinates.isEmpty()){
                 HomeScreenViewState.Loading
             } else {
-                val boundingBox = coordinates.toLatLngBounds()
+                val listOfLatLng = allCoordinates.map { LatLng(it.latitude,it.longitude) }
+                val boundingBox = LatLngBounds.Builder().apply {
+                    listOfLatLng.forEach{ include(it)}
+                }.build()
                 HomeScreenViewState.LatLongList(
-                    coordinates = coordinates,
-                    boundingBox = boundingBox
+                        coordinates = allCoordinates,
+                        boundingBox = boundingBox
                 )
             }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HomeScreenViewState.Loading
+        )
 
     fun onEvent(event: HomeViewModelEvent){
         when(event){
