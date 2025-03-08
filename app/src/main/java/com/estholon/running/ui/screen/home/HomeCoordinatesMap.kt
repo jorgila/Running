@@ -1,4 +1,4 @@
-package com.estholon.running.ui.screen.components
+package com.estholon.running.ui.screen.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -21,7 +21,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.estholon.running.ui.screen.home.HomeScreenViewState
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.CameraPositionState
@@ -32,7 +31,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun CoordinatesMap(
+fun HomeCoordinatesMap(
     modifier: Modifier,
     cameraPositionState: CameraPositionState,
     mapType: MapType,
@@ -45,7 +44,13 @@ fun CoordinatesMap(
     }
 
     // Create properties with mapType
-    val properties by remember { mutableStateOf(MapProperties(mapType = mapType)) }
+    val properties by remember {
+        mutableStateOf(
+            MapProperties(
+                mapType = mapType
+            )
+        )
+    }
 
     // Create scope
     val scope = rememberCoroutineScope()

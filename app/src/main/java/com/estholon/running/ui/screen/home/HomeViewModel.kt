@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Thread.State
@@ -216,6 +217,11 @@ class HomeViewModel @Inject constructor(
 
     private val _avgSpeedKPI = MutableStateFlow<Float>(0f)
     var avgSpeedKPI : StateFlow<Float> = _avgSpeedKPI
+
+    // GOOGLE MAP
+
+    private val _coordinates = MutableStateFlow(emptyList<LatLng>())
+    val coordinates: StateFlow<List<LatLng>> = _coordinates
 
     init {
         getUserInfo()
@@ -396,6 +402,9 @@ class HomeViewModel @Inject constructor(
 
                     updateSpeeds(distanceInterval)
                     refreshInterfaceData()
+                    _coordinates.update {
+                        it + LatLng(new_latitude,new_longitude)
+                    }
                     _latlng.value = LatLng(new_latitude,new_longitude)
                 }
             }
@@ -655,10 +664,7 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    // GOOGLE MAP
-
-    private val _coordinates = MutableStateFlow(emptyList<LatLng>())
-    val coordinates: StateFlow<List<LatLng>> = _coordinates
+    // GOOGLE MAPS
 
     // Whether or not to show all of the high peaks
     private var showAllCoordinates = MutableStateFlow(true)

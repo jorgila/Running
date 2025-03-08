@@ -5,14 +5,11 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Paint.Align
 import android.location.LocationManager
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,7 +22,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,13 +46,10 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -73,32 +66,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.estholon.running.R
 import com.estholon.running.ui.screen.components.BigSpinner
-import com.estholon.running.ui.screen.components.CoordinatesMap
 import com.estholon.running.ui.screen.components.Picker
 import com.estholon.running.ui.screen.components.rememberPickerState
 import com.estholon.running.ui.theme.Black
 import com.estholon.running.ui.theme.Grey
 import com.estholon.running.ui.theme.White
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.LatLngBounds
-import com.google.maps.android.compose.CameraPositionState
-import com.google.maps.android.compose.GoogleMap
-import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
-import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import java.text.DecimalFormat
 
 
@@ -166,7 +146,7 @@ fun HomeScreen(
         position = CameraPosition.fromLatLngZoom(latlng, 10f)
     }
 
-
+    val coordinates = homeViewModel.coordinates.collectAsState().value
 
     //// Tracks
 
@@ -506,12 +486,12 @@ fun HomeScreen(
                 when(viewState){
                     HomeScreenViewState.Loading -> BigSpinner()
                     is HomeScreenViewState.LatLongList -> {
-                        CoordinatesMap(
+                        HomeCoordinatesMap(
                             modifier = Modifier.fillMaxSize(),
                             cameraPositionState = cameraPositionState,
                             mapType = mapType,
                             content = {
-
+                                Polyline(coordinates)
                             },
                             viewState = viewState
                         )
