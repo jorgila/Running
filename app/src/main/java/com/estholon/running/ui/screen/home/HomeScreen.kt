@@ -455,7 +455,10 @@ fun HomeScreen(
                     .height(100.dp)
             ){
                 Button(
-                    onClick = { },
+                    onClick = {
+                        homeViewModel.showAllCoordinates()
+                        homeViewModel.onEvent(HomeViewModelEvent.OnZoomAll)
+                    },
                     shape = RoundedCornerShape(0.dp),
                     modifier = Modifier.padding(8.dp)
                 ) {
@@ -493,7 +496,8 @@ fun HomeScreen(
                             content = {
                                 Polyline(coordinates)
                             },
-                            viewState = viewState
+                            viewState = viewState,
+                            eventFlow = homeViewModel.getEventChannel()
                         )
                     }
                 }

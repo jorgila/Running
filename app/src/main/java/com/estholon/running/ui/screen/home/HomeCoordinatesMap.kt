@@ -28,6 +28,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapType
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,7 +37,8 @@ fun HomeCoordinatesMap(
     cameraPositionState: CameraPositionState,
     mapType: MapType,
     content: @Composable () -> Unit = {},
-    viewState: HomeScreenViewState.LatLongList
+    viewState: HomeScreenViewState.LatLongList,
+    eventFlow: Flow<HomeScreenEvent>
 ){
 
     var isMapLoaded by rememberSaveable {
@@ -58,6 +60,17 @@ fun HomeCoordinatesMap(
     // Add LaunchedEffect to zoom when the bounding box changes
     LaunchedEffect(key1 = viewState.boundingBox) {
         zoomAll(scope, cameraPositionState, viewState.boundingBox)
+    }
+
+    // LaunchedEffect to react to events from the ViewModel
+    LaunchedEffect(true) {
+        eventFlow.collect { event ->
+            when(event){
+                HomeScreenEvent.OnZoomAll -> {
+                    zoomAll(scope, cameraPositionState, viewState.boundingBox)
+                }
+            }
+        }
     }
 
     // Google Map View

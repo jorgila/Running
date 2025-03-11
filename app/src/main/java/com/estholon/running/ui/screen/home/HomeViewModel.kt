@@ -418,12 +418,6 @@ class HomeViewModel @Inject constructor(
         _currentKilometers.value = Math.round(distance * 100).toDouble()/100
         _currentAverageSpeed.value = Math.round(avgSpeed * 10).toDouble()/10
         _currentSpeed.value = Math.round(speed * 10).toDouble()/10
-
-        Log.i("HomeViewModel Distance",distance.toString())
-        Log.i("HomeViewModel CKm",_currentKilometers.value.toString())
-        Log.i("HomeViewModel avgSpeed",avgSpeed.toString())
-        Log.i("HomeViewModel CAS",_currentAverageSpeed.value.toString())
-        Log.i("HomeViewModel CS",_currentSpeed.value.toString())
     }
 
     private fun updateSpeeds(d: Double) {
@@ -667,20 +661,21 @@ class HomeViewModel @Inject constructor(
     // GOOGLE MAPS
 
     // Whether or not to show all of the high peaks
-    private var showAllCoordinates = MutableStateFlow(true)
+    private var showAllCoordinates = MutableStateFlow(false)
 
-    private val _eventChannel = Channel<HomeViewModelEvent>()
+    private val _eventChannel = Channel<HomeScreenEvent>()
 
     // Event channel to send events to the UI
     internal fun getEventChannel() = _eventChannel.receiveAsFlow()
 
     val homeScreenViewState =
 
-        coordinates.combine(showAllCoordinates){ allCoordinates, showAllCordinates ->
+        coordinates.combine(showAllCoordinates){ allCoordinates, showAllCoordinates ->
             if(allCoordinates.isEmpty()){
                 HomeScreenViewState.Loading
             } else {
-                val listOfLatLng = allCoordinates.map { LatLng(it.latitude,it.longitude) }
+
+                val listOfLatLng = if (showAllCoordinates) allCoordinates.map { LatLng(it.latitude,it.longitude) } else allCoordinates.map { LatLng(it.latitude,it.longitude) }
                 val boundingBox = LatLngBounds.Builder().apply {
                     listOfLatLng.forEach{ include(it)}
                 }.build()
@@ -702,11 +697,15 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun onZoomAll(){
-        sendScreenEvent(HomeViewModelEvent.OnZoomAll)
+        sendScreenEvent(HomeScreenEvent.OnZoomAll)
     }
 
-    private fun sendScreenEvent(event: HomeViewModelEvent){
+    private fun sendScreenEvent(event: HomeScreenEvent){
         viewModelScope.launch { _eventChannel.send(event) }
+    }
+
+    fun showAllCoordinates(){
+        showAllCoordinates.value = true
     }
 
 }
