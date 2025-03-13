@@ -663,9 +663,9 @@ class HomeViewModel @Inject constructor(
     // Whether or not to show all of the high peaks
     private var showAllCoordinates = MutableStateFlow(false)
 
+    // Event channel to send events to the UI
     private val _eventChannel = Channel<HomeScreenEvent>()
 
-    // Event channel to send events to the UI
     internal fun getEventChannel() = _eventChannel.receiveAsFlow()
 
     val homeScreenViewState =
@@ -683,6 +683,7 @@ class HomeViewModel @Inject constructor(
                         coordinates = allCoordinates,
                         boundingBox = boundingBox
                 )
+
             }
         }.stateIn(
             scope = viewModelScope,
