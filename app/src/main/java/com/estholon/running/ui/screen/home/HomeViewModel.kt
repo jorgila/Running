@@ -18,6 +18,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
 import com.estholon.running.common.Constants.INTERVAL_LOCATION
+import com.estholon.running.common.Constants.LIMIT_DISTANCE_ACCEPTED
 import com.estholon.running.domain.useCase.authentication.SignOutUseCase
 import com.estholon.running.domain.useCase.others.GetFormattedStopWatchUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
@@ -399,13 +400,14 @@ class HomeViewModel @Inject constructor(
             if(flagSavedLocation){
                 if (timeInSeconds >= INTERVAL_LOCATION){
                     var distanceInterval = calculateDistance(new_latitude,new_longitude)
-
-                    updateSpeeds(distanceInterval)
-                    refreshInterfaceData()
-                    _coordinates.update {
-                        it + LatLng(new_latitude,new_longitude)
+                    if(distanceInterval <= LIMIT_DISTANCE_ACCEPTED) {
+                        updateSpeeds(distanceInterval)
+                        refreshInterfaceData()
+                        _coordinates.update {
+                            it + LatLng(new_latitude,new_longitude)
+                        }
+                        _latlng.value = LatLng(new_latitude,new_longitude)
                     }
-                    _latlng.value = LatLng(new_latitude,new_longitude)
                 }
             }
         // }
