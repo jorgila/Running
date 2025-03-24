@@ -192,6 +192,13 @@ class HomeViewModel @Inject constructor(
     private var flagSavedLocation = false
     private var latitude: Double = 0.0
     private var longitude: Double = 0.0
+    private var minLatitude: Double? = null
+    private var maxLatitude: Double? = null
+    private var minLongitude: Double? = null
+    private var maxLongitude: Double? = null
+    private var minAltitude: Double? = null
+    private var maxAltitude: Double? = null
+
     private var init_lt: Double = 0.0
     private var init_ln: Double = 0.0
 
@@ -414,6 +421,27 @@ class HomeViewModel @Inject constructor(
 
         latitude = new_latitude
         longitude = new_longitude
+
+        if(minLatitude == null){
+            minLatitude = latitude
+            maxLatitude = latitude
+            minLongitude = longitude
+            maxLongitude = longitude
+        }
+
+        if(latitude < minLatitude!!) minLatitude = latitude
+        if(latitude > maxLatitude!!) maxLatitude = latitude
+        if(longitude < minLongitude!!) minLongitude = longitude
+        if(longitude > maxLongitude!!) maxLongitude = longitude
+
+        if(location.hasAltitude()){
+            if(maxAltitude == null){
+                maxAltitude = location.altitude
+                minAltitude = location.altitude
+            }
+            if(location.altitude > maxAltitude!!) maxAltitude = location.altitude
+            if(location.altitude < minAltitude!!) minAltitude = location.altitude
+        }
     }
 
     private fun refreshInterfaceData() {
@@ -450,7 +478,7 @@ class HomeViewModel @Inject constructor(
         )
         var n_distance = radioTierra * va2
 
-        if (n_distance < 100) distance += n_distance
+        if (n_distance < LIMIT_DISTANCE_ACCEPTED) distance += n_distance
 
         return n_distance
     }
@@ -551,6 +579,12 @@ class HomeViewModel @Inject constructor(
             distance = 0.0
             avgSpeed = 0.0
             speed = 0.0
+            minAltitude = null
+            maxAltitude = null
+            minLatitude = null
+            maxLatitude = null
+            minLongitude = null
+            maxLongitude = null
         }
 
     }
