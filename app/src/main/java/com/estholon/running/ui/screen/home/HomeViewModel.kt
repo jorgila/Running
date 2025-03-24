@@ -374,11 +374,15 @@ class HomeViewModel @Inject constructor(
 
     @SuppressLint("MissingPermission")
     private fun requestNewLocationData(){
-        var mLocationRequest = LocationRequest()
-        mLocationRequest.priority = Priority.PRIORITY_HIGH_ACCURACY
-        mLocationRequest.interval = 0
-        mLocationRequest.fastestInterval = 0
-        mLocationRequest.numUpdates = 1
+
+        var mLocationRequest = LocationRequest
+            .Builder(Priority.PRIORITY_HIGH_ACCURACY,0)
+            .setWaitForAccurateLocation(false)
+            .setMinUpdateIntervalMillis(0)
+            .setMaxUpdateDelayMillis(0)
+            .setMaxUpdates(1)
+            .build()
+
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
         fusedLocationClient.requestLocationUpdates(mLocationRequest,mLocationCallback, Looper.myLooper())
@@ -387,14 +391,12 @@ class HomeViewModel @Inject constructor(
 
     private val mLocationCallback = object: LocationCallback(){
         override fun onLocationResult(locationResult: LocationResult) {
-
-            if(locationResult!=null) {
+            locationResult.lastLocation?.let {
                 var mLastLocation : Location = locationResult.lastLocation!!
                 init_lt = mLastLocation.latitude
                 init_ln = mLastLocation.longitude
 
                 if(timeInSeconds > 0) registerNewLocation(mLastLocation)
-
             }
         }
     }
@@ -585,6 +587,7 @@ class HomeViewModel @Inject constructor(
             maxLatitude = null
             minLongitude = null
             maxLongitude = null
+            _coordinates.value = emptyList()
         }
 
     }
