@@ -2,6 +2,7 @@ package com.estholon.running.data.manager
 
 import android.content.Context
 import android.content.SharedPreferences
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 
 object PreferencesManager {
@@ -9,6 +10,10 @@ object PreferencesManager {
     private const val PREFERENCES_NAME = "shared_preferences"
     var sharedPreferences: SharedPreferences? = null
     var sharedPreferencesEditor : SharedPreferences.Editor? = null
+
+    fun resetPreferences() {
+        sharedPreferencesEditor?.clear()?.apply()
+    }
 
     // STRINGS
 

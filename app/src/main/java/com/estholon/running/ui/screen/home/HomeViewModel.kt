@@ -31,6 +31,7 @@ import com.estholon.running.domain.useCase.sharedPreferences.PreferencesGetIntUs
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesPutBooleanUseCase
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesPutFloatUseCase
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesPutIntUseCase
+import com.estholon.running.domain.useCase.sharedPreferences.PreferencesResetUseCase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -68,6 +69,7 @@ class HomeViewModel @Inject constructor(
     private val preferencesPutFloatUseCase: PreferencesPutFloatUseCase,
     private val preferencesGetIntUseCase: PreferencesGetIntUseCase,
     private val preferencesPutIntUseCase: PreferencesPutIntUseCase,
+    private val preferencesResetUseCase: PreferencesResetUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -890,6 +892,14 @@ class HomeViewModel @Inject constructor(
 
     fun showAllCoordinates(){
         showAllCoordinates.value = true
+    }
+
+    fun resetPreferences() : Boolean {
+        var isSuccessful : Boolean = false
+        viewModelScope.launch {
+           isSuccessful = preferencesResetUseCase.resetPreferences()
+        }
+        return isSuccessful
     }
 
 }

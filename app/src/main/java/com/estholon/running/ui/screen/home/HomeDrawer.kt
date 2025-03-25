@@ -1,5 +1,6 @@
 package com.estholon.running.ui.screen.home
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,11 +29,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.Font
@@ -50,7 +58,7 @@ fun HomeDrawer(
     navigateToHistory: () -> Unit,
     homeViewModel: HomeViewModel = hiltViewModel()
 ) {
-
+    val context = LocalContext.current
     val email = homeViewModel.user.collectAsState().value
     val level = homeViewModel.level.collectAsState().value
     val totalRunning = homeViewModel.totalTime.collectAsState().value
@@ -58,6 +66,10 @@ fun HomeDrawer(
     val totalKilometers = homeViewModel.totalKilometers.collectAsState().value
     val currentRuns = homeViewModel.currentRuns.collectAsState().value
     val totalRuns = homeViewModel.totalRuns.collectAsState().value
+
+    var showResetPreferences by rememberSaveable {
+        mutableStateOf(false)
+    }
 
     Box(
         modifier = Modifier
@@ -208,7 +220,7 @@ fun HomeDrawer(
             label = { Text(text = stringResource(R.string.reset_preferences)) },
             selected = false,
             onClick = {
-                /* TODO */
+                showResetPreferences = true
             },
             icon = {
                 Icon(
@@ -234,4 +246,43 @@ fun HomeDrawer(
             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
         )
     }
+
+    if(showResetPreferences){
+        AlertDialog(
+            title = {
+                Text(text = "Reset preferences")
+            },
+            text = {
+                Text(text = "If you continue, you can reset the preferences saved from your last run.")
+            },
+            onDismissRequest = {
+                showResetPreferences = false
+            },
+            confirmButton = {
+                TextButton (
+                    onClick = {
+                        var result : Boolean = false
+                        result = homeViewModel.resetPreferences()
+                        if(result){
+                            Toast.makeText(context,"Reset has been successful",Toast.LENGTH_LONG).show()
+                        }
+                        showResetPreferences = false
+                    }
+                ) {
+                    Text(text="RESET")
+                }
+            },
+            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showResetPreferences = false
+                    }
+                ) {
+                    Text(text="CANCEL")
+                }
+            },
+        )
+    }
 }
+
