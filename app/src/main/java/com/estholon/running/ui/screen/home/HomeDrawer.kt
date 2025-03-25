@@ -250,10 +250,10 @@ fun HomeDrawer(
     if(showResetPreferences){
         AlertDialog(
             title = {
-                Text(text = "Reset preferences")
+                Text(text = stringResource(R.string.reset_preferences))
             },
             text = {
-                Text(text = "If you continue, you can reset the preferences saved from your last run.")
+                Text(text = stringResource(R.string.if_you_continue_you_can_reset_the_preferences_saved_from_your_last_run))
             },
             onDismissRequest = {
                 showResetPreferences = false
@@ -264,22 +264,25 @@ fun HomeDrawer(
                         var result : Boolean = false
                         result = homeViewModel.resetPreferences()
                         if(result){
-                            Toast.makeText(context,"Reset has been successful",Toast.LENGTH_LONG).show()
+                            Toast.makeText(context,
+                                context.getString(R.string.reset_has_been_successful),Toast.LENGTH_LONG).show()
                         }
                         showResetPreferences = false
                     }
                 ) {
-                    Text(text="RESET")
+                    Text(text= stringResource(R.string.reset))
                 }
             },
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
             dismissButton = {
                 TextButton(
                     onClick = {
                         showResetPreferences = false
                     }
                 ) {
-                    Text(text="CANCEL")
+                    Text(text= stringResource(R.string.cancel))
                 }
             },
         )

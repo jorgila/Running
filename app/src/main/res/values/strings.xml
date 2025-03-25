@@ -58,4 +58,8 @@
     <string name="audio_settings_for_notifications">Volume for notifications</string>
     <string name="finish">Finish</string>
     <string name="stop">Stop</string>
+    <string name="reset">RESET</string>
+    <string name="reset_has_been_successful">Reset has been successful</string>
+    <string name="cancel">CANCEL</string>
+    <string name="if_you_continue_you_can_reset_the_preferences_saved_from_your_last_run">If you continue, you can reset the preferences saved from your last run.</string>
 </resources>
