@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.media.MediaPlayer
@@ -19,10 +20,17 @@ import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
 import com.estholon.running.common.Constants.INTERVAL_LOCATION
 import com.estholon.running.common.Constants.LIMIT_DISTANCE_ACCEPTED
+import com.estholon.running.common.SharedPreferencesKeys
 import com.estholon.running.domain.useCase.authentication.SignOutUseCase
 import com.estholon.running.domain.useCase.others.GetFormattedStopWatchUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetUserInfoUseCase
+import com.estholon.running.domain.useCase.sharedPreferences.PreferencesGetBooleanUseCase
+import com.estholon.running.domain.useCase.sharedPreferences.PreferencesGetFloatUseCase
+import com.estholon.running.domain.useCase.sharedPreferences.PreferencesGetIntUseCase
+import com.estholon.running.domain.useCase.sharedPreferences.PreferencesPutBooleanUseCase
+import com.estholon.running.domain.useCase.sharedPreferences.PreferencesPutFloatUseCase
+import com.estholon.running.domain.useCase.sharedPreferences.PreferencesPutIntUseCase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -54,6 +62,12 @@ class HomeViewModel @Inject constructor(
     private val getUserInfoUseCase: GetUserInfoUseCase,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
     private val getFormattedStopWatchUseCase: GetFormattedStopWatchUseCase,
+    private val preferencesGetBooleanUseCase: PreferencesGetBooleanUseCase,
+    private val preferencesPutBooleanUseCase: PreferencesPutBooleanUseCase,
+    private val preferencesGetFloatUseCase: PreferencesGetFloatUseCase,
+    private val preferencesPutFloatUseCase: PreferencesPutFloatUseCase,
+    private val preferencesGetIntUseCase: PreferencesGetIntUseCase,
+    private val preferencesPutIntUseCase: PreferencesPutIntUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -127,11 +141,6 @@ class HomeViewModel @Inject constructor(
     private val _chrono = MutableStateFlow<String>("00:00:00")
     var chrono : StateFlow<String> = _chrono
 
-    private val _intervalSwitch = MutableStateFlow<Boolean>(false)
-    val intervalSwitch : StateFlow<Boolean> get() = _intervalSwitch
-
-    private val _intervalDuration = MutableStateFlow<Long>(1)
-    val intervalDuration : StateFlow<Long> get() = _intervalDuration
 
     private val _timeRunning = MutableStateFlow<Long>(0)
     val timeRunning : StateFlow<Long> get() = _timeRunning
@@ -155,15 +164,6 @@ class HomeViewModel @Inject constructor(
     private var mpNotify : MediaPlayer? = null
     private var mpHard : MediaPlayer? = null
     private var mpSoft : MediaPlayer? = null
-
-    private val _notificationVolume = MutableStateFlow<Float>(70.0f)
-    val notificationVolume : StateFlow<Float> get() = _notificationVolume
-
-    private val _runVolume = MutableStateFlow<Float>(70.0f)
-    val runVolume : StateFlow<Float> get() = _runVolume
-
-    private val _walkVolume = MutableStateFlow<Float>(70.0f)
-    val walkVolume : StateFlow<Float> get() = _walkVolume
 
     private val _hardTrack = MutableStateFlow<Float>(0f)
     val hardTrack : StateFlow<Float> get() = _hardTrack
@@ -231,12 +231,95 @@ class HomeViewModel @Inject constructor(
     private val _coordinates = MutableStateFlow(emptyList<LatLng>())
     val coordinates: StateFlow<List<LatLng>> = _coordinates
 
+    // UI
+
+    //// GOAL SETTINGS
+
+    private val _goalSwitch = MutableStateFlow<Boolean>(false)
+    val goalSwitch: StateFlow<Boolean> = _goalSwitch
+
+    private val _durationSelected = MutableStateFlow<Boolean>(true)
+    val durationSelected: StateFlow<Boolean> = _durationSelected
+
+    private val _hoursGoalDefault = MutableStateFlow<Int>(0)
+    var hoursGoalDefault : StateFlow<Int> = _hoursGoalDefault
+
+    private val _minutesGoalDefault = MutableStateFlow<Int>(0)
+    var minutesGoalDefault : StateFlow<Int> = _minutesGoalDefault
+
+    private val _secondsGoalDefault = MutableStateFlow<Int>(0)
+    var secondsGoalDefault : StateFlow<Int> = _secondsGoalDefault
+
+    private val _kilometersGoalDefault = MutableStateFlow<Int>(0)
+    var kilometersGoalDefault : StateFlow<Int> = _kilometersGoalDefault
+
+
+
+    private val _notifyGoalCheck = MutableStateFlow<Boolean>(false)
+    val notifyGoalCheck : StateFlow<Boolean> get() = _notifyGoalCheck
+
+    private val _automaticFinishCheck = MutableStateFlow<Boolean>(false)
+    val automaticFinishCheck : StateFlow<Boolean> get() = _automaticFinishCheck
+
+    //// INTERVAL SETTINGS
+
+    private val _intervalSwitch = MutableStateFlow<Boolean>(false)
+    val intervalSwitch : StateFlow<Boolean> get() = _intervalSwitch
+
+    private val _intervalDuration = MutableStateFlow<Long>(1)
+    val intervalDuration : StateFlow<Long> get() = _intervalDuration
+
+    private val _intervalDurationSeekbar = MutableStateFlow<Float>(0.5F)
+    val intervalDurationSeekbar : StateFlow<Float> get() = _intervalDurationSeekbar
+
+    private val _intervalDefault = MutableStateFlow<Int>(5)
+    val intervalDefault : StateFlow<Int> get() = _intervalDefault
+
+    //// AUDIO SETTINGS
+
+    private val _audioSwitch = MutableStateFlow<Boolean>(false)
+    val audioSwitch: StateFlow<Boolean> = _audioSwitch
+
+    private val _runVolume = MutableStateFlow<Float>(70.0f)
+    val runVolume : StateFlow<Float> get() = _runVolume
+
+    private val _walkVolume = MutableStateFlow<Float>(70.0f)
+    val walkVolume : StateFlow<Float> get() = _walkVolume
+
+    private val _notificationVolume = MutableStateFlow<Float>(70.0f)
+    val notificationVolume : StateFlow<Float> get() = _notificationVolume
+
+
     init {
         getUserInfo()
         setKPI()
         mHandler = Handler()
         initPermissionGPS()
+        initPreferences()
     }
+
+    fun initPreferences(){
+
+        viewModelScope.launch {
+            _goalSwitch.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_GOAL_SWITCH,false)
+            _durationSelected.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_DURATION_SELECTED,true)
+            _hoursGoalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_HOURS_GOAL_DEFAULT,0)
+            _minutesGoalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_MINUTES_GOAL_DEFAULT,0)
+            _secondsGoalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_SECONDS_GOAL_DEFAULT,0)
+            _kilometersGoalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_KILOMETERS_GOAL_DEFAULT,0)
+            _notifyGoalCheck.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_NOTIFY_GOAL,false)
+            _automaticFinishCheck.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_AUTOMATIC_FINISH, false)
+            _intervalSwitch.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_INTERVAL_SWITCH, false)
+            _intervalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_INTERVAL_DEFAULT, 5)
+            _intervalDurationSeekbar.value = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_INTERVAL_DURATION_SEEKBAR, 0.5F)
+            _audioSwitch.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_AUDIO_SWITCH, false)
+            _runVolume.value = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_RUN_VOLUME, 70.0F)
+            _walkVolume.value = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_WALK_VOLUME, 70.0F)
+            _notificationVolume.value = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME, 70.0F)
+        }
+
+    }
+
 
     fun initPermissionGPS() {
         
@@ -279,17 +362,18 @@ class HomeViewModel @Inject constructor(
     }
 
     fun getSecondsFromWatch(watch: String) {
-
         _secondsFromWatch.value = getSecondsFromWatchUseCase.getSecondsFromWatch(watch)
     }
 
-    fun getRunIntervalDuration(interval: Long, intervalDurationSeekbar: Float){
-        val ms = (interval * 1000 * 60 * intervalDurationSeekbar).toLong()
+    fun getRunIntervalDuration(interval: Long, seekbar: Float){
+        // TODO: Redondear de 15 en 15 segundos
+        val ms = (interval * 1000 * 60 * seekbar).toLong()
         _runIntervalDuration.value = getFormattedStopWatchUseCase.getFormattedStopWatch(ms)
     }
 
-    fun getWalkIntervalDuration(interval: Long, intervalDurationSeekbar: Float){
-        val ms = (interval * 1000 * 60 * (1.0 - intervalDurationSeekbar)).toLong()
+    fun getWalkIntervalDuration(interval: Long, seekbar: Float){
+        // TODO: Redondear de 15 en 15 segundos
+        val ms = (interval * 1000 * 60 * (1.0 - seekbar)).toLong()
         _walkIntervalDuration.value = getFormattedStopWatchUseCase.getFormattedStopWatch(ms)
     }
 
@@ -571,6 +655,25 @@ class HomeViewModel @Inject constructor(
             if(mpNotify==null){
                 initMusic()
             }
+
+            viewModelScope.launch {
+                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_GOAL_SWITCH,_goalSwitch.value)
+                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_DURATION_SELECTED,_durationSelected.value)
+                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_HOURS_GOAL_DEFAULT,_hoursGoalDefault.value)
+                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_MINUTES_GOAL_DEFAULT,_minutesGoalDefault.value)
+                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_SECONDS_GOAL_DEFAULT,_secondsGoalDefault.value)
+                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_KILOMETERS_GOAL_DEFAULT,_kilometersGoalDefault.value)
+                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_NOTIFY_GOAL,_notifyGoalCheck.value)
+                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_AUTOMATIC_FINISH,_automaticFinishCheck.value)
+                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_INTERVAL_SWITCH,_intervalSwitch.value)
+                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_INTERVAL_DEFAULT,_intervalDefault.value)
+                preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_INTERVAL_DURATION_SEEKBAR,_intervalDurationSeekbar.value)
+                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_AUDIO_SWITCH,_audioSwitch.value)
+                preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_RUN_VOLUME,_runVolume.value)
+                preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_WALK_VOLUME,_walkVolume.value)
+                preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME,_notificationVolume.value)
+            }
+
         } else {
             mpHard?.stop()
             mpSoft?.stop()
@@ -637,29 +740,6 @@ class HomeViewModel @Inject constructor(
 
     // CHANGES
 
-    fun changeIntervalSwitch(){
-        _intervalSwitch.value = !_intervalSwitch.value
-    }
-
-    fun changeIntervalDuration(minutes: Long) {
-        _intervalDuration.value = minutes * 60
-    }
-
-    fun changeNotificationVolume(newPosition: Float) {
-        _notificationVolume.value = newPosition
-        setVolumes()
-    }
-
-    fun changeRunVolume(newPosition: Float) {
-        _runVolume.value = newPosition
-        setVolumes()
-    }
-
-    fun changeWalkVolume(newPosition: Float) {
-        _walkVolume.value = newPosition
-        setVolumes()
-    }
-
     fun changePositionHardTrack(newPosition: Float) {
         if (_started.value){
             if (!_isWalkingInterval.value){
@@ -695,6 +775,70 @@ class HomeViewModel @Inject constructor(
         } else {
             _mapType.value = MapType.HYBRID
         }
+    }
+
+    fun changeGoalSwitch(b: Boolean) {
+        _goalSwitch.value = b
+    }
+
+    fun changeDurationSelected(b: Boolean) {
+        _durationSelected.value = b
+    }
+
+    fun changeHoursGoalDefault(i: Int) {
+        _hoursGoalDefault.value = i
+    }
+
+    fun changeMinutesGoalDefault(i: Int) {
+        _minutesGoalDefault.value = i
+    }
+
+    fun changeSecondsGoalDefault(i: Int) {
+        _secondsGoalDefault.value = i
+    }
+
+    fun changeKilometersGoalDefault(i: Int) {
+        _kilometersGoalDefault.value = i
+    }
+
+    fun changeNotifyGoalCheck(b: Boolean) {
+        _notifyGoalCheck.value = b
+    }
+
+    fun changeAutomaticFinishCheck(b: Boolean) {
+        _automaticFinishCheck.value = b
+    }
+
+    fun changeIntervalSwitch(b: Boolean){
+        _intervalSwitch.value = b
+    }
+
+    fun changeIntervalDuration(minutes: Long) {
+        _intervalDuration.value = minutes * 60
+        _intervalDefault.value = minutes.toInt() - 1
+    }
+
+    fun changeIntervalDurationSeekbar(f: Float) {
+        _intervalDurationSeekbar.value = f
+    }
+
+    fun changeAudioSwitch(b: Boolean) {
+        _audioSwitch.value = b
+    }
+
+    fun changeNotificationVolume(newPosition: Float) {
+        _notificationVolume.value = newPosition
+        setVolumes()
+    }
+
+    fun changeRunVolume(newPosition: Float) {
+        _runVolume.value = newPosition
+        setVolumes()
+    }
+
+    fun changeWalkVolume(newPosition: Float) {
+        _walkVolume.value = newPosition
+        setVolumes()
     }
 
     // GOOGLE MAPS

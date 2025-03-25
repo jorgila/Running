@@ -79,6 +79,8 @@ import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import java.text.DecimalFormat
 
 
@@ -115,12 +117,36 @@ fun HomeScreen(
 
     val chrono : String = homeViewModel.chrono.collectAsState().value
 
+    // GOAL SETTINGS
+
+    val goalSwitch = homeViewModel.goalSwitch.collectAsState().value
+    val durationSelected = homeViewModel.durationSelected.collectAsState().value
+    var hoursGoalDefault = homeViewModel.hoursGoalDefault.collectAsState().value
+    var minutesGoalDefault = homeViewModel.minutesGoalDefault.collectAsState().value
+    var secondsGoalDefault = homeViewModel.secondsGoalDefault.collectAsState().value
+    var kilometersGoalDefault = homeViewModel.kilometersGoalDefault.collectAsState().value
+    val notifyGoalCheck = homeViewModel.notifyGoalCheck.collectAsState().value
+    val automaticFinishCheck = homeViewModel.automaticFinishCheck.collectAsState().value
+
+    // INTERVAL SETTINGS
+
     val intervalSwitch = homeViewModel.intervalSwitch.collectAsState().value
     val intervalDuration = homeViewModel.intervalDuration.collectAsState().value
+    val intervalDefault = homeViewModel.intervalDefault.collectAsState().value
+    val intervalDurationSeekbar = homeViewModel.intervalDurationSeekbar.collectAsState().value
     val rounds = homeViewModel.rounds.collectAsState().value
     val isWalkingInterval = homeViewModel.isWalkingInterval.collectAsState().value
     val runIntervalDuration = homeViewModel.runIntervalDuration.collectAsState().value
     val walkIntervalDuration = homeViewModel.walkIntervalDuration.collectAsState().value
+
+    //// AUDIO SETTINGS
+
+    val audioSwitch = homeViewModel.audioSwitch.collectAsState().value
+    val runVolume = homeViewModel.runVolume.collectAsState().value
+    val walkVolume = homeViewModel.walkVolume.collectAsState().value
+    val notificationVolume = homeViewModel.notificationVolume.collectAsState().value
+
+
 
     val runningProgress = homeViewModel.runningProgress.collectAsState().value
 
@@ -129,11 +155,6 @@ fun HomeScreen(
     val started = homeViewModel.started.collectAsState().value
     val stopped = homeViewModel.stopped.collectAsState().value
 
-    //// Volumes
-
-    val notificationVolume = homeViewModel.notificationVolume.collectAsState().value
-    val runVolume = homeViewModel.runVolume.collectAsState().value
-    val walkVolume = homeViewModel.walkVolume.collectAsState().value
 
     //// MAP
 
@@ -160,10 +181,6 @@ fun HomeScreen(
 
     var mapVisibility by rememberSaveable {
         mutableStateOf(false)
-    }
-
-    var intervalDurationSeekbar by rememberSaveable {
-        mutableStateOf(0.5f)
     }
 
     val intervalMinutes = remember {
@@ -205,26 +222,6 @@ fun HomeScreen(
     }
 
     val kilometerPickerState = rememberPickerState()
-
-    var goalSwitch by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    var durationSelected by rememberSaveable {
-        mutableStateOf(true)
-    }
-
-    var notifyGoalCheck by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    var automaticFinishCheck by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    var audioSwitch by rememberSaveable {
-        mutableStateOf(false)
-    }
 
     var averageSpeedKPI by rememberSaveable {
         mutableStateOf(0f)
@@ -635,7 +632,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     Switch(
                         checked = goalSwitch,
-                        onCheckedChange = { goalSwitch = it },
+                        onCheckedChange = { homeViewModel.changeGoalSwitch(it) },
                         enabled = if(started) false else true
                     )
                 }
@@ -644,7 +641,7 @@ fun HomeScreen(
                     Column {
                         Row {
                             Button(
-                                onClick = { durationSelected = true },
+                                onClick = { homeViewModel.changeDurationSelected(true)},
                                 shape = RoundedCornerShape(0),
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(
@@ -658,7 +655,7 @@ fun HomeScreen(
                             }
                             Spacer(modifier = Modifier.width(10.dp))
                             Button(
-                                onClick = { durationSelected = false },
+                                onClick = { homeViewModel.changeDurationSelected(false) },
                                 shape = RoundedCornerShape(0),
                                 modifier = Modifier.weight(1f),
                                 colors = ButtonDefaults.buttonColors(
@@ -680,6 +677,7 @@ fun HomeScreen(
                                     Picker(
                                         state = hourPickerState,
                                         items = hour,
+                                        startIndex = hoursGoalDefault,
                                         visibleItemsCount = 1,
                                         modifier = Modifier.weight(1f),
                                         textModifier = Modifier.padding(8.dp),
@@ -690,6 +688,7 @@ fun HomeScreen(
                                     Picker(
                                         state = minutePickerState,
                                         items = minute,
+                                        startIndex = minutesGoalDefault,
                                         visibleItemsCount = 1,
                                         modifier = Modifier.weight(1f),
                                         textModifier = Modifier.padding(8.dp),
@@ -700,6 +699,7 @@ fun HomeScreen(
                                     Picker(
                                         state = secondPickerState,
                                         items = second,
+                                        startIndex = secondsGoalDefault,
                                         visibleItemsCount = 1,
                                         modifier = Modifier.weight(1f),
                                         textModifier = Modifier.padding(8.dp),
@@ -707,6 +707,16 @@ fun HomeScreen(
                                         dividerColor = Color(0xFFE8E8E8)
                                     )
                                 }
+                                if(!hourPickerState.selectedItem.isNullOrEmpty()){
+                                    homeViewModel.changeHoursGoalDefault(hourPickerState.selectedItem.toInt())
+                                }
+                                if(!minutePickerState.selectedItem.isNullOrEmpty()){
+                                    homeViewModel.changeMinutesGoalDefault(minutePickerState.selectedItem.toInt())
+                                }
+                                if(!secondPickerState.selectedItem.isNullOrEmpty()){
+                                    homeViewModel.changeSecondsGoalDefault(secondPickerState.selectedItem.toInt())
+                                }
+
                             }
                             Row(
                                 horizontalArrangement = Arrangement.Center
@@ -728,11 +738,16 @@ fun HomeScreen(
                                 Picker(
                                     state = kilometerPickerState,
                                     items = kilometers,
+                                    startIndex = kilometersGoalDefault,
                                     visibleItemsCount = 1,
                                     textModifier = Modifier.padding(8.dp),
                                     textStyle = TextStyle(fontSize = 32.sp),
                                     dividerColor = Color(0xFFE8E8E8)
                                 )
+
+                                if(!kilometerPickerState.selectedItem.isNullOrEmpty()){
+                                    homeViewModel.changeKilometersGoalDefault(kilometerPickerState.selectedItem.toInt())
+                                }
                             }
                             Row(
                                 horizontalArrangement = Arrangement.Center
@@ -762,7 +777,7 @@ fun HomeScreen(
                         ) {
                             Checkbox(
                                 checked = notifyGoalCheck,
-                                onCheckedChange = { notifyGoalCheck = it },
+                                onCheckedChange = { homeViewModel.changeNotifyGoalCheck(it) },
                                 enabled = if(started) false else true
                             )
                             Text(
@@ -775,7 +790,7 @@ fun HomeScreen(
                         ) {
                             Checkbox(
                                 checked = automaticFinishCheck,
-                                onCheckedChange = { automaticFinishCheck = it },
+                                onCheckedChange = { homeViewModel.changeAutomaticFinishCheck(it) },
                                 enabled = if(started) false else true
                             )
                             Text(
@@ -797,7 +812,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     Switch(
                         checked = intervalSwitch,
-                        onCheckedChange = { homeViewModel.changeIntervalSwitch() },
+                        onCheckedChange = { homeViewModel.changeIntervalSwitch(it) },
                         enabled = if(started) false else true,
                     )
                 }
@@ -813,12 +828,14 @@ fun HomeScreen(
                             Picker(
                                 state = intervalMinutesPickerState,
                                 items = intervalMinutes,
+                                startIndex = intervalDefault,
                                 visibleItemsCount = 1,
                                 textModifier = Modifier.padding(8.dp),
                                 textStyle = TextStyle(fontSize = 32.sp),
                                 dividerColor = Color(0xFFE8E8E8)
                             )
                         }
+
                         if(!intervalMinutesPickerState.selectedItem.isNullOrEmpty()){
                             homeViewModel.changeIntervalDuration(intervalMinutesPickerState.selectedItem.toString().toLong())
                         }
@@ -843,7 +860,9 @@ fun HomeScreen(
                         ){
                             CircularSeekbarView(
                                 value = intervalDurationSeekbar,
-                                onChange = { if(!started){intervalDurationSeekbar = it}},
+                                onChange = { if(!started){
+                                    homeViewModel.changeIntervalDurationSeekbar(it)
+                                } },
                                 startAngle = -90f,
                                 fullAngle = 180f,
                                 steps =
@@ -891,7 +910,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     Switch(
                         checked = audioSwitch,
-                        onCheckedChange = { audioSwitch = it },
+                        onCheckedChange = { homeViewModel.changeAudioSwitch(it) },
                     )
                 }
                 AnimatedVisibility(audioSwitch){

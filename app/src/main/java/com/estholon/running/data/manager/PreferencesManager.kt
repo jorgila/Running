@@ -3,20 +3,12 @@ package com.estholon.running.data.manager
 import android.content.Context
 import android.content.SharedPreferences
 
+
 object PreferencesManager {
 
     private const val PREFERENCES_NAME = "shared_preferences"
-    private var sharedPreferences: SharedPreferences? = null
-    private var sharedPreferencesEditor : SharedPreferences.Editor? = null
-
-    fun init(context: Context){
-        if (sharedPreferences==null){
-            sharedPreferences = context.getSharedPreferences(PREFERENCES_NAME,Context.MODE_PRIVATE)
-        }
-        if (sharedPreferencesEditor==null){
-            sharedPreferencesEditor = sharedPreferences?.edit()
-        }
-    }
+    var sharedPreferences: SharedPreferences? = null
+    var sharedPreferencesEditor : SharedPreferences.Editor? = null
 
     // STRINGS
 
@@ -34,7 +26,7 @@ object PreferencesManager {
         sharedPreferencesEditor?.putInt(key,value)?.apply()
     }
 
-    fun getString(key: String, defaultValue: Int = 0) : Int {
+    fun getInt(key: String, defaultValue: Int = 0) : Int {
         return sharedPreferences?.getInt(key,defaultValue) ?: defaultValue
     }
 

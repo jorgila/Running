@@ -9,6 +9,5 @@ class RunningApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        PreferencesManager.init(applicationContext)
     }
 }
