@@ -215,7 +215,10 @@ fun AppNavigation(
                         )
                     ){
                         // TODO
-                        FinishedScreen("00:00:00")
+                        FinishedScreen(
+                            chrono = "00:00:00",
+                            dismissDialog = { navController.popBackStack() }
+                        )
                     }
                 }
             }

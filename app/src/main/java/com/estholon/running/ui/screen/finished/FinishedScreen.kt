@@ -12,6 +12,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Camera
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Text
@@ -34,6 +43,7 @@ import com.estholon.running.ui.theme.White
 @Composable
 fun FinishedScreen(
     chrono: String,
+    dismissDialog: () -> Unit,
     finishedViewModel: FinishedViewModel = hiltViewModel()
 ){
 
@@ -49,6 +59,14 @@ fun FinishedScreen(
         .width(400.dp)
         .background(MaterialTheme.colorScheme.primary)
     ) {
+        Row {
+            Spacer(modifier = Modifier.weight(1f))
+            IconButton(
+                onClick = dismissDialog
+            ) {
+                Icon(imageVector = Icons.Filled.Close, contentDescription = "Close", modifier = Modifier.padding(8.dp))
+            }
+        }
         Spacer(modifier = Modifier.height(8.dp))
         Row {
             Column(modifier = Modifier
@@ -183,6 +201,52 @@ fun FinishedScreen(
                     )
                 }
             }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(modifier = Modifier
+            .background(MaterialTheme.colorScheme.secondary)
+            .fillMaxWidth()
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = {},
+                colors = ButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                ),
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Text(text = "Eliminar")
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = {},
+                colors = ButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                ),
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Icon(imageVector = Icons.Filled.CameraAlt, contentDescription = "Camera")
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = {},
+                colors = ButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer
+                ),
+                modifier = Modifier.padding(20.dp)
+            ) {
+                Icon(imageVector = Icons.Filled.Share, contentDescription = "Share")
+            }
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
 }
