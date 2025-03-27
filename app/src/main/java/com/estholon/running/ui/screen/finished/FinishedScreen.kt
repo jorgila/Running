@@ -43,6 +43,16 @@ import com.estholon.running.ui.theme.White
 @Composable
 fun FinishedScreen(
     chrono: String,
+    durationGoal: String,
+    intervalDuration: String,
+    runIntervalDuration: String,
+    walkIntervalDuration: String,
+    distance: String,
+    distanceGoal: String,
+    minAltitude: String,
+    maxAltitude: String,
+    avgSpeed: String,
+    maxSpeed: String,
     dismissDialog: () -> Unit,
     finishedViewModel: FinishedViewModel = hiltViewModel()
 ){
@@ -153,13 +163,13 @@ fun FinishedScreen(
             ) {
                 Text(stringResource(R.string.duration))
                 Text(
-                    text = "00:00:00",
+                    text = chrono,
                     fontSize = 32.sp
                 )
                 Text("Goal")
-                Text("00:00:00")
+                Text(durationGoal)
                 Text("Intervals")
-                Text("0 (00:00 / 00:00)")
+                Text("$intervalDuration ($runIntervalDuration / $walkIntervalDuration)")
             }
             Spacer(modifier = Modifier.width(8.dp))
             Column(
@@ -174,13 +184,13 @@ fun FinishedScreen(
                 ) {
                     Text(stringResource(R.string.distance))
                     Text(
-                        text = "0.00 Km",
+                        text = "$distance Km",
                         fontSize = 32.sp
                     )
                     Text("Goal")
-                    Text("0.00 Km")
+                    Text("$distanceGoal.00 Km")
                     Text("Slope")
-                    Text("min: 0 / max: 0")
+                    Text("min: $minAltitude / max: $maxAltitude")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Column(
@@ -191,12 +201,12 @@ fun FinishedScreen(
                 ){
                     Text("Average Speed")
                     Text(
-                        text = "0.00 Km/H",
+                        text = "$avgSpeed Km/H",
                         fontSize = 32.sp
                     )
                     Text("Maximum Speed")
                     Text(
-                        text = "0.00 Km/H",
+                        text = "$maxSpeed Km/H",
                         fontSize = 32.sp
                     )
                 }

@@ -21,6 +21,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NamedNavArgument
+import androidx.navigation.NavArgument
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.dialog
@@ -197,8 +200,8 @@ fun AppNavigation(
                     }
                     composable(Routes.HomeScreen.route){
                         HomeScreen(
-                            navigateToFinishedScreen = {
-                                navController.navigate(Routes.FinishedScreen.route)
+                            navigateToFinishedScreen = { chrono,durationGoal,intervalDuration,runIntervalDuration,walkIntervalDuration,distance, distanceGoal, minAltitude, maxAltitude, avgSpeed, maxSpeed ->
+                                navController.navigate("${Routes.FinishedScreen.route}/$chrono/$durationGoal/$intervalDuration/$runIntervalDuration/$walkIntervalDuration/$distance/$distanceGoal/$minAltitude/$maxAltitude/$avgSpeed/$maxSpeed")
                             }
                         )
                     }
@@ -206,17 +209,39 @@ fun AppNavigation(
                         HistoryScreen()
                     }
                     dialog(
-                        route = Routes.FinishedScreen.route,
+                        route = "${Routes.FinishedScreen.route}/{chrono}/{durationGoal}/{intervalDuration}/{runIntervalDuration}/{walkIntervalDuration}/{distance}/{distanceGoal}/{minAltitude}/{maxAltitude}/{avgSpeed}/{maxSpeed}",
                         dialogProperties = DialogProperties(
                             dismissOnBackPress = true,
                             dismissOnClickOutside = true,
                             usePlatformDefaultWidth = false,
                             decorFitsSystemWindows = true
                         )
-                    ){
-                        // TODO
+                    ){ backStackEntry ->
+
+                        val passedChrono = backStackEntry.arguments?.getString("chrono") ?: "00:00:00"
+                        val durationGoal = backStackEntry.arguments?.getString("goalDuration") ?: "00:00:00"
+                        val intervalDuration = backStackEntry.arguments?.getString("intervalDuration") ?: "0"
+                        val runIntervalDuration = backStackEntry.arguments?.getString("runIntervalDuration") ?: "00:00"
+                        val walkIntervalDuration = backStackEntry.arguments?.getString("walkIntervalDuration") ?: "00:00"
+                        val distance = backStackEntry.arguments?.getString("distance") ?: "0.00"
+                        val distanceGoal = backStackEntry.arguments?.getString("distanceGoal") ?: "0"
+                        val minAltitude = backStackEntry.arguments?.getString("minAltitude") ?: "0"
+                        val maxAltitude = backStackEntry.arguments?.getString("maxAltitude") ?: "0"
+                        val avgSpeed = backStackEntry.arguments?.getString("avgSpeed") ?: "0.0"
+                        val maxSpeed = backStackEntry.arguments?.getString("maxSpeed") ?: "0.0"
+
                         FinishedScreen(
-                            chrono = "00:00:00",
+                            chrono = passedChrono,
+                            durationGoal = durationGoal,
+                            intervalDuration = intervalDuration,
+                            runIntervalDuration = runIntervalDuration,
+                            walkIntervalDuration = walkIntervalDuration,
+                            distance = distance,
+                            distanceGoal = distanceGoal,
+                            minAltitude = minAltitude,
+                            maxAltitude = maxAltitude,
+                            avgSpeed = avgSpeed,
+                            maxSpeed = maxSpeed,
                             dismissDialog = { navController.popBackStack() }
                         )
                     }

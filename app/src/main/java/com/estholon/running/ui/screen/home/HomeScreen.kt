@@ -87,7 +87,7 @@ import java.text.DecimalFormat
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
-    navigateToFinishedScreen: () -> Unit
+    navigateToFinishedScreen: (String, String, String, String, String, String, String, String, String, String, String) -> Unit
 ){
 
     // CONTEXTO
@@ -117,14 +117,22 @@ fun HomeScreen(
 
     val chrono : String = homeViewModel.chrono.collectAsState().value
 
+    // OTHER VALUES
+
+    val maxAltitude = homeViewModel.maxAltitude.collectAsState().value
+    val minAltitude = homeViewModel.minAltitude.collectAsState().value
+    val maxSpeed = homeViewModel.maxSpeed.collectAsState().value
+
     // GOAL SETTINGS
 
     val goalSwitch = homeViewModel.goalSwitch.collectAsState().value
     val durationSelected = homeViewModel.durationSelected.collectAsState().value
-    var hoursGoalDefault = homeViewModel.hoursGoalDefault.collectAsState().value
-    var minutesGoalDefault = homeViewModel.minutesGoalDefault.collectAsState().value
-    var secondsGoalDefault = homeViewModel.secondsGoalDefault.collectAsState().value
-    var kilometersGoalDefault = homeViewModel.kilometersGoalDefault.collectAsState().value
+    val hoursGoalDefault = homeViewModel.hoursGoalDefault.collectAsState().value
+    val minutesGoalDefault = homeViewModel.minutesGoalDefault.collectAsState().value
+    val secondsGoalDefault = homeViewModel.secondsGoalDefault.collectAsState().value
+    val durationGoal = homeViewModel.durationGoal.collectAsState().value
+    val kilometersGoalDefault = homeViewModel.kilometersGoalDefault.collectAsState().value
+    val distanceGoal = homeViewModel.distanceGoal.collectAsState().value
     val notifyGoalCheck = homeViewModel.notifyGoalCheck.collectAsState().value
     val automaticFinishCheck = homeViewModel.automaticFinishCheck.collectAsState().value
 
@@ -531,7 +539,6 @@ fun HomeScreen(
             ){
                 Button(
                     onClick = {
-
                         if(!stopped){
                             homeViewModel.changeStopped(true)
                             homeViewModel.stopChrono()
@@ -715,6 +722,14 @@ fun HomeScreen(
                                 }
                                 if(!secondPickerState.selectedItem.isNullOrEmpty()){
                                     homeViewModel.changeSecondsGoalDefault(secondPickerState.selectedItem.toInt())
+                                }
+                                if(!hourPickerState.selectedItem.isNullOrEmpty() || !minutePickerState.selectedItem.isNullOrEmpty() || !secondPickerState.selectedItem.isNullOrEmpty()){
+
+                                    val hours = hourPickerState.selectedItem ?: 0
+                                    val minutes = minutePickerState.selectedItem ?: 0
+                                    val seconds = secondPickerState.selectedItem ?: 0
+
+                                    homeViewModel.changeDurationGoal("$hours:$minutes:$seconds")
                                 }
 
                             }
@@ -993,7 +1008,19 @@ fun HomeScreen(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd){
             FloatingActionButton(
                 onClick = {
-                    navigateToFinishedScreen()
+                    navigateToFinishedScreen(
+                        chrono,
+                        durationGoal,
+                        (intervalDefault + 1).toString(),
+                        runIntervalDuration,
+                        walkIntervalDuration,
+                        currentKilometers.toString(),
+                        distanceGoal.toString(),
+                        (minAltitude ?: 0).toString(),
+                        (maxAltitude ?: 0).toString(),
+                        currentAverageSpeed.toString(),
+                        maxSpeed.toString()
+                    )
                     homeViewModel.stopChrono()
                     homeViewModel.resetChrono()
                     homeViewModel.changeStopped(true)

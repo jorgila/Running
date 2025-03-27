@@ -56,6 +56,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Thread.State
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -198,14 +199,24 @@ class HomeViewModel @Inject constructor(
     private var maxLatitude: Double? = null
     private var minLongitude: Double? = null
     private var maxLongitude: Double? = null
-    private var minAltitude: Double? = null
-    private var maxAltitude: Double? = null
+
+    private val _minAltitude = MutableStateFlow<Double?>(null)
+    val minAltitude : StateFlow<Double?> get() = _minAltitude
+
+    private val _maxAltitude = MutableStateFlow<Double?>(null)
+    val maxAltitude : StateFlow<Double?> get() = _maxAltitude
+
+    private val _distanceGoal = MutableStateFlow<Int>(0)
+    val distanceGoal : StateFlow<Int> get() = _distanceGoal
 
     private var init_lt: Double = 0.0
     private var init_ln: Double = 0.0
 
     private var distance: Double = 0.0
-    private var maxSpeed: Double = 0.0
+
+    private val _maxSpeed = MutableStateFlow<Double>(0.0)
+    val maxSpeed : StateFlow<Double> get() = _maxSpeed
+
     private var avgSpeed: Double = 0.0
     private var speed: Double = 0.0
 
@@ -252,6 +263,10 @@ class HomeViewModel @Inject constructor(
     private val _secondsGoalDefault = MutableStateFlow<Int>(0)
     var secondsGoalDefault : StateFlow<Int> = _secondsGoalDefault
 
+    private val _durationGoal = MutableStateFlow<String>("00:00:00")
+    var durationGoal : StateFlow<String> = _durationGoal
+
+
     private val _kilometersGoalDefault = MutableStateFlow<Int>(0)
     var kilometersGoalDefault : StateFlow<Int> = _kilometersGoalDefault
 
@@ -274,7 +289,7 @@ class HomeViewModel @Inject constructor(
     private val _intervalDurationSeekbar = MutableStateFlow<Float>(0.5F)
     val intervalDurationSeekbar : StateFlow<Float> get() = _intervalDurationSeekbar
 
-    private val _intervalDefault = MutableStateFlow<Int>(5)
+    private val _intervalDefault = MutableStateFlow<Int>(4)
     val intervalDefault : StateFlow<Int> get() = _intervalDefault
 
     //// AUDIO SETTINGS
@@ -523,12 +538,12 @@ class HomeViewModel @Inject constructor(
         if(longitude > maxLongitude!!) maxLongitude = longitude
 
         if(location.hasAltitude()){
-            if(maxAltitude == null){
-                maxAltitude = location.altitude
-                minAltitude = location.altitude
+            if(_maxAltitude.value == null){
+                _maxAltitude.value = location.altitude
+                _minAltitude.value = location.altitude
             }
-            if(location.altitude > maxAltitude!!) maxAltitude = location.altitude
-            if(location.altitude < minAltitude!!) minAltitude = location.altitude
+            if(location.altitude > _maxAltitude.value!!) _maxAltitude.value = location.altitude
+            if(location.altitude < _minAltitude.value!!) _minAltitude.value = location.altitude
         }
     }
 
@@ -543,7 +558,7 @@ class HomeViewModel @Inject constructor(
         // Se pasa la distancia a metros para calcular los m/s y se convierte a km/h
 
         speed = ((d * 1000) / INTERVAL_LOCATION) * 3.6
-        if(speed > maxSpeed) maxSpeed = speed
+        if(speed > _maxSpeed.value) _maxSpeed.value = (speed*100).roundToInt()/100.0
         avgSpeed = ((distance * 1000) / timeInSeconds) * 3.6
     }
 
@@ -686,8 +701,8 @@ class HomeViewModel @Inject constructor(
             distance = 0.0
             avgSpeed = 0.0
             speed = 0.0
-            minAltitude = null
-            maxAltitude = null
+            _minAltitude.value = null
+            _maxAltitude.value = null
             minLatitude = null
             maxLatitude = null
             minLongitude = null
@@ -799,8 +814,13 @@ class HomeViewModel @Inject constructor(
         _secondsGoalDefault.value = i
     }
 
+    fun changeDurationGoal(s: String) {
+        _durationGoal.value = s
+    }
+
     fun changeKilometersGoalDefault(i: Int) {
         _kilometersGoalDefault.value = i
+        _distanceGoal.value = i
     }
 
     fun changeNotifyGoalCheck(b: Boolean) {
