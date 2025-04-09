@@ -26,7 +26,7 @@ class DatabaseRepository @Inject constructor(
 
         return db
             .collection(COLLECTION_TOTALS_RUNNING)
-            .document(authManager.getCurrentUser().toString())
+            .document(authManager.getCurrentEmail().toString())
             .snapshots()
             .mapNotNull { qr ->
                 qr.toObject(TotalResponse::class.java)?.let { tr ->

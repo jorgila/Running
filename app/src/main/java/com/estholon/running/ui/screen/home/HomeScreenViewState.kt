@@ -21,7 +21,7 @@ sealed class HomeScreenViewState {
         val recordSpeed : Double = 0.00,
         val totalDistance : Double = 0.00,
         val totalRuns : Double = 0.00,
-        val totalTime : Double = 0.00
+        val totalTime : String = "0 d 0 h 0 m 0 s"
 
     ) : HomeScreenViewState()
 

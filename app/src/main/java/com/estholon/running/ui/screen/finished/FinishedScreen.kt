@@ -57,8 +57,11 @@ fun FinishedScreen(
     finishedViewModel: FinishedViewModel = hiltViewModel()
 ){
 
+    // UI State
+    val finishedUIState = finishedViewModel.finishedUIState.collectAsState().value
+
+
     val level = finishedViewModel.level.collectAsState().value
-    val totalRunning = finishedViewModel.totalTime.collectAsState().value
     val currentKilometers = finishedViewModel.currentKilometers.collectAsState().value
     val totalKilometers = finishedViewModel.totalKilometers.collectAsState().value
     val currentRuns = finishedViewModel.currentRuns.collectAsState().value
@@ -110,7 +113,7 @@ fun FinishedScreen(
                         .background(Color.Black)
                 )
                 Text(
-                    text = totalRunning,
+                    text = finishedUIState.totalTime,
                     fontWeight = FontWeight.Black,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.onPrimary,
@@ -137,7 +140,7 @@ fun FinishedScreen(
                     fontSize = 18.sp
                 )
                 Text(
-                    "$currentKilometers / $totalKilometers km"
+                    "${finishedUIState.totalDistance} / $totalKilometers km"
                 )
                 Spacer(
                     modifier = Modifier.height(8.dp)
@@ -148,7 +151,7 @@ fun FinishedScreen(
                     fontSize = 18.sp
                 )
                 Text(
-                    "$currentRuns / $totalRuns runs"
+                    "${finishedUIState.totalRuns} / $totalRuns runs"
                 )
             }
         }

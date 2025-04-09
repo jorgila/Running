@@ -22,6 +22,7 @@ import com.estholon.running.common.Constants.INTERVAL_LOCATION
 import com.estholon.running.common.Constants.LIMIT_DISTANCE_ACCEPTED
 import com.estholon.running.common.SharedPreferencesKeys
 import com.estholon.running.domain.useCase.authentication.SignOutUseCase
+import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
 import com.estholon.running.domain.useCase.others.GetFormattedStopWatchUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetUserInfoUseCase
@@ -71,6 +72,7 @@ class HomeViewModel @Inject constructor(
     private val preferencesGetIntUseCase: PreferencesGetIntUseCase,
     private val preferencesPutIntUseCase: PreferencesPutIntUseCase,
     private val preferencesResetUseCase: PreferencesResetUseCase,
+    private val getTotalsUseCase: GetTotalsUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -81,6 +83,13 @@ class HomeViewModel @Inject constructor(
                 Manifest.permission.ACCESS_FINE_LOCATION
             )
     }
+
+    // UI STATE
+
+    private val _homeUIState = MutableStateFlow<HomeScreenViewState.HomeUIState>(HomeScreenViewState.HomeUIState())
+    val homeUIState : StateFlow<HomeScreenViewState.HomeUIState> = _homeUIState
+
+    // VARIABLES
 
     private val _stopped = MutableStateFlow<Boolean>(true)
     var stopped : StateFlow<Boolean> = _stopped
@@ -99,9 +108,6 @@ class HomeViewModel @Inject constructor(
     private val _level = MutableStateFlow<String>(context.getString(R.string.level_0))
     var level : StateFlow<String> = _level
 
-    private val _totalTime = MutableStateFlow<String>(context.getString(R.string.total_0))
-    var totalTime : StateFlow<String> = _totalTime
-
     private val _currentKilometers = MutableStateFlow<Double>(0.0 )
     var currentKilometers : StateFlow<Double> = _currentKilometers
 
@@ -110,9 +116,6 @@ class HomeViewModel @Inject constructor(
 
     private val _currentSpeed = MutableStateFlow<Double>(0.0 )
     var currentSpeed : StateFlow<Double> = _currentSpeed
-
-    private val _currentRuns = MutableStateFlow<Int>(0)
-    var currentRuns : StateFlow<Int> = _currentRuns
 
     private val _recordKilometers = MutableStateFlow<Double>(0.0 )
     var recordKilometers : StateFlow<Double> = _recordKilometers
@@ -313,6 +316,7 @@ class HomeViewModel @Inject constructor(
         mHandler = Handler()
         initPermissionGPS()
         initPreferences()
+        initTotals()
     }
 
     fun initPreferences(){
@@ -337,6 +341,32 @@ class HomeViewModel @Inject constructor(
 
     }
 
+    fun initTotals(){
+        viewModelScope.launch {
+            getTotalsUseCase.getTotals().collect{ totals ->
+
+                val segundosTotales = totals.totalTime / 1000
+                val minutosTotales = segundosTotales / 60
+                val horasTotales = minutosTotales / 60
+
+                val d = Math.floor(horasTotales / 24).toInt()
+                val h = Math.floor(horasTotales % 24).toInt()
+                val m = Math.floor(minutosTotales % 60).toInt()
+                val s = Math.floor(segundosTotales % 60).toInt()
+
+                _homeUIState.update { homeUIState ->
+                    homeUIState.copy(
+                    recordAvgSpeed = totals.recordAvgSpeed,
+                    recordDistance = totals.recordDistance,
+                    recordSpeed = totals.recordSpeed,
+                    totalDistance = totals.totalDistance,
+                    totalRuns = totals.totalRuns,
+                    totalTime = "$d d $h h $m m $s s"
+                    )
+                }
+            }
+        }
+    }
 
     fun initPermissionGPS() {
         
@@ -921,5 +951,6 @@ class HomeViewModel @Inject constructor(
         }
         return isSuccessful
     }
+
 
 }

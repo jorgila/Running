@@ -59,12 +59,13 @@ fun HomeDrawer(
     homeViewModel: HomeViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+
+
+   val homeUIState = homeViewModel.homeUIState.collectAsState().value
+
     val email = homeViewModel.user.collectAsState().value
     val level = homeViewModel.level.collectAsState().value
-    val totalRunning = homeViewModel.totalTime.collectAsState().value
-    val currentKilometers = homeViewModel.currentKilometers.collectAsState().value
     val totalKilometers = homeViewModel.totalKilometers.collectAsState().value
-    val currentRuns = homeViewModel.currentRuns.collectAsState().value
     val totalRuns = homeViewModel.totalRuns.collectAsState().value
 
     var showResetPreferences by rememberSaveable {
@@ -123,7 +124,7 @@ fun HomeDrawer(
                             .background(Color.Black)
                     )
                     Text(
-                        text = totalRunning,
+                        text = homeUIState.totalTime.toString(),
                         fontWeight = FontWeight.Black,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onPrimary,
@@ -150,7 +151,7 @@ fun HomeDrawer(
                         fontSize = 18.sp
                     )
                     Text(
-                        "$currentKilometers / $totalKilometers km"
+                        "${homeUIState.totalDistance} / $totalKilometers km"
                     )
                     Spacer(
                         modifier = Modifier.height(8.dp)
@@ -161,7 +162,7 @@ fun HomeDrawer(
                         fontSize = 18.sp
                     )
                     Text(
-                        "$currentRuns / $totalRuns runs"
+                        "${homeUIState.totalRuns} / $totalRuns runs"
                     )
                 }
             }

@@ -505,6 +505,9 @@ fun HomeScreen(
                             eventFlow = homeViewModel.getEventChannel()
                         )
                     }
+                    is HomeScreenViewState.HomeUIState -> {
+
+                    }
                 }
 
             }
