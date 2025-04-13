@@ -1,7 +1,9 @@
 package com.estholon.running.data.network
 
 import com.estholon.running.data.manager.AuthManager
+import com.estholon.running.data.network.response.LevelResponse
 import com.estholon.running.data.network.response.TotalResponse
+import com.estholon.running.domain.model.LevelModel
 import com.estholon.running.domain.model.TotalModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.snapshots
@@ -36,6 +38,25 @@ class DatabaseRepository @Inject constructor(
 
     }
 
+    fun getLevels() : Flow<List<LevelModel>> {
+
+        return db
+            .collection(COLLECTION_LEVELS_RUNNING)
+            .snapshots()
+            .mapNotNull { querySnapshot ->
+                val levelsList = mutableListOf<LevelModel>()
+                for (document in querySnapshot.documents) {
+                    document.toObject(LevelResponse::class.java)?.let { lr ->
+                        levelToDomain(lr)?.let { levelModel ->
+                            levelsList.add(levelModel)
+                        }
+                    }
+                }
+                levelsList
+            }
+
+    }
+
     private fun totalToDomain(tr: TotalResponse): TotalModel? {
         return if (
             tr.recordAvgSpeed != null &&
@@ -58,9 +79,24 @@ class DatabaseRepository @Inject constructor(
         } else {
             null
         }
-
-
     }
 
+    private fun levelToDomain(lr: LevelResponse): LevelModel? {
+        return if (
+            lr.level !=null &&
+            lr.distanceTarget != null &&
+            lr.runsTarget != null
+        ) {
+
+            LevelModel(
+                level = lr.level,
+                distanceTarget = lr.distanceTarget,
+                runsTarget = lr.runsTarget
+            )
+
+        } else {
+            null
+        }
+    }
 
 }

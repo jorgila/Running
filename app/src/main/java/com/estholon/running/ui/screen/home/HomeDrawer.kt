@@ -24,7 +24,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
@@ -42,7 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -64,8 +62,7 @@ fun HomeDrawer(
    val homeUIState = homeViewModel.homeUIState.collectAsState().value
 
     val email = homeViewModel.user.collectAsState().value
-    val level = homeViewModel.level.collectAsState().value
-    val totalKilometers = homeViewModel.totalKilometers.collectAsState().value
+    val totalKilometers = homeViewModel.totalDistance.collectAsState().value
     val totalRuns = homeViewModel.totalRuns.collectAsState().value
 
     var showResetPreferences by rememberSaveable {
@@ -97,7 +94,7 @@ fun HomeDrawer(
                     .width(117.dp)
                 ) {
                     Text(
-                        text = level,
+                        text = "Level ${homeUIState.level}",
                         fontWeight = FontWeight.Black,
                         fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.onSecondary,
@@ -151,7 +148,7 @@ fun HomeDrawer(
                         fontSize = 18.sp
                     )
                     Text(
-                        "${homeUIState.totalDistance} / $totalKilometers km"
+                        "${homeUIState.totalDistance} / ${homeUIState.levelDistance} km"
                     )
                     Spacer(
                         modifier = Modifier.height(8.dp)
@@ -162,7 +159,7 @@ fun HomeDrawer(
                         fontSize = 18.sp
                     )
                     Text(
-                        "${homeUIState.totalRuns} / $totalRuns runs"
+                        "${homeUIState.totalRuns} / ${homeUIState.levelRuns} runs"
                     )
                 }
             }

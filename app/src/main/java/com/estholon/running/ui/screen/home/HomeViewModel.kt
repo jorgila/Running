@@ -2,17 +2,12 @@ package com.estholon.running.ui.screen.home
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -22,6 +17,7 @@ import com.estholon.running.common.Constants.INTERVAL_LOCATION
 import com.estholon.running.common.Constants.LIMIT_DISTANCE_ACCEPTED
 import com.estholon.running.common.SharedPreferencesKeys
 import com.estholon.running.domain.useCase.authentication.SignOutUseCase
+import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
 import com.estholon.running.domain.useCase.others.GetFormattedStopWatchUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
@@ -55,7 +51,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.lang.Thread.State
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -73,6 +68,7 @@ class HomeViewModel @Inject constructor(
     private val preferencesPutIntUseCase: PreferencesPutIntUseCase,
     private val preferencesResetUseCase: PreferencesResetUseCase,
     private val getTotalsUseCase: GetTotalsUseCase,
+    private val getLevelsUseCase: GetLevelsUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -129,11 +125,11 @@ class HomeViewModel @Inject constructor(
     private val _goalKilometers = MutableStateFlow<Double>(0.0)
     var goalKilometers : StateFlow<Double> = _goalKilometers
 
-    private val _totalKilometers = MutableStateFlow<Double>(0.0)
-    var totalKilometers : StateFlow<Double> = _totalKilometers
+    private val _totalDistance = MutableStateFlow<Double>(0.0)
+    var totalDistance : StateFlow<Double> = _totalDistance
 
-    private val _totalRuns = MutableStateFlow<Int>(0)
-    var totalRuns : StateFlow<Int> = _totalRuns
+    private val _totalRuns = MutableStateFlow<Double>(0.0)
+    var totalRuns : StateFlow<Double> = _totalRuns
 
     private val _secondsFromWatch = MutableStateFlow<Int>(0)
     var secondsFromWatch : StateFlow<Int> = _secondsFromWatch
@@ -317,6 +313,7 @@ class HomeViewModel @Inject constructor(
         initPermissionGPS()
         initPreferences()
         initTotals()
+        initLevels()
     }
 
     fun initPreferences(){
@@ -342,6 +339,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun initTotals(){
+
         viewModelScope.launch {
             getTotalsUseCase.getTotals().collect{ totals ->
 
@@ -354,6 +352,9 @@ class HomeViewModel @Inject constructor(
                 val m = Math.floor(minutosTotales % 60).toInt()
                 val s = Math.floor(segundosTotales % 60).toInt()
 
+                _totalDistance.value = totals.totalDistance
+                _totalRuns.value = totals.totalRuns
+
                 _homeUIState.update { homeUIState ->
                     homeUIState.copy(
                     recordAvgSpeed = totals.recordAvgSpeed,
@@ -364,6 +365,27 @@ class HomeViewModel @Inject constructor(
                     totalTime = "$d d $h h $m m $s s"
                     )
                 }
+            }
+        }
+    }
+
+    fun initLevels(){
+        viewModelScope.launch {
+            getLevelsUseCase.getLevels().collect{ levels ->
+
+                for (level in levels) {
+                    if(  _totalDistance.value < level.distanceTarget || _totalRuns.value < level.runsTarget) {
+                        _homeUIState.update { homeUIState ->
+                            homeUIState.copy(
+                                level = level.level,
+                                levelDistance = level.distanceTarget,
+                                levelRuns = level.runsTarget
+                            )
+                        }
+                    }
+                    break
+                }
+
             }
         }
     }
