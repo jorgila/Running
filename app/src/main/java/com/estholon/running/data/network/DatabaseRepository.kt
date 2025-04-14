@@ -1,16 +1,21 @@
 package com.estholon.running.data.network
 
+import android.util.Log
 import com.estholon.running.data.manager.AuthManager
 import com.estholon.running.data.network.response.LevelResponse
 import com.estholon.running.data.network.response.TotalResponse
 import com.estholon.running.domain.model.LevelModel
 import com.estholon.running.domain.model.TotalModel
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.snapshots
 import com.google.firebase.firestore.toObjects
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import java.util.logging.Level
 import javax.inject.Inject
 
 class DatabaseRepository @Inject constructor(
@@ -43,17 +48,18 @@ class DatabaseRepository @Inject constructor(
         return db
             .collection(COLLECTION_LEVELS_RUNNING)
             .snapshots()
-            .mapNotNull { querySnapshot ->
+            .mapNotNull { qr ->
                 val levelsList = mutableListOf<LevelModel>()
-                for (document in querySnapshot.documents) {
+                for (document in qr.documents) {
                     document.toObject(LevelResponse::class.java)?.let { lr ->
                         levelToDomain(lr)?.let { levelModel ->
                             levelsList.add(levelModel)
                         }
                     }
                 }
-                levelsList
+                levelsList.sortedBy { it.distanceTarget }
             }
+
 
     }
 
@@ -83,14 +89,14 @@ class DatabaseRepository @Inject constructor(
 
     private fun levelToDomain(lr: LevelResponse): LevelModel? {
         return if (
-            lr.level !=null &&
             lr.distanceTarget != null &&
-            lr.runsTarget != null
+            lr.level !=null &&
+            lr.runsTarget !=null
         ) {
 
             LevelModel(
-                level = lr.level,
                 distanceTarget = lr.distanceTarget,
+                level = lr.level,
                 runsTarget = lr.runsTarget
             )
 

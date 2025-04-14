@@ -8,6 +8,7 @@ import android.location.Location
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -42,6 +43,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -357,12 +359,12 @@ class HomeViewModel @Inject constructor(
 
                 _homeUIState.update { homeUIState ->
                     homeUIState.copy(
-                    recordAvgSpeed = totals.recordAvgSpeed,
-                    recordDistance = totals.recordDistance,
-                    recordSpeed = totals.recordSpeed,
-                    totalDistance = totals.totalDistance,
-                    totalRuns = totals.totalRuns,
-                    totalTime = "$d d $h h $m m $s s"
+                        recordAvgSpeed = totals.recordAvgSpeed,
+                        recordDistance = totals.recordDistance,
+                        recordSpeed = totals.recordSpeed,
+                        totalDistance = totals.totalDistance,
+                        totalRuns = totals.totalRuns,
+                        totalTime = "$d d $h h $m m $s s"
                     )
                 }
             }
@@ -372,8 +374,9 @@ class HomeViewModel @Inject constructor(
     fun initLevels(){
         viewModelScope.launch {
             getLevelsUseCase.getLevels().collect{ levels ->
-
+                delay(3000)
                 for (level in levels) {
+
                     if(  _totalDistance.value < level.distanceTarget || _totalRuns.value < level.runsTarget) {
                         _homeUIState.update { homeUIState ->
                             homeUIState.copy(
@@ -382,8 +385,8 @@ class HomeViewModel @Inject constructor(
                                 levelRuns = level.runsTarget
                             )
                         }
+                        break
                     }
-                    break
                 }
 
             }

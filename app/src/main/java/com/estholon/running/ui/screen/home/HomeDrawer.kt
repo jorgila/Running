@@ -62,8 +62,6 @@ fun HomeDrawer(
    val homeUIState = homeViewModel.homeUIState.collectAsState().value
 
     val email = homeViewModel.user.collectAsState().value
-    val totalKilometers = homeViewModel.totalDistance.collectAsState().value
-    val totalRuns = homeViewModel.totalRuns.collectAsState().value
 
     var showResetPreferences by rememberSaveable {
         mutableStateOf(false)

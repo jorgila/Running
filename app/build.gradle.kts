@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.scope.ProjectInfo.Companion.getBaseName
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -79,6 +81,9 @@ dependencies {
     //MAP
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps)
+
+    // GOOGLE PLAY SERVICES
+    implementation(libs.play.services.base)
 
     // GEOLOCALIZACIÓN
     implementation(libs.play.services.location)
