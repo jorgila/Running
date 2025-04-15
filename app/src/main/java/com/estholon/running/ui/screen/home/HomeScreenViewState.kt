@@ -1,9 +1,7 @@
 package com.estholon.running.ui.screen.home
 
-import android.gesture.OrientedBoundingBox
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
-import javax.inject.Inject
 
 sealed class HomeScreenViewState {
 
@@ -25,7 +23,25 @@ sealed class HomeScreenViewState {
         val level : String = "0",
         val levelDistance : Double = 0.00,
         val levelRuns : Double = 0.00,
+        val started : Boolean = false,
+        val stopped : Boolean = false,
+        val goalSwitch : Boolean = false,
+        val goalDurationSelected : Boolean = false,
+        val goalHoursDefault : Int = 0,
+        val goalMinutesDefault: Int = 0,
+        val goalSecondsDefault : Int = 0,
+        val goalDistanceDefault : Int = 0,
+        val goalNotifyCheck : Boolean = false,
+        val goalAutomaticFinishCheck : Boolean = false,
+        val intervalSwitch : Boolean = false,
+        val intervalDefault : Int = 1,
+        val intervalDurationSeekbar : Float = 0.5F,
+        val audioSwitch : Boolean = false,
+        val runVolume : Float = 70.0F,
+        val walkVolume : Float = 70.0F,
+        val notificationVolume : Float = 70.0F
 
     ) : HomeScreenViewState()
+
 
 }

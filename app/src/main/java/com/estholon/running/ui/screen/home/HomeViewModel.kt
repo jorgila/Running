@@ -8,7 +8,6 @@ import android.location.Location
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -94,8 +93,6 @@ class HomeViewModel @Inject constructor(
 
     private val _started = MutableStateFlow<Boolean>(false)
     var started : StateFlow<Boolean> = _started
-
-
 
     private val _isLoading = MutableStateFlow<Boolean>(false)
     var isLoading : StateFlow<Boolean> = _isLoading
@@ -207,9 +204,6 @@ class HomeViewModel @Inject constructor(
     private val _maxAltitude = MutableStateFlow<Double?>(null)
     val maxAltitude : StateFlow<Double?> get() = _maxAltitude
 
-    private val _distanceGoal = MutableStateFlow<Int>(0)
-    val distanceGoal : StateFlow<Int> get() = _distanceGoal
-
     private var init_lt: Double = 0.0
     private var init_ln: Double = 0.0
 
@@ -247,66 +241,10 @@ class HomeViewModel @Inject constructor(
 
     // UI
 
-    //// GOAL SETTINGS
-
-    private val _goalSwitch = MutableStateFlow<Boolean>(false)
-    val goalSwitch: StateFlow<Boolean> = _goalSwitch
-
-    private val _durationSelected = MutableStateFlow<Boolean>(true)
-    val durationSelected: StateFlow<Boolean> = _durationSelected
-
-    private val _hoursGoalDefault = MutableStateFlow<Int>(0)
-    var hoursGoalDefault : StateFlow<Int> = _hoursGoalDefault
-
-    private val _minutesGoalDefault = MutableStateFlow<Int>(0)
-    var minutesGoalDefault : StateFlow<Int> = _minutesGoalDefault
-
-    private val _secondsGoalDefault = MutableStateFlow<Int>(0)
-    var secondsGoalDefault : StateFlow<Int> = _secondsGoalDefault
-
-    private val _durationGoal = MutableStateFlow<String>("00:00:00")
-    var durationGoal : StateFlow<String> = _durationGoal
-
-
-    private val _kilometersGoalDefault = MutableStateFlow<Int>(0)
-    var kilometersGoalDefault : StateFlow<Int> = _kilometersGoalDefault
-
-
-
-    private val _notifyGoalCheck = MutableStateFlow<Boolean>(false)
-    val notifyGoalCheck : StateFlow<Boolean> get() = _notifyGoalCheck
-
-    private val _automaticFinishCheck = MutableStateFlow<Boolean>(false)
-    val automaticFinishCheck : StateFlow<Boolean> get() = _automaticFinishCheck
-
     //// INTERVAL SETTINGS
-
-    private val _intervalSwitch = MutableStateFlow<Boolean>(false)
-    val intervalSwitch : StateFlow<Boolean> get() = _intervalSwitch
 
     private val _intervalDuration = MutableStateFlow<Long>(1)
     val intervalDuration : StateFlow<Long> get() = _intervalDuration
-
-    private val _intervalDurationSeekbar = MutableStateFlow<Float>(0.5F)
-    val intervalDurationSeekbar : StateFlow<Float> get() = _intervalDurationSeekbar
-
-    private val _intervalDefault = MutableStateFlow<Int>(4)
-    val intervalDefault : StateFlow<Int> get() = _intervalDefault
-
-    //// AUDIO SETTINGS
-
-    private val _audioSwitch = MutableStateFlow<Boolean>(false)
-    val audioSwitch: StateFlow<Boolean> = _audioSwitch
-
-    private val _runVolume = MutableStateFlow<Float>(70.0f)
-    val runVolume : StateFlow<Float> get() = _runVolume
-
-    private val _walkVolume = MutableStateFlow<Float>(70.0f)
-    val walkVolume : StateFlow<Float> get() = _walkVolume
-
-    private val _notificationVolume = MutableStateFlow<Float>(70.0f)
-    val notificationVolume : StateFlow<Float> get() = _notificationVolume
-
 
     init {
         getUserInfo()
@@ -321,21 +259,27 @@ class HomeViewModel @Inject constructor(
     fun initPreferences(){
 
         viewModelScope.launch {
-            _goalSwitch.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_GOAL_SWITCH,false)
-            _durationSelected.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_DURATION_SELECTED,true)
-            _hoursGoalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_HOURS_GOAL_DEFAULT,0)
-            _minutesGoalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_MINUTES_GOAL_DEFAULT,0)
-            _secondsGoalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_SECONDS_GOAL_DEFAULT,0)
-            _kilometersGoalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_KILOMETERS_GOAL_DEFAULT,0)
-            _notifyGoalCheck.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_NOTIFY_GOAL,false)
-            _automaticFinishCheck.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_AUTOMATIC_FINISH, false)
-            _intervalSwitch.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_INTERVAL_SWITCH, false)
-            _intervalDefault.value = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_INTERVAL_DEFAULT, 5)
-            _intervalDurationSeekbar.value = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_INTERVAL_DURATION_SEEKBAR, 0.5F)
-            _audioSwitch.value = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_AUDIO_SWITCH, false)
-            _runVolume.value = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_RUN_VOLUME, 70.0F)
-            _walkVolume.value = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_WALK_VOLUME, 70.0F)
-            _notificationVolume.value = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME, 70.0F)
+
+            _homeUIState.update { homeUIState ->
+                homeUIState.copy(
+                    goalSwitch = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_GOAL_SWITCH,false),
+                    goalDurationSelected = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_DURATION_SELECTED,true),
+                    goalHoursDefault = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_HOURS_GOAL_DEFAULT,0),
+                    goalMinutesDefault = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_MINUTES_GOAL_DEFAULT,0),
+                    goalSecondsDefault = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_SECONDS_GOAL_DEFAULT,0),
+                    goalDistanceDefault = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_KILOMETERS_GOAL_DEFAULT,0),
+                    goalNotifyCheck = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_NOTIFY_GOAL,false),
+                    goalAutomaticFinishCheck = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_AUTOMATIC_FINISH, false),
+                    intervalSwitch = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_INTERVAL_SWITCH, false),
+                    intervalDefault = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_INTERVAL_DEFAULT, 5),
+                    intervalDurationSeekbar = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_INTERVAL_DURATION_SEEKBAR, 0.5F),
+                    audioSwitch = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_AUDIO_SWITCH, false),
+                    runVolume = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_RUN_VOLUME, 70.0F),
+                    walkVolume = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_WALK_VOLUME, 70.0F),
+                    notificationVolume = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME, 70.0F),
+                )
+            }
+
         }
 
     }
@@ -402,7 +346,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun requestPermissionLocation() {
-        _currentKilometers.value = 100.0
+        _currentKilometers.value = 999.9
     }
 
     private fun allPermissionsGrantedGPS() = REQUIRED_PERMISSIONS_GPS.all {
@@ -410,9 +354,18 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun setVolumes() {
-        mpNotify?.setVolume(_notificationVolume.value/100.0f, _notificationVolume.value/100.0f)
-        mpSoft?.setVolume(_walkVolume.value/100.0f, _walkVolume.value/100.0f)
-        mpHard?.setVolume(_runVolume.value/100.0f, _runVolume.value/100.0f)
+        mpNotify?.setVolume(
+            _homeUIState.value.notificationVolume/100.0f,
+            _homeUIState.value.notificationVolume/100.0f
+        )
+        mpSoft?.setVolume(
+            _homeUIState.value.walkVolume/100.0f,
+            _homeUIState.value.walkVolume/100.0f
+        )
+        mpHard?.setVolume(
+            _homeUIState.value.runVolume/100.0f,
+            _homeUIState.value.runVolume/100.0f
+        )
     }
 
     fun logout() {
@@ -492,7 +445,7 @@ class HomeViewModel @Inject constructor(
                     && timeInSeconds.toInt() % INTERVAL_LOCATION == 0
                 ) manageLocation()
 
-                if(_intervalSwitch.value){
+                if( homeUIState.value.intervalSwitch ){
                     checkStopRun(timeInSeconds)
                     checkNewRun(timeInSeconds)
                 } else {
@@ -722,28 +675,16 @@ class HomeViewModel @Inject constructor(
 
         _started.value = b
 
-        if(_started.value){
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                started = b
+            )
+        }
+
+        if(b){
             refreshInterfaceData()
             if(mpNotify==null){
                 initMusic()
-            }
-
-            viewModelScope.launch {
-                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_GOAL_SWITCH,_goalSwitch.value)
-                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_DURATION_SELECTED,_durationSelected.value)
-                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_HOURS_GOAL_DEFAULT,_hoursGoalDefault.value)
-                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_MINUTES_GOAL_DEFAULT,_minutesGoalDefault.value)
-                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_SECONDS_GOAL_DEFAULT,_secondsGoalDefault.value)
-                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_KILOMETERS_GOAL_DEFAULT,_kilometersGoalDefault.value)
-                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_NOTIFY_GOAL,_notifyGoalCheck.value)
-                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_AUTOMATIC_FINISH,_automaticFinishCheck.value)
-                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_INTERVAL_SWITCH,_intervalSwitch.value)
-                preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_INTERVAL_DEFAULT,_intervalDefault.value)
-                preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_INTERVAL_DURATION_SEEKBAR,_intervalDurationSeekbar.value)
-                preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_AUDIO_SWITCH,_audioSwitch.value)
-                preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_RUN_VOLUME,_runVolume.value)
-                preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_WALK_VOLUME,_walkVolume.value)
-                preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME,_notificationVolume.value)
             }
 
         } else {
@@ -763,6 +704,14 @@ class HomeViewModel @Inject constructor(
             minLongitude = null
             maxLongitude = null
             _coordinates.value = emptyList()
+            // TODO
+            _homeUIState.update { homeUIState ->
+                homeUIState.copy(
+
+                )
+            }
+
+
         }
 
     }
@@ -850,72 +799,220 @@ class HomeViewModel @Inject constructor(
     }
 
     fun changeGoalSwitch(b: Boolean) {
-        _goalSwitch.value = b
+
+        viewModelScope.launch {
+            preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_GOAL_SWITCH,b)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                goalSwitch = b
+            )
+        }
+
     }
 
     fun changeDurationSelected(b: Boolean) {
-        _durationSelected.value = b
+
+        viewModelScope.launch {
+            preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_DURATION_SELECTED,b)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                goalDurationSelected = b
+            )
+        }
+
     }
 
     fun changeHoursGoalDefault(i: Int) {
-        _hoursGoalDefault.value = i
+
+        viewModelScope.launch {
+            preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_HOURS_GOAL_DEFAULT,i)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                goalHoursDefault = i
+            )
+        }
+
+
     }
 
     fun changeMinutesGoalDefault(i: Int) {
-        _minutesGoalDefault.value = i
+
+        viewModelScope.launch {
+            preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_MINUTES_GOAL_DEFAULT,i)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                goalMinutesDefault = i
+            )
+        }
+
     }
 
     fun changeSecondsGoalDefault(i: Int) {
-        _secondsGoalDefault.value = i
-    }
 
-    fun changeDurationGoal(s: String) {
-        _durationGoal.value = s
+        viewModelScope.launch {
+            preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_SECONDS_GOAL_DEFAULT,i)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                goalSecondsDefault = i
+            )
+        }
+
     }
 
     fun changeKilometersGoalDefault(i: Int) {
-        _kilometersGoalDefault.value = i
-        _distanceGoal.value = i
+
+        viewModelScope.launch {
+            preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_KILOMETERS_GOAL_DEFAULT,i)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                goalDistanceDefault = i
+            )
+        }
+
     }
 
     fun changeNotifyGoalCheck(b: Boolean) {
-        _notifyGoalCheck.value = b
+
+        viewModelScope.launch {
+            preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_NOTIFY_GOAL,b)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                goalNotifyCheck = b
+            )
+        }
+
     }
 
     fun changeAutomaticFinishCheck(b: Boolean) {
-        _automaticFinishCheck.value = b
+
+        viewModelScope.launch {
+            preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_AUTOMATIC_FINISH,b)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                goalAutomaticFinishCheck = b
+            )
+        }
     }
 
     fun changeIntervalSwitch(b: Boolean){
-        _intervalSwitch.value = b
+
+        viewModelScope.launch {
+            preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_INTERVAL_SWITCH,b)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                intervalSwitch = b
+            )
+        }
+
     }
 
     fun changeIntervalDuration(minutes: Long) {
+
         _intervalDuration.value = minutes * 60
-        _intervalDefault.value = minutes.toInt() - 1
+
+        viewModelScope.launch {
+            preferencesPutIntUseCase.putInt(SharedPreferencesKeys.SP_INTERVAL_DEFAULT,minutes.toInt() - 1)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                intervalDefault = minutes.toInt() - 1
+            )
+        }
+
+
     }
 
     fun changeIntervalDurationSeekbar(f: Float) {
-        _intervalDurationSeekbar.value = f
+
+        viewModelScope.launch {
+            preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_INTERVAL_DURATION_SEEKBAR,f)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                intervalDurationSeekbar = f
+            )
+        }
+
     }
 
     fun changeAudioSwitch(b: Boolean) {
-        _audioSwitch.value = b
+
+        viewModelScope.launch {
+            preferencesPutBooleanUseCase.putBoolean(SharedPreferencesKeys.SP_AUDIO_SWITCH,b)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                audioSwitch = b
+            )
+        }
+
     }
 
     fun changeNotificationVolume(newPosition: Float) {
-        _notificationVolume.value = newPosition
+
+        viewModelScope.launch {
+            preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME,newPosition)
+        }
+
+        _homeUIState.update {homeUIState ->
+            homeUIState.copy(
+                notificationVolume = newPosition
+            )
+        }
+
         setVolumes()
     }
 
     fun changeRunVolume(newPosition: Float) {
-        _runVolume.value = newPosition
+
+        viewModelScope.launch {
+            preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_RUN_VOLUME,newPosition)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                runVolume = newPosition
+            )
+        }
+
         setVolumes()
     }
 
     fun changeWalkVolume(newPosition: Float) {
-        _walkVolume.value = newPosition
+
+        viewModelScope.launch {
+            preferencesPutFloatUseCase.putFloat(SharedPreferencesKeys.SP_WALK_VOLUME,newPosition)
+        }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                walkVolume = newPosition
+            )
+        }
+
         setVolumes()
+
     }
 
     // GOOGLE MAPS
