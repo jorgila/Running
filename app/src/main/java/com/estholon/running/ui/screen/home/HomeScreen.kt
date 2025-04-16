@@ -77,7 +77,6 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.MapType
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberMarkerState
 import io.github.ningyuv.circularseekbar.CircularSeekbarView
 import java.text.DecimalFormat
 
@@ -101,20 +100,6 @@ fun HomeScreen(
 
     val isLoading = homeViewModel.isLoading.collectAsState().value
 
-    val currentKilometers = homeViewModel.currentKilometers.collectAsState().value
-    val currentAverageSpeed = homeViewModel.currentAverageSpeed.collectAsState().value
-    val currentSpeed = homeViewModel.currentSpeed.collectAsState().value
-
-    val recordKilometers = homeViewModel.recordKilometers.collectAsState().value
-    val recordAverageSpeed = homeViewModel.recordAverageSpeed.collectAsState().value
-    val recordSpeed = homeViewModel.recordSpeed.collectAsState().value
-
-    val goalKilometers = homeViewModel.goalKilometers.collectAsState().value
-
-    val kilometersKPI = homeViewModel.kilometersKPI.collectAsState().value
-
-    val chrono : String = homeViewModel.chrono.collectAsState().value
-
     // OTHER VALUES
 
     val maxAltitude = homeViewModel.maxAltitude.collectAsState().value
@@ -123,11 +108,7 @@ fun HomeScreen(
 
     // INTERVAL SETTINGS
 
-    val rounds = homeViewModel.rounds.collectAsState().value
     val isWalkingInterval = homeViewModel.isWalkingInterval.collectAsState().value
-    val runIntervalDuration = homeViewModel.runIntervalDuration.collectAsState().value
-    val walkIntervalDuration = homeViewModel.walkIntervalDuration.collectAsState().value
-
     val runningProgress = homeViewModel.runningProgress.collectAsState().value
 
     //// General
@@ -138,26 +119,13 @@ fun HomeScreen(
 
     //// MAP
 
-    val latlng = homeViewModel.latlng.collectAsState().value
-    val markerState = rememberMarkerState(position = latlng)
-
-
-    val mapType = homeViewModel.mapType.collectAsState().value
     val cameraPositionState = rememberCameraPositionState{
-        position = CameraPosition.fromLatLngZoom(latlng, 10f)
+        position = CameraPosition.fromLatLngZoom(homeUIState.mapLatLongTarget, 10f)
     }
 
     val coordinates = homeViewModel.coordinates.collectAsState().value
 
     //// Tracks
-
-    val hardTrack = homeViewModel.hardTrack.collectAsState().value
-    val hardTrackPosition = homeViewModel.hardTrackPosition.collectAsState().value
-    val hardTrackRemaining = homeViewModel.hardTrackRemaining.collectAsState().value
-
-    val softTrack = homeViewModel.softTrack.collectAsState().value
-    val softTrackPosition = homeViewModel.softTrackPosition.collectAsState().value
-    val softTrackRemaining = homeViewModel.softTrackRemaining.collectAsState().value
 
     var mapVisibility by rememberSaveable {
         mutableStateOf(false)
@@ -202,25 +170,6 @@ fun HomeScreen(
     }
 
     val kilometerPickerState = rememberPickerState()
-
-    var averageSpeedKPI by rememberSaveable {
-        mutableStateOf(0f)
-    }
-    var speedKPI by rememberSaveable {
-        mutableStateOf(0f)
-    }
-
-    averageSpeedKPI = if(currentAverageSpeed < recordAverageSpeed){
-        (currentAverageSpeed / recordAverageSpeed).toFloat()
-    } else {
-        1f
-    }
-
-    speedKPI = if(currentSpeed < recordSpeed){
-        (currentSpeed / recordSpeed).toFloat()
-    } else {
-        1f
-    }
 
     // ALERT DIALOG
 
@@ -294,7 +243,7 @@ fun HomeScreen(
                 ){
 
                     CircularSeekbarView(
-                        value = kilometersKPI,
+                        value = homeUIState.kpiDistanceCircularSeekbarValue,
                         onChange = { },
                         startAngle = -120f,
                         fullAngle =  240f,
@@ -306,8 +255,8 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.Center,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(text = currentKilometers.toString(), fontSize = 18.sp, fontWeight = FontWeight.Black)
-                            Text(text = "/${if(recordKilometers<goalKilometers) goalKilometers else recordKilometers}", fontSize = 10.sp)
+                            Text(text = homeUIState.kpiDistance.toString(), fontSize = 18.sp, fontWeight = FontWeight.Black)
+                            Text(text = "/${if(homeUIState.kpiRecordDistance<homeUIState.goalDistance) homeUIState.goalDistance else homeUIState.kpiRecordDistance}", fontSize = 10.sp)
                         }
                         Text(stringResource(R.string.distance), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
                     }
@@ -321,7 +270,7 @@ fun HomeScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularSeekbarView(
-                        value = averageSpeedKPI,
+                        value = homeUIState.kpiAvgSpeedCircularSeekbarValue,
                         onChange = { },
                         startAngle = -120f,
                         fullAngle = 240f,
@@ -334,11 +283,11 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = currentAverageSpeed.toString(),
+                                text = homeUIState.kpiAvgSpeed.toString(),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Black
                             )
-                            Text(text = "/$recordAverageSpeed", fontSize = 10.sp)
+                            Text(text = "/${homeUIState.kpiRecordAvgSpeed}", fontSize = 10.sp)
                         }
                         Text(
                             stringResource(R.string.average_speed),
@@ -356,7 +305,7 @@ fun HomeScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     CircularSeekbarView(
-                        value = speedKPI,
+                        value = homeUIState.kpiSpeedCircularSeekbarValue,
                         onChange = { },
                         startAngle = -120f,
                         fullAngle = 240f,
@@ -369,11 +318,11 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = currentSpeed.toString(),
+                                text = homeUIState.kpiSpeed.toString(),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Black
                             )
-                            Text(text = "/$recordSpeed", fontSize = 10.sp)
+                            Text(text = "/${homeUIState.kpiRecordSpeed}", fontSize = 10.sp)
                         }
                         Text(
                             stringResource(R.string.speed),
@@ -400,7 +349,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = chrono,
+                        text = homeUIState.chrono,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Black,
                         textAlign = if(homeUIState.intervalSwitch) TextAlign.End else TextAlign.Center,
@@ -411,7 +360,7 @@ fun HomeScreen(
                     )
                     if(homeUIState.intervalSwitch){
                         Text(
-                            text = "Round $rounds",
+                            text = "Round ${homeUIState.rounds}",
                             fontWeight = FontWeight.Black,
                             textAlign = TextAlign.Start,
                             color = MaterialTheme.colorScheme.onSecondary,
@@ -445,13 +394,13 @@ fun HomeScreen(
                 Button(
                     onClick = {
 
-                        homeViewModel.changeMapType(mapType != MapType.NORMAL)
+                        homeViewModel.changeMapType(homeUIState.mapType != MapType.NORMAL)
 
                     },
                     shape = RoundedCornerShape(0.dp),
                     modifier = Modifier.padding(8.dp)
                 ) {
-                    if(mapType == MapType.NORMAL){
+                    if(homeUIState.mapType == MapType.NORMAL){
                         Icon(imageVector = Icons.Filled.SatelliteAlt, contentDescription = "Hybrid")
                     } else {
                         Icon(imageVector = Icons.Filled.Map, contentDescription = "Normal")
@@ -469,7 +418,7 @@ fun HomeScreen(
                         HomeCoordinatesMap(
                             modifier = Modifier.fillMaxSize(),
                             cameraPositionState = cameraPositionState,
-                            mapType = mapType,
+                            mapType = homeUIState.mapType,
                             content = {
                                 Polyline(coordinates)
                             },
@@ -746,11 +695,6 @@ fun HomeScreen(
                                 )
                             }
                         }
-                        homeViewModel.getSecondsFromWatch(
-                            "${if(hourPickerState.selectedItem.isNullOrEmpty()) "00" else hourPickerState.selectedItem}:" +
-                                    "${if(minutePickerState.selectedItem.isNullOrEmpty()) "00" else minutePickerState.selectedItem}:" +
-                                    "${if(secondPickerState.selectedItem.isNullOrEmpty()) "00" else secondPickerState.selectedItem}"
-                        )
 
                         Spacer(modifier = Modifier.height(18.dp))
                         Row(
@@ -826,11 +770,11 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                         if(!intervalMinutesPickerState.selectedItem.isNullOrEmpty()){
-                            homeViewModel.getRunIntervalDuration(
+                            homeViewModel.getIntervalRunDuration(
                                 intervalMinutesPickerState.selectedItem.toLong(),
                                 homeUIState.intervalDurationSeekbar
                             )
-                            homeViewModel.getWalkIntervalDuration(
+                            homeViewModel.getIntervalWalkDuration(
                                 intervalMinutesPickerState.selectedItem.toLong(),
                                 homeUIState.intervalDurationSeekbar
                             )
@@ -870,10 +814,10 @@ fun HomeScreen(
                             ){
                                 Column {
                                     Text("Run:")
-                                    Text("$runIntervalDuration")
+                                    Text("${homeUIState.intervalRunDuration}")
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Text("Walk:")
-                                    Text("$walkIntervalDuration")
+                                    Text("${homeUIState.intervalWalkDuration}")
                                 }
                             }
                         }
@@ -903,7 +847,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Slider(
-                            value = homeUIState.runVolume,
+                            value = homeUIState.audioRunVolume,
                             onValueChange = { homeViewModel.changeRunVolume(it) },
                             valueRange = 0f..100f
                         )
@@ -915,7 +859,7 @@ fun HomeScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Slider(
-                                    value = homeUIState.walkVolume,
+                                    value = homeUIState.audioWalkVolume,
                                     onValueChange = { homeViewModel.changeWalkVolume(it) },
                                     valueRange = 0f..100f
                                 )
@@ -927,7 +871,7 @@ fun HomeScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Slider(
-                            value = homeUIState.notificationVolume,
+                            value = homeUIState.audioNotificationVolume,
                             onValueChange = { homeViewModel.changeNotificationVolume(it) },
                             valueRange = 0f..100f
                         )
@@ -937,26 +881,26 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Slider(
-                    value = hardTrack,
+                    value = homeUIState.audioRunTrack,
                     onValueChange = { homeViewModel.changePositionHardTrack(it) },
                     valueRange = 0f .. 100f
                 )
                 Row {
-                    Text("$hardTrackPosition")
+                    Text("${homeUIState.audioRunTrackPosition}")
                     Spacer(modifier = Modifier.weight(1f))
-                    Text("-$hardTrackRemaining")
+                    Text("-${homeUIState.audioRunRemainingTrackPosition}")
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 if(homeUIState.intervalSwitch){
                     Slider(
-                        value = softTrack,
+                        value = homeUIState.audioWalkTrack,
                         onValueChange = { homeViewModel.changePositionSoftTrack(it)},
                         valueRange = 0f .. 100f
                     )
                     Row {
-                        Text("$softTrackPosition")
+                        Text("${homeUIState.audioWalkTrackPosition}")
                         Spacer(modifier = Modifier.weight(1f))
-                        Text("-$softTrackRemaining")
+                        Text("-${homeUIState.audioWalkRemainingTrackPosition}")
                     }
                 }
             }
@@ -970,21 +914,21 @@ fun HomeScreen(
     }
 
 
-    if(chrono!="00:00:00"){
+    if(homeUIState.chrono!="00:00:00"){
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd){
             FloatingActionButton(
                 onClick = {
                     navigateToFinishedScreen(
-                        chrono,
-                        "${hourPickerState.selectedItem ?: "00"}:${minutePickerState.selectedItem ?: "00"}:${secondPickerState.selectedItem ?: "00"}",
+                        homeUIState.chrono,
+                        "${homeUIState.goalHoursDefault}:${homeUIState.goalMinutesDefault}:${homeUIState.goalSecondsDefault}",
                         (homeUIState.intervalDefault + 1).toString(),
-                        runIntervalDuration,
-                        walkIntervalDuration,
-                        currentKilometers.toString(),
+                        homeUIState.intervalRunDuration,
+                        homeUIState.intervalWalkDuration,
+                        homeUIState.kpiDistance.toString(),
                         homeUIState.goalDistanceDefault.toString(),
                         (minAltitude ?: 0).toString(),
                         (maxAltitude ?: 0).toString(),
-                        currentAverageSpeed.toString(),
+                        homeUIState.kpiAvgSpeed.toString(),
                         maxSpeed.toString()
                     )
                     homeViewModel.stopChrono()

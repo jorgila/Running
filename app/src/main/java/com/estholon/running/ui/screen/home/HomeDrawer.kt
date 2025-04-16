@@ -61,8 +61,6 @@ fun HomeDrawer(
 
    val homeUIState = homeViewModel.homeUIState.collectAsState().value
 
-    val email = homeViewModel.user.collectAsState().value
-
     var showResetPreferences by rememberSaveable {
         mutableStateOf(false)
     }
@@ -92,7 +90,7 @@ fun HomeDrawer(
                     .width(117.dp)
                 ) {
                     Text(
-                        text = "Level ${homeUIState.level}",
+                        text = "Level ${homeUIState.kpiLevel}",
                         fontWeight = FontWeight.Black,
                         fontSize = 18.sp,
                         color = MaterialTheme.colorScheme.onSecondary,
@@ -119,7 +117,7 @@ fun HomeDrawer(
                             .background(Color.Black)
                     )
                     Text(
-                        text = homeUIState.totalTime.toString(),
+                        text = homeUIState.kpiTotalTime,
                         fontWeight = FontWeight.Black,
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onPrimary,
@@ -146,7 +144,7 @@ fun HomeDrawer(
                         fontSize = 18.sp
                     )
                     Text(
-                        "${homeUIState.totalDistance} / ${homeUIState.levelDistance} km"
+                        "${homeUIState.kpiTotalDistance} / ${homeUIState.kpiLevelDistance} km"
                     )
                     Spacer(
                         modifier = Modifier.height(8.dp)
@@ -157,7 +155,7 @@ fun HomeDrawer(
                         fontSize = 18.sp
                     )
                     Text(
-                        "${homeUIState.totalRuns} / ${homeUIState.levelRuns} runs"
+                        "${homeUIState.kpiTotalRuns} / ${homeUIState.kpiLevelRuns} runs"
                     )
                 }
             }
@@ -174,7 +172,7 @@ fun HomeDrawer(
             )
         ){
             Text(
-                text = email,
+                text = homeUIState.user,
                 fontWeight = FontWeight.Black,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onPrimary

@@ -53,6 +53,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.math.round
 import kotlin.math.roundToInt
 
 @HiltViewModel
@@ -97,62 +98,11 @@ class HomeViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow<Boolean>(false)
     var isLoading : StateFlow<Boolean> = _isLoading
 
-    private val _user = MutableStateFlow<String>(context.getString(R.string.anonimous))
-    var user : StateFlow<String> = _user
-
-    private val _level = MutableStateFlow<String>(context.getString(R.string.level_0))
-    var level : StateFlow<String> = _level
-
-    private val _currentKilometers = MutableStateFlow<Double>(0.0 )
-    var currentKilometers : StateFlow<Double> = _currentKilometers
-
-    private val _currentAverageSpeed = MutableStateFlow<Double>(0.0 )
-    var currentAverageSpeed : StateFlow<Double> = _currentAverageSpeed
-
-    private val _currentSpeed = MutableStateFlow<Double>(0.0 )
-    var currentSpeed : StateFlow<Double> = _currentSpeed
-
-    private val _recordKilometers = MutableStateFlow<Double>(0.0 )
-    var recordKilometers : StateFlow<Double> = _recordKilometers
-
-    private val _recordAverageSpeed = MutableStateFlow<Double>(0.0)
-    var recordAverageSpeed : StateFlow<Double> = _recordAverageSpeed
-
-    private val _recordSpeed = MutableStateFlow<Double>(0.0)
-    var recordSpeed : StateFlow<Double> = _recordSpeed
-
-    private val _goalKilometers = MutableStateFlow<Double>(0.0)
-    var goalKilometers : StateFlow<Double> = _goalKilometers
-
-    private val _totalDistance = MutableStateFlow<Double>(0.0)
-    var totalDistance : StateFlow<Double> = _totalDistance
-
-    private val _totalRuns = MutableStateFlow<Double>(0.0)
-    var totalRuns : StateFlow<Double> = _totalRuns
-
-    private val _secondsFromWatch = MutableStateFlow<Int>(0)
-    var secondsFromWatch : StateFlow<Int> = _secondsFromWatch
-
-    private val _runIntervalDuration = MutableStateFlow("00:00")
-    var runIntervalDuration : StateFlow<String> = _runIntervalDuration
-
-    private val _walkIntervalDuration = MutableStateFlow("00:00")
-    var walkIntervalDuration : StateFlow<String> = _walkIntervalDuration
-
-    private val _chrono = MutableStateFlow<String>("00:00:00")
-    var chrono : StateFlow<String> = _chrono
-
-
     private val _timeRunning = MutableStateFlow<Long>(0)
     val timeRunning : StateFlow<Long> get() = _timeRunning
 
-
     private val _isWalkingInterval = MutableStateFlow<Boolean>(false)
     val isWalkingInterval : StateFlow<Boolean> get() = _isWalkingInterval
-
-    private val _rounds = MutableStateFlow<Int>(1)
-    val rounds : StateFlow<Int> get() = _rounds
-
 
     private val _runningProgress = MutableStateFlow<Float>(0f)
     var runningProgress : StateFlow<Float> = _runningProgress
@@ -165,24 +115,6 @@ class HomeViewModel @Inject constructor(
     private var mpNotify : MediaPlayer? = null
     private var mpHard : MediaPlayer? = null
     private var mpSoft : MediaPlayer? = null
-
-    private val _hardTrack = MutableStateFlow<Float>(0f)
-    val hardTrack : StateFlow<Float> get() = _hardTrack
-
-    private val _hardTrackPosition = MutableStateFlow<String>("00:00:00")
-    val hardTrackPosition : StateFlow<String> get() = _hardTrackPosition
-
-    private val _hardTrackRemaining = MutableStateFlow<String>("00:00:00")
-    val hardTrackRemaining : StateFlow<String> get() = _hardTrackRemaining
-
-    private val _softTrack = MutableStateFlow<Float>(0f)
-    val softTrack : StateFlow<Float> get() = _softTrack
-
-    private val _softTrackPosition = MutableStateFlow<String>("00:00:00")
-    val softTrackPosition : StateFlow<String> get() = _softTrackPosition
-
-    private val _softTrackRemaining = MutableStateFlow<String>("00:00:00")
-    val softTrackRemaining : StateFlow<String> get() = _softTrackRemaining
 
     private val _locationStatus = MutableStateFlow<Boolean>(false)
     val locationStatus : StateFlow<Boolean> get() = _locationStatus
@@ -214,25 +146,6 @@ class HomeViewModel @Inject constructor(
 
     private var avgSpeed: Double = 0.0
     private var speed: Double = 0.0
-
-    // MAP
-
-    private val _latlng = MutableStateFlow<LatLng>(LatLng(0.0,0.0))
-    val latlng : StateFlow<LatLng> get() = _latlng
-
-    private val _mapType = MutableStateFlow<MapType>(MapType.NORMAL)
-    val mapType : StateFlow<MapType> get() = _mapType
-
-    // KPIs
-
-    private val _kilometersKPI = MutableStateFlow<Float>(0f)
-    var kilometersKPI : StateFlow<Float> = _kilometersKPI
-
-    private val _speedKPI = MutableStateFlow<Float>(0f)
-    var speedKPI : StateFlow<Float> = _speedKPI
-
-    private val _avgSpeedKPI = MutableStateFlow<Float>(0f)
-    var avgSpeedKPI : StateFlow<Float> = _avgSpeedKPI
 
     // GOOGLE MAP
 
@@ -274,9 +187,9 @@ class HomeViewModel @Inject constructor(
                     intervalDefault = preferencesGetIntUseCase.getInt(SharedPreferencesKeys.SP_INTERVAL_DEFAULT, 5),
                     intervalDurationSeekbar = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_INTERVAL_DURATION_SEEKBAR, 0.5F),
                     audioSwitch = preferencesGetBooleanUseCase.getBoolean(SharedPreferencesKeys.SP_AUDIO_SWITCH, false),
-                    runVolume = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_RUN_VOLUME, 70.0F),
-                    walkVolume = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_WALK_VOLUME, 70.0F),
-                    notificationVolume = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME, 70.0F),
+                    audioRunVolume = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_RUN_VOLUME, 70.0F),
+                    audioWalkVolume = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_WALK_VOLUME, 70.0F),
+                    audioNotificationVolume = preferencesGetFloatUseCase.getFloat(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME, 70.0F),
                 )
             }
 
@@ -298,17 +211,14 @@ class HomeViewModel @Inject constructor(
                 val m = Math.floor(minutosTotales % 60).toInt()
                 val s = Math.floor(segundosTotales % 60).toInt()
 
-                _totalDistance.value = totals.totalDistance
-                _totalRuns.value = totals.totalRuns
-
                 _homeUIState.update { homeUIState ->
                     homeUIState.copy(
-                        recordAvgSpeed = totals.recordAvgSpeed,
-                        recordDistance = totals.recordDistance,
-                        recordSpeed = totals.recordSpeed,
-                        totalDistance = totals.totalDistance,
-                        totalRuns = totals.totalRuns,
-                        totalTime = "$d d $h h $m m $s s"
+                        kpiRecordAvgSpeed = totals.recordAvgSpeed,
+                        kpiRecordDistance = totals.recordDistance,
+                        kpiRecordSpeed = totals.recordSpeed,
+                        kpiTotalDistance = totals.totalDistance,
+                        kpiTotalRuns = totals.totalRuns,
+                        kpiTotalTime = "$d d $h h $m m $s s"
                     )
                 }
             }
@@ -321,12 +231,12 @@ class HomeViewModel @Inject constructor(
                 delay(3000)
                 for (level in levels) {
 
-                    if(  _totalDistance.value < level.distanceTarget || _totalRuns.value < level.runsTarget) {
+                    if( _homeUIState.value.kpiTotalDistance < level.distanceTarget || _homeUIState.value.kpiTotalRuns < level.runsTarget) {
                         _homeUIState.update { homeUIState ->
                             homeUIState.copy(
-                                level = level.level,
-                                levelDistance = level.distanceTarget,
-                                levelRuns = level.runsTarget
+                                kpiLevel = level.level,
+                                kpiLevelDistance = level.distanceTarget,
+                                kpiLevelRuns = level.runsTarget
                             )
                         }
                         break
@@ -346,7 +256,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun requestPermissionLocation() {
-        _currentKilometers.value = 999.9
+
     }
 
     private fun allPermissionsGrantedGPS() = REQUIRED_PERMISSIONS_GPS.all {
@@ -355,16 +265,16 @@ class HomeViewModel @Inject constructor(
 
     private fun setVolumes() {
         mpNotify?.setVolume(
-            _homeUIState.value.notificationVolume/100.0f,
-            _homeUIState.value.notificationVolume/100.0f
+            _homeUIState.value.audioNotificationVolume/100.0f,
+            _homeUIState.value.audioNotificationVolume/100.0f
         )
         mpSoft?.setVolume(
-            _homeUIState.value.walkVolume/100.0f,
-            _homeUIState.value.walkVolume/100.0f
+            _homeUIState.value.audioWalkVolume/100.0f,
+            _homeUIState.value.audioWalkVolume/100.0f
         )
         mpHard?.setVolume(
-            _homeUIState.value.runVolume/100.0f,
-            _homeUIState.value.runVolume/100.0f
+            _homeUIState.value.audioRunVolume/100.0f,
+            _homeUIState.value.audioRunVolume/100.0f
         )
     }
 
@@ -381,42 +291,78 @@ class HomeViewModel @Inject constructor(
     fun getUserInfo(){
         viewModelScope.launch {
             withContext(Dispatchers.IO){
-                _user.value = getUserInfoUseCase.getUserInfo()
+                val user = getUserInfoUseCase.getUserInfo()
+                _homeUIState.update { homeUIState ->
+                    homeUIState.copy(
+                        user = user
+                    )
+                }
+
             }
         }
     }
 
-    fun getSecondsFromWatch(watch: String) {
-        _secondsFromWatch.value = getSecondsFromWatchUseCase.getSecondsFromWatch(watch)
+    fun getIntervalRunDuration(interval: Long, seekbar: Float){
+
+        val ms = ((interval * 60 * seekbar / 15.0).roundToInt() * 15 * 1000).toLong()
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                intervalRunDuration = getFormattedStopWatchUseCase.getFormattedStopWatch(ms)
+            )
+        }
+
     }
 
-    fun getRunIntervalDuration(interval: Long, seekbar: Float){
-        // TODO: Redondear de 15 en 15 segundos
-        val ms = (interval * 1000 * 60 * seekbar).toLong()
-        _runIntervalDuration.value = getFormattedStopWatchUseCase.getFormattedStopWatch(ms)
-    }
+    fun getIntervalWalkDuration(interval: Long, seekbar: Float){
 
-    fun getWalkIntervalDuration(interval: Long, seekbar: Float){
-        // TODO: Redondear de 15 en 15 segundos
-        val ms = (interval * 1000 * 60 * (1.0 - seekbar)).toLong()
-        _walkIntervalDuration.value = getFormattedStopWatchUseCase.getFormattedStopWatch(ms)
+        val ms = ((interval * 60 * (1.0 - seekbar) / 15.0).roundToInt() * 15 * 1000).toLong()
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                intervalWalkDuration = getFormattedStopWatchUseCase.getFormattedStopWatch(ms)
+            )
+        }
+
     }
 
     fun setKPI(){
-        _kilometersKPI.value =
-            if(_recordKilometers.value<_goalKilometers.value){
-                if(_currentKilometers.value < _goalKilometers.value) {
-                    (_currentKilometers.value / _goalKilometers.value).toFloat()
-                } else {
-                    1f
-                }
+
+        val kpiDistanceFloat = if(_homeUIState.value.kpiRecordDistance<_homeUIState.value.goalDistance){
+            if(_homeUIState.value.kpiDistance < _homeUIState.value.goalDistance) {
+                (_homeUIState.value.kpiDistance / _homeUIState.value.goalDistance).toFloat()
             } else {
-                if(_currentKilometers.value < _recordKilometers.value) {
-                    (_currentKilometers.value / _recordKilometers.value).toFloat()
-                } else {
-                    1f
-                }
+                1f
             }
+        } else {
+            if(_homeUIState.value.kpiDistance < _homeUIState.value.kpiRecordDistance) {
+                (_homeUIState.value.kpiDistance / _homeUIState.value.kpiRecordDistance).toFloat()
+            } else {
+                1f
+            }
+        }
+
+        val kpiAvgSpeedFloat =
+            if(_homeUIState.value.kpiAvgSpeed < _homeUIState.value.kpiRecordAvgSpeed) {
+                (_homeUIState.value.kpiAvgSpeed / _homeUIState.value.kpiRecordAvgSpeed).toFloat()
+            } else {
+                1f
+            }
+
+        val kpiSpeedFloat =
+            if(_homeUIState.value.kpiSpeed < _homeUIState.value.kpiRecordSpeed) {
+                (_homeUIState.value.kpiSpeed / _homeUIState.value.kpiRecordSpeed).toFloat()
+            } else {
+                1f
+            }
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                kpiDistanceCircularSeekbarValue = kpiDistanceFloat,
+                kpiAvgSpeedCircularSeekbarValue = kpiAvgSpeedFloat,
+                kpiSpeedCircularSeekbarValue = kpiSpeedFloat,
+            )
+        }
     }
 
     var chronometer: Runnable = object : Runnable {
@@ -424,11 +370,23 @@ class HomeViewModel @Inject constructor(
             try {
 
                 if(mpHard!!.isPlaying){
-                    _hardTrack.value = (mpHard!!.currentPosition.toFloat() / mpHard!!.duration.toFloat())*100
+
+                    _homeUIState.update { homeUIState ->
+                        homeUIState.copy(
+                            audioRunTrack = (mpHard!!.currentPosition.toFloat() / mpHard!!.duration.toFloat())*100
+                        )
+                    }
+
                 }
 
                 if(mpSoft!!.isPlaying){
-                    _softTrack.value = (mpSoft!!.currentPosition.toFloat() / mpSoft!!.duration.toFloat())*100
+
+                    _homeUIState.update { homeUIState ->
+                        homeUIState.copy(
+                            audioWalkTrack = (mpSoft!!.currentPosition.toFloat() / mpSoft!!.duration.toFloat())*100
+                        )
+                    }
+
                 }
 
                 updateTimesTrack(true,true)
@@ -452,7 +410,14 @@ class HomeViewModel @Inject constructor(
                     mpHard?.start()
                 }
                 timeInSeconds += 1
-                _chrono.value = getFormattedStopWatchUseCase.getFormattedStopWatch(timeInSeconds*1000)
+
+                _homeUIState.update { homeUIState ->
+                    homeUIState.copy(
+                        chrono = getFormattedStopWatchUseCase.getFormattedStopWatch(timeInSeconds*1000)
+                    )
+                }
+
+                setKPI()
 
             } finally {
                 mHandler!!.postDelayed(this,mInterval.toLong())
@@ -524,7 +489,11 @@ class HomeViewModel @Inject constructor(
                         _coordinates.update {
                             it + LatLng(new_latitude,new_longitude)
                         }
-                        _latlng.value = LatLng(new_latitude,new_longitude)
+                        _homeUIState.update { homeUIState ->
+                            homeUIState.copy(
+                                mapLatLongTarget = LatLng(new_latitude,new_longitude)
+                            )
+                        }
                     }
                 }
             }
@@ -556,9 +525,15 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun refreshInterfaceData() {
-        _currentKilometers.value = Math.round(distance * 100).toDouble()/100
-        _currentAverageSpeed.value = Math.round(avgSpeed * 10).toDouble()/10
-        _currentSpeed.value = Math.round(speed * 10).toDouble()/10
+
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                kpiDistance = Math.round(distance * 100).toDouble()/100,
+                kpiAvgSpeed = Math.round(avgSpeed * 10).toDouble()/10,
+                kpiSpeed = Math.round(speed * 10).toDouble()/10
+            )
+        }
+
     }
 
     private fun updateSpeeds(d: Double) {
@@ -612,18 +587,19 @@ class HomeViewModel @Inject constructor(
     fun resetChrono() {
 
         timeInSeconds = 0
-        _rounds.value = 1
-        _chrono.value = "00:00:00"
 
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                chrono = "00:00:00",
+                rounds = 1
+            )
+        }
     }
-
-
-
 
     private fun checkStopRun(secs: Long){
         var seconds : Long = secs
         while(seconds > _intervalDuration.value) seconds -= _intervalDuration.value
-        _timeRunning.value = getSecondsFromWatchUseCase.getSecondsFromWatch(_runIntervalDuration.value).toLong()
+        _timeRunning.value = getSecondsFromWatchUseCase.getSecondsFromWatch(_homeUIState.value.intervalRunDuration).toLong()
 
 
 
@@ -641,7 +617,13 @@ class HomeViewModel @Inject constructor(
         var seconds : Long = secs
         if(seconds.toInt() % _intervalDuration.value.toInt() == 0){
             if(secs > 0){
-                _rounds.value++
+
+                _homeUIState.update { homeUIState ->
+                    homeUIState.copy(
+                        rounds = _homeUIState.value.rounds + 1
+                    )
+                }
+
                 _isWalkingInterval.value = false
             }
             mpSoft?.start()
@@ -750,12 +732,24 @@ class HomeViewModel @Inject constructor(
 
     private fun updateTimesTrack(timesH: Boolean, timesS: Boolean){
         if(timesH){
-            _hardTrackPosition.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.currentPosition).toLong())
-            _hardTrackRemaining.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.duration - mpHard!!.currentPosition).toLong())
+
+            _homeUIState.update { homeUIState ->
+                homeUIState.copy(
+                    audioRunTrackPosition = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.currentPosition).toLong()),
+                    audioRunRemainingTrackPosition = getFormattedStopWatchUseCase.getFormattedStopWatch((mpHard!!.duration - mpHard!!.currentPosition).toLong())
+                )
+            }
+
         }
         if(timesS){
-            _softTrackPosition.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.currentPosition).toLong())
-            _softTrackRemaining.value = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.duration - mpSoft!!.currentPosition).toLong())
+
+            _homeUIState.update { homeUIState ->
+                homeUIState.copy(
+                    audioWalkTrackPosition = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.currentPosition).toLong()),
+                    audioWalkRemainingTrackPosition = getFormattedStopWatchUseCase.getFormattedStopWatch((mpSoft!!.duration - mpSoft!!.currentPosition).toLong())
+                )
+            }
+
         }
     }
 
@@ -791,11 +785,13 @@ class HomeViewModel @Inject constructor(
     }
 
     fun changeMapType(b:Boolean){
-        if(b){
-            _mapType.value = MapType.NORMAL
-        } else {
-            _mapType.value = MapType.HYBRID
-        }
+
+            _homeUIState.update { homeUIState ->
+                homeUIState.copy(
+                    mapType = if(b) MapType.NORMAL else MapType.HYBRID
+                )
+            }
+
     }
 
     fun changeGoalSwitch(b: Boolean) {
@@ -977,7 +973,7 @@ class HomeViewModel @Inject constructor(
 
         _homeUIState.update {homeUIState ->
             homeUIState.copy(
-                notificationVolume = newPosition
+                audioNotificationVolume = newPosition
             )
         }
 
@@ -992,7 +988,7 @@ class HomeViewModel @Inject constructor(
 
         _homeUIState.update { homeUIState ->
             homeUIState.copy(
-                runVolume = newPosition
+                audioRunVolume = newPosition
             )
         }
 
@@ -1007,7 +1003,7 @@ class HomeViewModel @Inject constructor(
 
         _homeUIState.update { homeUIState ->
             homeUIState.copy(
-                walkVolume = newPosition
+                audioWalkVolume = newPosition
             )
         }
 
