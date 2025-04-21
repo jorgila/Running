@@ -102,8 +102,6 @@ fun HomeScreen(
 
     // OTHER VALUES
 
-    val maxAltitude = homeViewModel.maxAltitude.collectAsState().value
-    val minAltitude = homeViewModel.minAltitude.collectAsState().value
     val maxSpeed = homeViewModel.maxSpeed.collectAsState().value
 
     // INTERVAL SETTINGS
@@ -926,13 +924,12 @@ fun HomeScreen(
                         homeUIState.intervalWalkDuration,
                         homeUIState.kpiDistance.toString(),
                         homeUIState.goalDistanceDefault.toString(),
-                        (minAltitude ?: 0).toString(),
-                        (maxAltitude ?: 0).toString(),
+                        (homeUIState.kpiMinAltitude ?: 0).toString(),
+                        (homeUIState.kpiMaxAltitude ?: 0).toString(),
                         homeUIState.kpiAvgSpeed.toString(),
                         maxSpeed.toString()
                     )
                     homeViewModel.stopChrono()
-                    homeViewModel.resetChrono()
                     homeViewModel.changeStopped(true)
                     homeViewModel.changeStarted(false)
                     homeViewModel.changeLocationStatus(false)

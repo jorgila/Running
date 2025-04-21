@@ -1,11 +1,13 @@
 package com.estholon.running.ui.screen.finished
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.estholon.running.R
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
+import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.ui.screen.home.HomeScreenViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -19,6 +21,7 @@ import javax.inject.Inject
 class FinishedViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val getTotalsUseCase: GetTotalsUseCase,
+    private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
 ) : ViewModel() {
 
     // UI STATE
@@ -34,23 +37,8 @@ class FinishedViewModel @Inject constructor(
     private var _level = MutableStateFlow<String>(context.getString(R.string.level_0))
     var level : StateFlow<String> = _level
 
-    private var _recordKilometers = MutableStateFlow<Double>(0.0 )
-    var recordKilometers : StateFlow<Double> = _recordKilometers
-
-    private var _recordAverageSpeed = MutableStateFlow<Double>(0.0)
-    var recordAverageSpeed : StateFlow<Double> = _recordAverageSpeed
-
-    private var _recordSpeed = MutableStateFlow<Double>(0.0)
-    var recordSpeed : StateFlow<Double> = _recordSpeed
-
-    private var _currentKilometers = MutableStateFlow<Double>(0.0 )
-    var currentKilometers : StateFlow<Double> = _currentKilometers
-
     private var _totalKilometers = MutableStateFlow<Double>(0.0)
     var totalKilometers : StateFlow<Double> = _totalKilometers
-
-    private var _currentRuns = MutableStateFlow<Int>(0)
-    var currentRuns : StateFlow<Int> = _currentRuns
 
     private var _totalRuns = MutableStateFlow<Int>(0)
     var totalRuns : StateFlow<Int> = _totalRuns
@@ -63,7 +51,13 @@ class FinishedViewModel @Inject constructor(
         viewModelScope.launch {
             getTotalsUseCase.getTotals().collect{ totals ->
 
-                val segundosTotales = totals.totalTime / 1000
+                Log.e("FinishedViewModel Chrono",_finishedUIState.value.chrono)
+                Log.e("FinishedViewModel Distance",_finishedUIState.value.kpiDistance.toString())
+
+                val currentSeconds = getSecondsFromWatchUseCase(_finishedUIState.value.chrono)
+                val currentTime = currentSeconds * 1000
+
+                val segundosTotales = (totals.totalTime + currentTime ) / 1000
                 val minutosTotales = segundosTotales / 60
                 val horasTotales = minutosTotales / 60
 
@@ -72,16 +66,17 @@ class FinishedViewModel @Inject constructor(
                 val m = Math.floor(minutosTotales % 60).toInt()
                 val s = Math.floor(segundosTotales % 60).toInt()
 
+                val currentDistance = _finishedUIState.value.kpiDistance
+
                 _finishedUIState.update { homeUIState ->
                     homeUIState.copy(
-                        totalDistance = totals.totalDistance,
-                        totalRuns = totals.totalRuns,
-                        totalTime = "$d d $h h $m m $s s"
+                        kpiTotalDistance = totals.totalDistance + currentDistance,
+                        kpiTotalRuns = totals.totalRuns + 1,
+                        kpiTotalTime = "$d d $h h $m m $s s"
                     )
                 }
             }
         }
     }
-
 
 }

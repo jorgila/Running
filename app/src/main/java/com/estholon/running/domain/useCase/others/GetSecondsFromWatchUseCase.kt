@@ -8,7 +8,7 @@ class GetSecondsFromWatchUseCase @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
-    fun getSecondsFromWatch(watch: String) : Int {
+    operator fun invoke(watch: String) : Int {
 
         var seconds = 0
         var w: String = watch
@@ -19,6 +19,7 @@ class GetSecondsFromWatchUseCase @Inject constructor(
         seconds += w.subSequence(6,8).toString().toInt()
 
         return seconds
+
     }
 
 }

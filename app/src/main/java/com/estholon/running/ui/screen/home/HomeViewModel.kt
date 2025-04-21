@@ -29,6 +29,7 @@ import com.estholon.running.domain.useCase.sharedPreferences.PreferencesPutBoole
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesPutFloatUseCase
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesPutIntUseCase
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesResetUseCase
+import com.estholon.running.ui.screen.finished.FinishedScreenViewState
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -87,6 +88,9 @@ class HomeViewModel @Inject constructor(
     private val _homeUIState = MutableStateFlow<HomeScreenViewState.HomeUIState>(HomeScreenViewState.HomeUIState())
     val homeUIState : StateFlow<HomeScreenViewState.HomeUIState> = _homeUIState
 
+    private val _finishedUIState = MutableStateFlow<FinishedScreenViewState.FinishedUIState>(FinishedScreenViewState.FinishedUIState())
+    val finishedUIState : StateFlow<FinishedScreenViewState.FinishedUIState> = _finishedUIState
+
     // VARIABLES
 
     private val _stopped = MutableStateFlow<Boolean>(true)
@@ -129,12 +133,6 @@ class HomeViewModel @Inject constructor(
     private var maxLatitude: Double? = null
     private var minLongitude: Double? = null
     private var maxLongitude: Double? = null
-
-    private val _minAltitude = MutableStateFlow<Double?>(null)
-    val minAltitude : StateFlow<Double?> get() = _minAltitude
-
-    private val _maxAltitude = MutableStateFlow<Double?>(null)
-    val maxAltitude : StateFlow<Double?> get() = _maxAltitude
 
     private var init_lt: Double = 0.0
     private var init_ln: Double = 0.0
@@ -515,12 +513,29 @@ class HomeViewModel @Inject constructor(
         if(longitude > maxLongitude!!) maxLongitude = longitude
 
         if(location.hasAltitude()){
-            if(_maxAltitude.value == null){
-                _maxAltitude.value = location.altitude
-                _minAltitude.value = location.altitude
+            if(_homeUIState.value.kpiMaxAltitude == null){
+                _homeUIState.update { homeUIState ->
+                    homeUIState.copy(
+                        kpiMinAltitude = location.altitude,
+                        kpiMaxAltitude = location.altitude
+                    )
+                }
             }
-            if(location.altitude > _maxAltitude.value!!) _maxAltitude.value = location.altitude
-            if(location.altitude < _minAltitude.value!!) _minAltitude.value = location.altitude
+            if(location.altitude > _homeUIState.value.kpiMaxAltitude!!) {
+                _homeUIState.update { homeUIState ->
+                    homeUIState.copy(
+                        kpiMaxAltitude = location.altitude
+                    )
+                }
+            }
+            if(location.altitude < _homeUIState.value.kpiMinAltitude!!) {
+                _homeUIState.update { homeUIState ->
+                    homeUIState.copy(
+                        kpiMinAltitude = location.altitude
+                    )
+                }
+            }
+
         }
     }
 
@@ -584,22 +599,10 @@ class HomeViewModel @Inject constructor(
         mHandler!!.removeCallbacks(chronometer)
     }
 
-    fun resetChrono() {
-
-        timeInSeconds = 0
-
-        _homeUIState.update { homeUIState ->
-            homeUIState.copy(
-                chrono = "00:00:00",
-                rounds = 1
-            )
-        }
-    }
-
     private fun checkStopRun(secs: Long){
         var seconds : Long = secs
         while(seconds > _intervalDuration.value) seconds -= _intervalDuration.value
-        _timeRunning.value = getSecondsFromWatchUseCase.getSecondsFromWatch(_homeUIState.value.intervalRunDuration).toLong()
+        _timeRunning.value = getSecondsFromWatchUseCase(_homeUIState.value.intervalRunDuration).toLong()
 
 
 
@@ -670,6 +673,16 @@ class HomeViewModel @Inject constructor(
             }
 
         } else {
+
+            // SET VALUES FOR FINISHED SCREEN
+
+            _finishedUIState.update { finishedUIState ->
+                finishedUIState.copy(
+                    chrono = _homeUIState.value.chrono,
+                    kpiDistance = _homeUIState.value.kpiDistance,
+                )
+            }
+
             mpHard?.stop()
             mpSoft?.stop()
             mpNotify?.stop()
@@ -679,17 +692,18 @@ class HomeViewModel @Inject constructor(
             distance = 0.0
             avgSpeed = 0.0
             speed = 0.0
-            _minAltitude.value = null
-            _maxAltitude.value = null
             minLatitude = null
             maxLatitude = null
             minLongitude = null
             maxLongitude = null
             _coordinates.value = emptyList()
-            // TODO
+            timeInSeconds = 0
             _homeUIState.update { homeUIState ->
                 homeUIState.copy(
-
+                    chrono = "00:00:00",
+                    rounds = 1,
+                    kpiMinAltitude = null,
+                    kpiMaxAltitude = null
                 )
             }
 

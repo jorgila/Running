@@ -31,6 +31,8 @@ sealed class HomeScreenViewState {
         val kpiLevel : String = "0",
         val kpiLevelDistance : Double = 0.00,
         val kpiLevelRuns : Double = 0.00,
+        val kpiMinAltitude : Double? = null,
+        val kpiMaxAltitude : Double? = null,
         val chrono : String = "00:00:00",
         var rounds : Int = 1,
         val started : Boolean = false,
