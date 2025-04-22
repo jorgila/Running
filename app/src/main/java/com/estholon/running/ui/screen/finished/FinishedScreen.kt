@@ -1,5 +1,6 @@
 package com.estholon.running.ui.screen.finished
 
+import android.util.Log
 import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -84,7 +85,7 @@ fun FinishedScreen(
                 .width(117.dp)
             ) {
                 Text(
-                    text = level,
+                    text = "Level ${finishedUIState.kpiLevel}",
                     fontWeight = FontWeight.Black,
                     fontSize = 18.sp,
                     color = MaterialTheme.colorScheme.onSecondary,
@@ -138,7 +139,7 @@ fun FinishedScreen(
                     fontSize = 18.sp
                 )
                 Text(
-                    "${finishedUIState.kpiTotalDistance} / $totalKilometers km"
+                    "${finishedUIState.kpiTotalDistance} / ${finishedUIState.kpiLevelDistance} km"
                 )
                 Spacer(
                     modifier = Modifier.height(8.dp)
@@ -149,7 +150,7 @@ fun FinishedScreen(
                     fontSize = 18.sp
                 )
                 Text(
-                    "${finishedUIState.kpiTotalRuns} / $totalRuns runs"
+                    "${finishedUIState.kpiTotalRuns} / ${finishedUIState.kpiLevelRuns} runs"
                 )
             }
         }

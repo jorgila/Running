@@ -12,7 +12,7 @@ class SignUpEmailUseCase @Inject constructor(
     private val auth: AuthManager,
     private val analytics: AnalyticsManager
 ) {
-    suspend fun signUpEmail(
+    suspend operator fun invoke(
         email: String,
         password: String
     ): String {

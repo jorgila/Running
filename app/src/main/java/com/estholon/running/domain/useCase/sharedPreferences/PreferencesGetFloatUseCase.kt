@@ -7,7 +7,7 @@ class PreferencesGetFloatUseCase @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
 
-    suspend fun getFloat(
+    suspend operator fun invoke(
         key: String,
         defaultValue: Float = 0F
     ) : Float {

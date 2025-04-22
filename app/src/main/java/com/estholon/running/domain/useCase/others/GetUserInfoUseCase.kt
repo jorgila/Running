@@ -12,7 +12,7 @@ class GetUserInfoUseCase @Inject constructor(
     private val auth: AuthManager,
     @ApplicationContext private val context: Context
 ) {
-    suspend fun getUserInfo(): String {
+    suspend operator fun invoke(): String {
         return withContext(Dispatchers.IO){
             auth.getCurrentEmail() ?: context.getString(R.string.anonimous)
         }

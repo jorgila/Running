@@ -10,7 +10,7 @@ class GetLevelsUseCase @Inject constructor(
     private val databaseRepository: DatabaseRepository
 ) {
 
-    fun getLevels() : Flow<List<LevelModel>> {
+    operator fun invoke() : Flow<List<LevelModel>> {
         return databaseRepository.getLevels()
     }
 

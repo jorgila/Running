@@ -7,7 +7,7 @@ class PreferencesGetIntUseCase @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
 
-    suspend fun getInt(
+    suspend operator fun invoke(
         key: String,
         defaultValue: Int = 0
     ) : Int {

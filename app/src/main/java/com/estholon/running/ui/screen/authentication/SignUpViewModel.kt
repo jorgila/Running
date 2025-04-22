@@ -42,7 +42,7 @@ class SignUpViewModel @Inject constructor(
     ) {
         _isLoading.value = true
         viewModelScope.launch {
-            val signUp = signUpEmailUseCase.signUpEmail(
+            val signUp = signUpEmailUseCase(
                 email,
                 password
             )

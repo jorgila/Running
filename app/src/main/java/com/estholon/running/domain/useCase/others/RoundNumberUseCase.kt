@@ -7,7 +7,7 @@ import javax.inject.Inject
 class RoundNumberUseCase @Inject constructor(
     @ApplicationContext private val context: Context
 ){
-    fun roundNumber(data: String, decimals: Int) : String{
+    operator fun invoke(data: String, decimals: Int) : String{
         var d : String = data
         var p= d.indexOf(".", 0)
         if (p != null){

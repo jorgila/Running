@@ -39,7 +39,7 @@ class RecoverViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            val reset = resetPasswordUseCase.resetPassword(email)
+            val reset = resetPasswordUseCase(email)
 
             when(reset){
                 "Success" -> navigateToSignIn()

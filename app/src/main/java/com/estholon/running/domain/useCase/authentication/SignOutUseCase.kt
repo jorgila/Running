@@ -9,7 +9,7 @@ class SignOutUseCase @Inject constructor(
     private val analytics: AnalyticsManager
 ){
 
-    suspend fun signOut(){
+    suspend operator fun invoke(){
         auth.signOut()
     }
 

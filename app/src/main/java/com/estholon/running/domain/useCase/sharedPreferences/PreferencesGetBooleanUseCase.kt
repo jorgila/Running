@@ -7,7 +7,7 @@ class PreferencesGetBooleanUseCase @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
 
-    suspend fun getBoolean(
+    suspend operator fun invoke(
         key: String,
         defaultValue: Boolean = false
     ) : Boolean {

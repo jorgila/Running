@@ -6,11 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.estholon.running.R
+import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.ui.screen.home.HomeScreenViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -21,6 +23,7 @@ import javax.inject.Inject
 class FinishedViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val getTotalsUseCase: GetTotalsUseCase,
+    private val getLevelsUseCase: GetLevelsUseCase,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
 ) : ViewModel() {
 
@@ -45,19 +48,14 @@ class FinishedViewModel @Inject constructor(
 
     init {
         initTotals()
+        initLevels()
     }
 
     fun initTotals(){
         viewModelScope.launch {
-            getTotalsUseCase.getTotals().collect{ totals ->
+            getTotalsUseCase.invoke().collect(){ totals ->
 
-                Log.e("FinishedViewModel Chrono",_finishedUIState.value.chrono)
-                Log.e("FinishedViewModel Distance",_finishedUIState.value.kpiDistance.toString())
-
-                val currentSeconds = getSecondsFromWatchUseCase(_finishedUIState.value.chrono)
-                val currentTime = currentSeconds * 1000
-
-                val segundosTotales = (totals.totalTime + currentTime ) / 1000
+                val segundosTotales = totals.totalTime / 1000
                 val minutosTotales = segundosTotales / 60
                 val horasTotales = minutosTotales / 60
 
@@ -66,15 +64,35 @@ class FinishedViewModel @Inject constructor(
                 val m = Math.floor(minutosTotales % 60).toInt()
                 val s = Math.floor(segundosTotales % 60).toInt()
 
-                val currentDistance = _finishedUIState.value.kpiDistance
-
                 _finishedUIState.update { homeUIState ->
                     homeUIState.copy(
-                        kpiTotalDistance = totals.totalDistance + currentDistance,
-                        kpiTotalRuns = totals.totalRuns + 1,
+                        kpiTotalDistance = totals.totalDistance,
+                        kpiTotalRuns = totals.totalRuns,
                         kpiTotalTime = "$d d $h h $m m $s s"
                     )
                 }
+            }
+        }
+    }
+
+    fun initLevels(){
+        viewModelScope.launch {
+            getLevelsUseCase.invoke().collect{ levels ->
+                delay(3000)
+                for (level in levels) {
+
+                    if( _finishedUIState.value.kpiTotalDistance < level.distanceTarget || _finishedUIState.value.kpiTotalRuns < level.runsTarget) {
+                        _finishedUIState.update { homeUIState ->
+                            homeUIState.copy(
+                                kpiLevel = level.level,
+                                kpiLevelDistance = level.distanceTarget,
+                                kpiLevelRuns = level.runsTarget
+                            )
+                        }
+                        break
+                    }
+                }
+
             }
         }
     }

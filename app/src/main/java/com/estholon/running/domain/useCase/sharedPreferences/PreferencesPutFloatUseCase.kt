@@ -7,7 +7,10 @@ class PreferencesPutFloatUseCase @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
 
-    suspend fun putFloat(key: String, value: Float){
+    suspend operator fun invoke(
+        key: String,
+        value: Float
+    ){
         preferencesManager.putFloat(key,value)
     }
 

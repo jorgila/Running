@@ -9,7 +9,7 @@ class GetTotalsUseCase @Inject constructor(
     val databaseRepository: DatabaseRepository
 ) {
 
-    fun getTotals() : Flow<TotalModel> {
+    suspend operator fun invoke() : Flow<TotalModel> {
         return databaseRepository.getTotals()
     }
 

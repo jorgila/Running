@@ -1,6 +1,7 @@
 package com.estholon.running.data.network
 
 import android.util.Log
+import com.estholon.running.data.dto.TotalDTO
 import com.estholon.running.data.manager.AuthManager
 import com.estholon.running.data.network.response.LevelResponse
 import com.estholon.running.data.network.response.TotalResponse
@@ -103,6 +104,19 @@ class DatabaseRepository @Inject constructor(
         } else {
             null
         }
+    }
+
+    fun setTotals(dto: TotalDTO) {
+        val model = hashMapOf(
+            "recordAvgSpeed" to dto.recordAvgSpeed,
+            "recordDistance" to dto.recordDistance,
+            "recordSpeed" to dto.recordSpeed,
+            "totalDistance" to dto.totalDistance,
+            "totalRuns" to dto.totalRuns,
+            "totalTime" to dto.totalTime
+        )
+        db.collection(COLLECTION_TOTALS_RUNNING).document(authManager.getCurrentEmail().toString()).set(model)
+
     }
 
 }

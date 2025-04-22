@@ -8,7 +8,7 @@ class GetFormattedStopWatchUseCase @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
-    fun getFormattedStopWatch(ms: Long) : String {
+    operator fun invoke(ms: Long) : String {
         return formatTime(ms)
     }
 

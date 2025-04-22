@@ -7,7 +7,10 @@ class PreferencesPutBooleanUseCase @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
 
-    suspend fun putBoolean(key: String, value: Boolean){
+    suspend operator fun invoke(
+        key: String,
+        value: Boolean
+    ){
         preferencesManager.putBoolean(key,value)
     }
 

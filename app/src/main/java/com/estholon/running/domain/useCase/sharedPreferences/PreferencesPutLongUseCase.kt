@@ -7,7 +7,10 @@ class PreferencesPutLongUseCase @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
 
-    suspend fun putLong(key: String, value: Long){
+    suspend operator fun invoke(
+        key: String,
+        value: Long
+    ){
         preferencesManager.putLong(key,value)
     }
 

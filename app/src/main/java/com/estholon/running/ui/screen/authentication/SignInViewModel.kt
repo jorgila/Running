@@ -38,7 +38,7 @@ class SignInViewModel @Inject constructor(
     ) {
         _isLoading.value = true
         viewModelScope.launch {
-            val signIn = signInEmailUseCase.signInEmail(
+            val signIn = signInEmailUseCase(
                 email,
                 password
             )

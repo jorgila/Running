@@ -13,7 +13,7 @@ class ResetPasswordUseCase @Inject constructor(
     private val analytics: AnalyticsManager
 ) {
 
-    suspend fun resetPassword(
+    suspend operator fun invoke(
         email: String
     ) : String {
 

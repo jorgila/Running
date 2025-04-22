@@ -11,7 +11,7 @@ class PreferencesResetUseCase @Inject constructor(
     private val preferencesManager: PreferencesManager
 ) {
 
-    fun resetPreferences() : Boolean {
+    suspend operator fun invoke() : Boolean {
         preferencesManager.resetPreferences()
         return true
     }
