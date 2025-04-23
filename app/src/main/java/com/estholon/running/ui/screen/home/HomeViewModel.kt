@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.icu.text.SimpleDateFormat
 import android.location.Location
 import android.media.MediaPlayer
 import android.os.Handler
@@ -16,10 +17,10 @@ import com.estholon.running.R
 import com.estholon.running.common.Constants.INTERVAL_LOCATION
 import com.estholon.running.common.Constants.LIMIT_DISTANCE_ACCEPTED
 import com.estholon.running.common.SharedPreferencesKeys
-import com.estholon.running.domain.model.TotalModel
 import com.estholon.running.domain.useCase.authentication.SignOutUseCase
 import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
+import com.estholon.running.domain.useCase.firestore.SetRunUseCase
 import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
 import com.estholon.running.domain.useCase.others.GetFormattedStopWatchUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
@@ -55,6 +56,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.Date
 import javax.inject.Inject
 import kotlin.math.round
 import kotlin.math.roundToInt
@@ -75,6 +77,7 @@ class HomeViewModel @Inject constructor(
     private val getTotalsUseCase: GetTotalsUseCase,
     private val getLevelsUseCase: GetLevelsUseCase,
     private val setTotalsUseCase: SetTotalsUseCase,
+    private val setRunUseCase: SetRunUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -151,6 +154,10 @@ class HomeViewModel @Inject constructor(
 
     private var avgSpeed: Double = 0.0
     private var speed: Double = 0.0
+
+    // DATE
+    private lateinit var startDate : String
+    private lateinit var startTime : String
 
     // GOOGLE MAP
 
@@ -414,6 +421,10 @@ class HomeViewModel @Inject constructor(
                 updateTimesTrack(true,true)
 
                 if(timeInSeconds==0L){
+
+                    startDate = SimpleDateFormat("yyyy/MM/dd").format(Date())
+                    startTime = SimpleDateFormat("HH:mm:ss").format(Date())
+
                     flagSavedLocation = false
                     manageLocation()
                     flagSavedLocation = true
@@ -698,10 +709,42 @@ class HomeViewModel @Inject constructor(
 
         } else {
             setTotals()
+            setRun()
             resetVariables()
         }
 
     }
+
+    private fun setRun(){
+
+        var id = "${startDate.replace("/","")}${startTime.replace(":","")}"
+
+        viewModelScope.launch {
+            setRunUseCase(
+                id,
+                _homeUIState.value.user,
+                startDate,
+                startTime,
+                _homeUIState.value.chrono,
+                _homeUIState.value. kpiDistance,
+                _homeUIState.value.kpiAvgSpeed,
+                _maxSpeed.value,
+                _homeUIState.value.kpiMinAltitude,
+                _homeUIState.value.kpiMaxAltitude,
+                _homeUIState.value.goalDurationSelected,
+                _homeUIState.value.goalHoursDefault,
+                _homeUIState.value.goalMinutesDefault,
+                _homeUIState.value.goalSecondsDefault,
+                _homeUIState.value.goalDistanceDefault,
+                _homeUIState.value.goalDistance,
+                _homeUIState.value.intervalDefault,
+                _homeUIState.value.intervalRunDuration,
+                _homeUIState.value.intervalWalkDuration,
+                _homeUIState.value.rounds
+            )
+        }
+    }
+
 
     private fun setTotals(){
 

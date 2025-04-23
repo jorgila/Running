@@ -172,7 +172,7 @@ fun HomeDrawer(
             )
         ){
             Text(
-                text = homeUIState.user,
+                text = homeUIState.user ?: "Anonimous",
                 fontWeight = FontWeight.Black,
                 fontSize = 18.sp,
                 color = MaterialTheme.colorScheme.onPrimary

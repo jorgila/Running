@@ -1,6 +1,7 @@
 package com.estholon.running.data.network
 
 import android.util.Log
+import com.estholon.running.data.dto.RunDTO
 import com.estholon.running.data.dto.TotalDTO
 import com.estholon.running.data.manager.AuthManager
 import com.estholon.running.data.network.response.LevelResponse
@@ -117,6 +118,34 @@ class DatabaseRepository @Inject constructor(
         )
         db.collection(COLLECTION_TOTALS_RUNNING).document(authManager.getCurrentEmail().toString()).set(model)
 
+    }
+
+    fun setRun(id: String, dto: RunDTO){
+
+        val runId = "${authManager.getCurrentEmail()}${id}"
+
+        val model = hashMapOf(
+            "user" to dto.user,
+            "startDate" to dto.startDate,
+            "startTime" to dto.startTime,
+            "kpiDuration" to dto.kpiDuration,
+            "kpiDistance" to dto.kpiDistance,
+            "kpiAvgSpeed" to dto.kpiAvgSpeed,
+            "kpiMaxSpeed" to dto.kpiMaxSpeed,
+            "kpiMinAltitude" to dto.kpiMinAltitude,
+            "kpiMaxAltitude" to dto.kpiMaxAltitude,
+            "goalDurationSelected" to dto.goalDurationSelected,
+            "goalHoursDefault" to dto.goalHoursDefault,
+            "goalMinutesDefault" to dto.goalMinutesDefault,
+            "goalSecondsDefault" to dto.goalSecondsDefault,
+            "goalDistanceDefault" to dto.goalDistanceDefault,
+            "goalDistance" to dto.goalDistance,
+            "intervalDefault" to dto.intervalDefault,
+            "intervalRunDuration" to dto.intervalRunDuration,
+            "intervalWalkDuration" to dto.intervalWalkDuration,
+            "rounds" to dto.rounds
+        )
+        db.collection(COLLECTION_RUNS_RUNNING).document(runId).set(model)
     }
 
 }
