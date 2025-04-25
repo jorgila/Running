@@ -20,11 +20,13 @@ import com.estholon.running.common.SharedPreferencesKeys
 import com.estholon.running.domain.useCase.authentication.SignOutUseCase
 import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
+import com.estholon.running.domain.useCase.firestore.SetLocationUseCase
 import com.estholon.running.domain.useCase.firestore.SetRunUseCase
 import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
 import com.estholon.running.domain.useCase.others.GetFormattedStopWatchUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetUserInfoUseCase
+import com.estholon.running.domain.useCase.others.RoundNumberUseCase
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesGetBooleanUseCase
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesGetFloatUseCase
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesGetIntUseCase
@@ -78,6 +80,8 @@ class HomeViewModel @Inject constructor(
     private val getLevelsUseCase: GetLevelsUseCase,
     private val setTotalsUseCase: SetTotalsUseCase,
     private val setRunUseCase: SetRunUseCase,
+    private val setLocationUseCase: SetLocationUseCase,
+    private val roundNumberUseCase: RoundNumberUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -519,6 +523,7 @@ class HomeViewModel @Inject constructor(
                     if(distanceInterval <= LIMIT_DISTANCE_ACCEPTED) {
                         updateSpeeds(distanceInterval)
                         refreshInterfaceData()
+                        setLocation(location)
                         _coordinates.update {
                             it + LatLng(new_latitude,new_longitude)
                         }
@@ -571,6 +576,32 @@ class HomeViewModel @Inject constructor(
                 }
             }
 
+        }
+    }
+
+    private fun setLocation(location: Location){
+
+        var id = "${startDate.replace("/","")}${startTime.replace(":","")}"
+
+        var docName = timeInSeconds.toString()
+        while(docName.length < 5) docName = "0" + docName
+
+        val ms = speed == _maxSpeed.value && speed > 0
+
+        viewModelScope.launch {
+            setLocationUseCase(
+                id,
+                docName,
+                _homeUIState.value.chrono,
+                location.latitude,
+                location.longitude,
+                location.altitude,
+                location.hasAltitude(),
+                location.speed,
+                _homeUIState.value.kpiSpeed,
+                ms,
+                _isWalkingInterval.value
+            )
         }
     }
 
@@ -751,7 +782,7 @@ class HomeViewModel @Inject constructor(
         val recordAvgSpeed = _homeUIState.value.kpiRecordAvgSpeed
         val recordDistance = _homeUIState.value.kpiRecordDistance
         val recordSpeed = _homeUIState.value.kpiRecordSpeed
-        val totalDistance = _homeUIState.value.kpiTotalDistance + _homeUIState.value.kpiDistance
+        val totalDistance = roundNumberUseCase((_homeUIState.value.kpiTotalDistance + _homeUIState.value.kpiDistance).toString(),2).toDouble()
         val totalRuns = _homeUIState.value.kpiTotalRuns + 1
         val totalTime = _totalTime.value + (getSecondsFromWatchUseCase(_homeUIState.value.chrono) * 1000).toDouble()
 

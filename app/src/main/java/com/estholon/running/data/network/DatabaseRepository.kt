@@ -1,6 +1,7 @@
 package com.estholon.running.data.network
 
 import android.util.Log
+import com.estholon.running.data.dto.LocationDTO
 import com.estholon.running.data.dto.RunDTO
 import com.estholon.running.data.dto.TotalDTO
 import com.estholon.running.data.manager.AuthManager
@@ -145,7 +146,32 @@ class DatabaseRepository @Inject constructor(
             "intervalWalkDuration" to dto.intervalWalkDuration,
             "rounds" to dto.rounds
         )
-        db.collection(COLLECTION_RUNS_RUNNING).document(runId).set(model)
+        db
+            .collection(COLLECTION_RUNS_RUNNING)
+            .document(runId)
+            .set(model)
+    }
+
+    fun setLocation(id: String, docName: String,dto: LocationDTO){
+
+        val user = authManager.getCurrentEmail()
+
+        val model = hashMapOf(
+            "time" to dto.time,
+            "latitude" to dto.latitude,
+            "longitude" to dto.longitude,
+            "altitude" to dto.altitude,
+            "hasAltitude" to dto.hasAltitude,
+            "speedFromGoogle" to dto.speedFromGoogle,
+            "speedFromApp" to dto.speedFromApp,
+            "isMaxSpeed" to dto.isMaxSpeed,
+            "isRunInterval" to dto.isRunInterval
+        )
+
+        db
+            .collection("locations/$user/$id")
+            .document(docName)
+            .set(model)
     }
 
 }

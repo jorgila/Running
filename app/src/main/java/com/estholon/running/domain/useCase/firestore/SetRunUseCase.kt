@@ -59,7 +59,7 @@ class SetRunUseCase @Inject constructor(
 
     }
 
-    fun prepareDTO(
+    private fun prepareDTO(
         user: String?,
         startDate : String,
         startTime : String,
