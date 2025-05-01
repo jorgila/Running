@@ -63,7 +63,6 @@ fun FinishedScreen(
     dismissDialog: () -> Unit,
     finishedViewModel: FinishedViewModel = hiltViewModel()
 ){
-
     // Contexto
     val context = LocalContext.current
 
@@ -73,6 +72,7 @@ fun FinishedScreen(
     if(runId==null){
         Toast.makeText(context, stringResource(R.string.error_in_run_creation),Toast.LENGTH_LONG).show()
     } else {
+        finishedViewModel.initRun(runId)
         Column(
             modifier = Modifier
                 .width(400.dp)

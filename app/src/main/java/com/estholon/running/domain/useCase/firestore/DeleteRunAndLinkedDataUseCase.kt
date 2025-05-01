@@ -15,9 +15,6 @@ class DeleteRunAndLinkedDataUseCase @Inject constructor(
         id: String,
         callback: (Boolean) -> Unit
     ){
-
-
-
         databaseRepository.deleteRunAndLinkedData(
             id,
             callback

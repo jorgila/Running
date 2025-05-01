@@ -18,7 +18,6 @@ data class RunDTO(
     val goalMinutesDefault: Int,
     val goalSecondsDefault : Int,
     val goalDistanceDefault : Int,
-    val goalDistance : Double,
     val intervalDefault : Int,
     val intervalRunDuration : String,
     val intervalWalkDuration : String,

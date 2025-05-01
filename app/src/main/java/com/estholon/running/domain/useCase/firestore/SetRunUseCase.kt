@@ -104,7 +104,6 @@ class SetRunUseCase @Inject constructor(
                 goalMinutesDefault,
                 goalSecondsDefault,
                 goalDistanceDefault,
-                goalDistance,
                 intervalDefault,
                 intervalRunDuration,
                 intervalWalkDuration,

@@ -6,12 +6,15 @@ import com.estholon.running.data.dto.RunDTO
 import com.estholon.running.data.dto.TotalDTO
 import com.estholon.running.data.manager.AuthManager
 import com.estholon.running.data.network.response.LevelResponse
+import com.estholon.running.data.network.response.RunResponse
 import com.estholon.running.data.network.response.TotalResponse
 import com.estholon.running.domain.model.LevelModel
+import com.estholon.running.domain.model.RunModel
 import com.estholon.running.domain.model.TotalModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.snapshots
+import com.google.firebase.firestore.toObject
 import com.google.firebase.firestore.toObjects
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -66,6 +69,25 @@ class DatabaseRepository @Inject constructor(
 
     }
 
+    fun getRun(
+        id: String
+    ) : Flow<RunModel> {
+
+        val runId : String = "${authManager.getCurrentEmail()}$id"
+
+        return db
+            .collection(COLLECTION_RUNS_RUNNING)
+            .document(runId)
+            .snapshots()
+            .mapNotNull { qr ->
+                qr.toObject(RunResponse::class.java)?.let { rr ->
+                    runToDomain(rr)
+                }
+            }
+
+    }
+
+
     private fun totalToDomain(tr: TotalResponse): TotalModel? {
         return if (
             tr.recordAvgSpeed != null &&
@@ -108,6 +130,38 @@ class DatabaseRepository @Inject constructor(
         }
     }
 
+    private fun runToDomain(rr: RunResponse) : RunModel? {
+        return if (
+            rr.user!=null &&
+            rr.startDate != null &&
+            rr.startTime != null &&
+            rr.kpiDuration != "00:00:00"
+        ) {
+            RunModel(
+                user = rr.user,
+                startDate = rr.startDate,
+                startTime = rr.startTime,
+                kpiDuration = rr.kpiDuration,
+                kpiDistance = rr.kpiDistance,
+                kpiAvgSpeed = rr.kpiAvgSpeed,
+                kpiMaxSpeed = rr.kpiMaxSpeed,
+                kpiMinAltitude = rr.kpiMinAltitude,
+                kpiMaxAltitude = rr.kpiMaxAltitude,
+                goalDurationSelected = rr.goalDurationSelected,
+                goalHoursDefault = rr.goalHoursDefault,
+                goalMinutesDefault = rr.goalMinutesDefault,
+                goalSecondsDefault = rr.goalSecondsDefault,
+                goalDistanceDefault = rr.goalDistanceDefault,
+                intervalDefault = rr.intervalDefault,
+                intervalRunDuration = rr.intervalRunDuration,
+                intervalWalkDuration = rr.intervalWalkDuration,
+                rounds = rr.rounds
+            )
+        } else {
+            null
+        }
+    }
+
     fun setTotals(dto: TotalDTO) {
         val model = hashMapOf(
             "recordAvgSpeed" to dto.recordAvgSpeed,
@@ -142,7 +196,6 @@ class DatabaseRepository @Inject constructor(
                 "goalMinutesDefault" to dto.goalMinutesDefault,
                 "goalSecondsDefault" to dto.goalSecondsDefault,
                 "goalDistanceDefault" to dto.goalDistanceDefault,
-                "goalDistance" to dto.goalDistance,
                 "intervalDefault" to dto.intervalDefault,
                 "intervalRunDuration" to dto.intervalRunDuration,
                 "intervalWalkDuration" to dto.intervalWalkDuration,

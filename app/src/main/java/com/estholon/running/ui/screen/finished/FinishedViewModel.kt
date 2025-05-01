@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.estholon.running.R
 import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataUseCase
 import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
+import com.estholon.running.domain.useCase.firestore.GetRunUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
 import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
 import com.estholon.running.domain.useCase.others.GetMilisecondsFromStringWithDHMS
@@ -28,6 +29,7 @@ class FinishedViewModel @Inject constructor(
     private val getTotalsUseCase: GetTotalsUseCase,
     private val setTotalsUseCase: SetTotalsUseCase,
     private val getLevelsUseCase: GetLevelsUseCase,
+    private val getRunUseCase: GetRunUseCase,
     private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataUseCase,
     private val getMilisecondsFromStringWithDHMS: GetMilisecondsFromStringWithDHMS,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
@@ -89,6 +91,37 @@ class FinishedViewModel @Inject constructor(
         }
     }
 
+    fun initRun(id: String){
+
+        viewModelScope.launch {
+            getRunUseCase.invoke(id).collect{ run ->
+                _finishedUIState.update { finishedUIState ->
+                    finishedUIState.copy(
+                        user = run.user,
+                        startDate = run.startDate,
+                        startTime = run.startTime,
+                        kpiDuration = run.kpiDuration,
+                        kpiDistance = run.kpiDistance,
+                        kpiAvgSpeed = run.kpiAvgSpeed,
+                        kpiMaxSpeed = run.kpiMaxSpeed,
+                        kpiMinAltitude = run.kpiMinAltitude,
+                        kpiMaxAltitude = run.kpiMaxAltitude,
+                        goalDurationSelected = run.goalDurationSelected,
+                        goalHoursDefault = run.goalHoursDefault,
+                        goalMinutesDefault = run.goalMinutesDefault,
+                        goalSecondsDefault = run.goalSecondsDefault,
+                        goalDistanceDefault = run.goalDistanceDefault,
+                        intervalDefault = run.intervalDefault,
+                        intervalRunDuration = run.intervalRunDuration,
+                        intervalWalkDuration = run.intervalWalkDuration,
+                        rounds = run.rounds,
+                    )
+                }
+            }
+        }
+
+    }
+
     fun deleteRunAndLinkedData(
         id: String
     ){
@@ -104,10 +137,12 @@ class FinishedViewModel @Inject constructor(
                     }
 
                     if(boolean){
-                        Log.e("FinishedViewModel PRUEBA PASO","PASA POR AQUÍ")
                         var newTotalDistance = _finishedUIState.value.kpiTotalDistance - _finishedUIState.value.kpiDistance
                         var newTotalRuns = _finishedUIState.value.kpiTotalRuns - 1
-                        var newTotalTime = (getMilisecondsFromStringWithDHMS(_finishedUIState.value.kpiTotalTime) - (getSecondsFromWatchUseCase(_finishedUIState.value.chrono) * 1000)).toDouble()
+                        var newTotalTime = (getMilisecondsFromStringWithDHMS(_finishedUIState.value.kpiTotalTime) - (getSecondsFromWatchUseCase(_finishedUIState.value.kpiDuration) * 1000)).toDouble()
+
+                        Log.e("FinishedViewModel TOTAL DISTANCE",newTotalDistance.toString())
+                        Log.e("FinishedViewModel DISTANCE",_finishedUIState.value.kpiDistance.toString())
 
                         viewModelScope.launch {
                             setTotalsUseCase(
