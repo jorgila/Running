@@ -19,7 +19,7 @@ sealed class FinishedScreenViewState {
         val kpiMinAltitude : Double? = null,
         val kpiMaxAltitude : Double? = null,
         val chrono : String = "00:00:00",
-
+        val message : Boolean? = null
     ) : FinishedScreenViewState()
 
 }

@@ -42,15 +42,6 @@ class SetTotalsUseCase @Inject constructor(
         totalTime : Double
     ) : TotalDTO? {
 
-        if(
-            recordAvgSpeed==0.00 ||
-            recordDistance ==0.00 ||
-            recordSpeed == 0.00 ||
-            totalDistance == 0.00 ||
-            totalRuns == 0.00 ||
-            totalTime == 0.00
-        ) return null
-
         return try {
             TotalDTO(
                 recordAvgSpeed,

@@ -9,7 +9,7 @@ class SetLocationUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(
-        id: String,
+        id: String?,
         docName: String,
         time : String,
         latitude : Double,
@@ -22,6 +22,7 @@ class SetLocationUseCase @Inject constructor(
         isRunInterval : Boolean
     ){
         val dto = prepareDTO(
+            id,
             time,
             latitude,
             longitude,
@@ -38,6 +39,7 @@ class SetLocationUseCase @Inject constructor(
     }
 
     private fun prepareDTO(
+        id: String?,
         time : String,
         latitude : Double,
         longitude : Double,
@@ -49,6 +51,7 @@ class SetLocationUseCase @Inject constructor(
         isRunInterval : Boolean
     ) : LocationDTO? {
         if(
+            id==null ||
             time==null ||
             latitude == null ||
             longitude == null

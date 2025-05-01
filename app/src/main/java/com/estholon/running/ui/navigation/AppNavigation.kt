@@ -200,8 +200,8 @@ fun AppNavigation(
                     }
                     composable(Routes.HomeScreen.route){
                         HomeScreen(
-                            navigateToFinishedScreen = { chrono,durationGoal,intervalDuration,runIntervalDuration,walkIntervalDuration,distance, distanceGoal, minAltitude, maxAltitude, avgSpeed, maxSpeed ->
-                                navController.navigate("${Routes.FinishedScreen.route}/$chrono/$durationGoal/$intervalDuration/$runIntervalDuration/$walkIntervalDuration/$distance/$distanceGoal/$minAltitude/$maxAltitude/$avgSpeed/$maxSpeed")
+                            navigateToFinishedScreen = { chrono,durationGoal,intervalDuration,runIntervalDuration,walkIntervalDuration,distance, distanceGoal, minAltitude, maxAltitude, avgSpeed, maxSpeed, runId ->
+                                navController.navigate("${Routes.FinishedScreen.route}/$chrono/$durationGoal/$intervalDuration/$runIntervalDuration/$walkIntervalDuration/$distance/$distanceGoal/$minAltitude/$maxAltitude/$avgSpeed/$maxSpeed/$runId")
                             }
                         )
                     }
@@ -209,7 +209,7 @@ fun AppNavigation(
                         HistoryScreen()
                     }
                     dialog(
-                        route = "${Routes.FinishedScreen.route}/{chrono}/{durationGoal}/{intervalDuration}/{runIntervalDuration}/{walkIntervalDuration}/{distance}/{distanceGoal}/{minAltitude}/{maxAltitude}/{avgSpeed}/{maxSpeed}",
+                        route = "${Routes.FinishedScreen.route}/{chrono}/{durationGoal}/{intervalDuration}/{runIntervalDuration}/{walkIntervalDuration}/{distance}/{distanceGoal}/{minAltitude}/{maxAltitude}/{avgSpeed}/{maxSpeed}/{runId}",
                         dialogProperties = DialogProperties(
                             dismissOnBackPress = true,
                             dismissOnClickOutside = true,
@@ -218,6 +218,7 @@ fun AppNavigation(
                         )
                     ){ backStackEntry ->
 
+                        val runId = backStackEntry.arguments?.getString("runId")
                         val passedChrono = backStackEntry.arguments?.getString("chrono") ?: "00:00:00"
                         val durationGoal = backStackEntry.arguments?.getString("goalDuration") ?: "00:00:00"
                         val intervalDuration = backStackEntry.arguments?.getString("intervalDuration") ?: "0"
@@ -231,6 +232,7 @@ fun AppNavigation(
                         val maxSpeed = backStackEntry.arguments?.getString("maxSpeed") ?: "0.0"
 
                         FinishedScreen(
+                            runId = runId,
                             chrono = passedChrono,
                             durationGoal = durationGoal,
                             intervalDuration = intervalDuration,

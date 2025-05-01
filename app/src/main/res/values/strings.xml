@@ -61,4 +61,8 @@
     <string name="reset_has_been_successful">Reset has been successful</string>
     <string name="cancel">CANCEL</string>
     <string name="if_you_continue_you_can_reset_the_preferences_saved_from_your_last_run">If you continue, you can reset the preferences saved from your last run.</string>
+    <string name="delete">Delete</string>
+    <string name="error_in_run_creation">Error in run creation</string>
+    <string name="deleted_successfully">Deleted successfully</string>
+    <string name="an_error_has_happen_while_deleting_the_run">An error has happen while deleting the run</string>
 </resources>

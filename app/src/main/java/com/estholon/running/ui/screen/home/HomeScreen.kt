@@ -84,7 +84,7 @@ import java.text.DecimalFormat
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
-    navigateToFinishedScreen: (String, String, String, String, String, String, String, String, String, String, String) -> Unit
+    navigateToFinishedScreen: (String, String, String, String, String, String, String, String, String, String, String, runId: String?) -> Unit
 ){
 
     // CONTEXTO
@@ -927,7 +927,8 @@ fun HomeScreen(
                         (homeUIState.kpiMinAltitude ?: 0).toString(),
                         (homeUIState.kpiMaxAltitude ?: 0).toString(),
                         homeUIState.kpiAvgSpeed.toString(),
-                        maxSpeed.toString()
+                        maxSpeed.toString(),
+                        homeUIState.runId
                     )
                     homeViewModel.stopChrono()
                     homeViewModel.changeStopped(true)

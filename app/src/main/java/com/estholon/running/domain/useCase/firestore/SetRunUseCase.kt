@@ -11,7 +11,7 @@ class SetRunUseCase @Inject constructor(
 
 
     suspend operator fun invoke(
-        id: String,
+        id: String?,
         user: String?,
         startDate : String,
         startTime : String,
@@ -33,6 +33,7 @@ class SetRunUseCase @Inject constructor(
         rounds : Int,
     ){
         val dto = prepareDTO(
+            id,
             user,
             startDate,
             startTime,
@@ -60,6 +61,7 @@ class SetRunUseCase @Inject constructor(
     }
 
     private fun prepareDTO(
+        id: String?,
         user: String?,
         startDate : String,
         startTime : String,
@@ -82,6 +84,7 @@ class SetRunUseCase @Inject constructor(
     ) : RunDTO? {
 
         if(
+            id == null ||
             user==null
         ) return null
 

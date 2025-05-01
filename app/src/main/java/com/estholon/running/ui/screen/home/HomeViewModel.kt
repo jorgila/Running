@@ -429,6 +429,12 @@ class HomeViewModel @Inject constructor(
                     startDate = SimpleDateFormat("yyyy/MM/dd").format(Date())
                     startTime = SimpleDateFormat("HH:mm:ss").format(Date())
 
+                    _homeUIState.update { homeUIState ->
+                        homeUIState.copy(
+                            runId = "${startDate.replace("/","")}${startTime.replace(":","")}"
+                        )
+                    }
+
                     flagSavedLocation = false
                     manageLocation()
                     flagSavedLocation = true
@@ -581,7 +587,7 @@ class HomeViewModel @Inject constructor(
 
     private fun setLocation(location: Location){
 
-        var id = "${startDate.replace("/","")}${startTime.replace(":","")}"
+        var id = homeUIState.value.runId
 
         var docName = timeInSeconds.toString()
         while(docName.length < 5) docName = "0" + docName
@@ -748,7 +754,7 @@ class HomeViewModel @Inject constructor(
 
     private fun setRun(){
 
-        var id = "${startDate.replace("/","")}${startTime.replace(":","")}"
+        var id = _homeUIState.value.runId
 
         viewModelScope.launch {
             setRunUseCase(

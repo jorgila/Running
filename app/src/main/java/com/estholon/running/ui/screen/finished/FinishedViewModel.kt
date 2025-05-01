@@ -6,8 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.estholon.running.R
+import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataUseCase
 import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
+import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
+import com.estholon.running.domain.useCase.others.GetMilisecondsFromStringWithDHMS
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.ui.screen.home.HomeScreenViewState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +26,10 @@ import javax.inject.Inject
 class FinishedViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val getTotalsUseCase: GetTotalsUseCase,
+    private val setTotalsUseCase: SetTotalsUseCase,
     private val getLevelsUseCase: GetLevelsUseCase,
+    private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataUseCase,
+    private val getMilisecondsFromStringWithDHMS: GetMilisecondsFromStringWithDHMS,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
 ) : ViewModel() {
 
@@ -32,26 +38,12 @@ class FinishedViewModel @Inject constructor(
     private val _finishedUIState = MutableStateFlow<FinishedScreenViewState.FinishedUIState>(FinishedScreenViewState.FinishedUIState())
     val finishedUIState : StateFlow<FinishedScreenViewState.FinishedUIState> = _finishedUIState
 
-    // VARIABLES
-
-    private var _isLoading = MutableStateFlow<Boolean>(false)
-    var isLoading : StateFlow<Boolean> = _isLoading
-
-    private var _level = MutableStateFlow<String>(context.getString(R.string.level_0))
-    var level : StateFlow<String> = _level
-
-    private var _totalKilometers = MutableStateFlow<Double>(0.0)
-    var totalKilometers : StateFlow<Double> = _totalKilometers
-
-    private var _totalRuns = MutableStateFlow<Int>(0)
-    var totalRuns : StateFlow<Int> = _totalRuns
-
     init {
         initTotals()
         initLevels()
     }
 
-    fun initTotals(){
+    private fun initTotals(){
         viewModelScope.launch {
             getTotalsUseCase.invoke().collect(){ totals ->
 
@@ -75,7 +67,7 @@ class FinishedViewModel @Inject constructor(
         }
     }
 
-    fun initLevels(){
+    private fun initLevels(){
         viewModelScope.launch {
             getLevelsUseCase.invoke().collect{ levels ->
                 delay(3000)
@@ -95,6 +87,60 @@ class FinishedViewModel @Inject constructor(
 
             }
         }
+    }
+
+    fun deleteRunAndLinkedData(
+        id: String
+    ){
+
+        viewModelScope.launch {
+            deleteRunAndLinkedDataUseCase(
+                id,
+                { boolean ->
+                    _finishedUIState.update { finishedUIState ->
+                        finishedUIState.copy(
+                            message = boolean
+                        )
+                    }
+
+                    if(boolean){
+                        Log.e("FinishedViewModel PRUEBA PASO","PASA POR AQUÍ")
+                        var newTotalDistance = _finishedUIState.value.kpiTotalDistance - _finishedUIState.value.kpiDistance
+                        var newTotalRuns = _finishedUIState.value.kpiTotalRuns - 1
+                        var newTotalTime = (getMilisecondsFromStringWithDHMS(_finishedUIState.value.kpiTotalTime) - (getSecondsFromWatchUseCase(_finishedUIState.value.chrono) * 1000)).toDouble()
+
+                        viewModelScope.launch {
+                            setTotalsUseCase(
+                                0.0,
+                                0.0,
+                                0.0,
+                                newTotalDistance,
+                                newTotalRuns,
+                                newTotalTime
+                            )
+
+                            _finishedUIState.update { finishedUIState ->
+                                finishedUIState.copy(
+                                    kpiRecordAvgSpeed = 0.0,
+                                    kpiRecordDistance = 0.0,
+                                    kpiRecordSpeed = 0.0,
+                                    kpiTotalDistance = newTotalDistance,
+                                    kpiTotalRuns = newTotalRuns,
+                                )
+                            }
+                        }
+
+
+                    }
+
+
+
+                }
+
+            )
+        }
+
+
     }
 
 }

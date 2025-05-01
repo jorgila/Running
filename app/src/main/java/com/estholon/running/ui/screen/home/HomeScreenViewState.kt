@@ -16,6 +16,7 @@ sealed class HomeScreenViewState {
     data class HomeUIState(
         val mapIsLoading: Boolean = false,
         val user : String? = null,
+        val runId : String? = null,
         val kpiDistanceCircularSeekbarValue: Float = 0F,
         val kpiDistance : Double = 0.0,
         val kpiRecordDistance : Double = 0.0,

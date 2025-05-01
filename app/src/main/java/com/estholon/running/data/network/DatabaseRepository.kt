@@ -121,57 +121,86 @@ class DatabaseRepository @Inject constructor(
 
     }
 
-    fun setRun(id: String, dto: RunDTO){
+    fun setRun(id: String?, dto: RunDTO){
 
-        val runId = "${authManager.getCurrentEmail()}${id}"
+        if(id != null){
 
-        val model = hashMapOf(
-            "user" to dto.user,
-            "startDate" to dto.startDate,
-            "startTime" to dto.startTime,
-            "kpiDuration" to dto.kpiDuration,
-            "kpiDistance" to dto.kpiDistance,
-            "kpiAvgSpeed" to dto.kpiAvgSpeed,
-            "kpiMaxSpeed" to dto.kpiMaxSpeed,
-            "kpiMinAltitude" to dto.kpiMinAltitude,
-            "kpiMaxAltitude" to dto.kpiMaxAltitude,
-            "goalDurationSelected" to dto.goalDurationSelected,
-            "goalHoursDefault" to dto.goalHoursDefault,
-            "goalMinutesDefault" to dto.goalMinutesDefault,
-            "goalSecondsDefault" to dto.goalSecondsDefault,
-            "goalDistanceDefault" to dto.goalDistanceDefault,
-            "goalDistance" to dto.goalDistance,
-            "intervalDefault" to dto.intervalDefault,
-            "intervalRunDuration" to dto.intervalRunDuration,
-            "intervalWalkDuration" to dto.intervalWalkDuration,
-            "rounds" to dto.rounds
-        )
+            val runId = "${authManager.getCurrentEmail()}${id}"
+
+            val model = hashMapOf(
+                "user" to dto.user,
+                "startDate" to dto.startDate,
+                "startTime" to dto.startTime,
+                "kpiDuration" to dto.kpiDuration,
+                "kpiDistance" to dto.kpiDistance,
+                "kpiAvgSpeed" to dto.kpiAvgSpeed,
+                "kpiMaxSpeed" to dto.kpiMaxSpeed,
+                "kpiMinAltitude" to dto.kpiMinAltitude,
+                "kpiMaxAltitude" to dto.kpiMaxAltitude,
+                "goalDurationSelected" to dto.goalDurationSelected,
+                "goalHoursDefault" to dto.goalHoursDefault,
+                "goalMinutesDefault" to dto.goalMinutesDefault,
+                "goalSecondsDefault" to dto.goalSecondsDefault,
+                "goalDistanceDefault" to dto.goalDistanceDefault,
+                "goalDistance" to dto.goalDistance,
+                "intervalDefault" to dto.intervalDefault,
+                "intervalRunDuration" to dto.intervalRunDuration,
+                "intervalWalkDuration" to dto.intervalWalkDuration,
+                "rounds" to dto.rounds
+            )
+            db
+                .collection(COLLECTION_RUNS_RUNNING)
+                .document(runId)
+                .set(model)
+
+        }
+
+    }
+
+    fun setLocation(id: String?, docName: String,dto: LocationDTO){
+
+        if (id!=null){
+            val user = authManager.getCurrentEmail()
+
+            val model = hashMapOf(
+                "time" to dto.time,
+                "latitude" to dto.latitude,
+                "longitude" to dto.longitude,
+                "altitude" to dto.altitude,
+                "hasAltitude" to dto.hasAltitude,
+                "speedFromGoogle" to dto.speedFromGoogle,
+                "speedFromApp" to dto.speedFromApp,
+                "isMaxSpeed" to dto.isMaxSpeed,
+                "isRunInterval" to dto.isRunInterval
+            )
+
+            db
+                .collection("locations/$user/$id")
+                .document(docName)
+                .set(model)
+        }
+
+    }
+
+    fun deleteRunAndLinkedData(
+        id:String,
+        callback: (Boolean) -> Unit
+    ) {
+
+        val user = authManager.getCurrentEmail()
+        val runId = "$user$id"
+
         db
             .collection(COLLECTION_RUNS_RUNNING)
             .document(runId)
-            .set(model)
-    }
+            .delete()
+            .addOnSuccessListener {
+                callback(true)
+            }
+            .addOnFailureListener{
+                callback(false)
+            }
 
-    fun setLocation(id: String, docName: String,dto: LocationDTO){
-
-        val user = authManager.getCurrentEmail()
-
-        val model = hashMapOf(
-            "time" to dto.time,
-            "latitude" to dto.latitude,
-            "longitude" to dto.longitude,
-            "altitude" to dto.altitude,
-            "hasAltitude" to dto.hasAltitude,
-            "speedFromGoogle" to dto.speedFromGoogle,
-            "speedFromApp" to dto.speedFromApp,
-            "isMaxSpeed" to dto.isMaxSpeed,
-            "isRunInterval" to dto.isRunInterval
-        )
-
-        db
-            .collection("locations/$user/$id")
-            .document(docName)
-            .set(model)
     }
 
 }
