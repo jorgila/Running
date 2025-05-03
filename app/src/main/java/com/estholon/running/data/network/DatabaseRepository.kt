@@ -13,6 +13,7 @@ import com.estholon.running.domain.model.RunModel
 import com.estholon.running.domain.model.TotalModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.snapshots
 import com.google.firebase.firestore.toObject
 import com.google.firebase.firestore.toObjects
@@ -254,6 +255,79 @@ class DatabaseRepository @Inject constructor(
                 callback(false)
             }
 
+    }
+
+    fun getDistanceRecord(callback: (Boolean) -> Unit) : Double {
+
+        var record: Double = 0.0
+
+        db
+            .collection(COLLECTION_RUNS_RUNNING)
+            .orderBy("kpiDistance", Query.Direction.DESCENDING)
+            .whereEqualTo("user",authManager.getCurrentEmail())
+            .get()
+            .addOnSuccessListener { documents ->
+                if(documents.size() == 0) {
+                     record = 0.0
+                } else {
+                    record = documents.documents[1].get("kpiDistance").toString().toDouble()
+                }
+                callback(true)
+            }
+            .addOnFailureListener{
+                callback(false)
+            }
+
+            return record
+
+    }
+
+    fun getAvgSpeedRecord(
+        callback: (Boolean) -> Unit
+    ): Double {
+        var record: Double = 0.0
+
+        db
+            .collection(COLLECTION_RUNS_RUNNING)
+            .orderBy("kpiAvgSpeed", Query.Direction.DESCENDING)
+            .whereEqualTo("user",authManager.getCurrentEmail())
+            .get()
+            .addOnSuccessListener { documents ->
+                if(documents.size() == 0) {
+                    record = 0.0
+                } else {
+                    record = documents.documents[1].get("kpiAvgSpeed").toString().toDouble()
+                }
+                callback(true)
+            }
+            .addOnFailureListener{
+                callback(false)
+            }
+
+        return record
+    }
+
+    fun getSpeedRecord(callback: (Boolean) -> Unit) : Double {
+        var record: Double = 0.0
+
+        db
+            .collection(COLLECTION_RUNS_RUNNING)
+            .orderBy("kpiMaxSpeed", Query.Direction.DESCENDING)
+            .whereEqualTo("user",authManager.getCurrentEmail())
+            .get()
+            .addOnSuccessListener { documents ->
+                if(documents.size() == 0) {
+                    record = 0.0
+                } else {
+                    record = documents.documents[1].get("kpiMaxSpeed").toString().toDouble()
+                }
+                callback(true)
+            }
+            .addOnFailureListener{
+                callback(false)
+            }
+
+        return record
     }
 
 }

@@ -1,10 +1,6 @@
 package com.estholon.running.domain.useCase.firestore
 
-import androidx.compose.runtime.rememberCoroutineScope
-import com.estholon.running.data.dto.TotalDTO
 import com.estholon.running.data.network.DatabaseRepository
-import com.estholon.running.domain.useCase.others.GetMilisecondsFromStringWithDHMS
-import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import javax.inject.Inject
 
 class DeleteRunAndLinkedDataUseCase @Inject constructor(

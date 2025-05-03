@@ -63,6 +63,7 @@ fun FinishedScreen(
     dismissDialog: () -> Unit,
     finishedViewModel: FinishedViewModel = hiltViewModel()
 ){
+
     // Contexto
     val context = LocalContext.current
 

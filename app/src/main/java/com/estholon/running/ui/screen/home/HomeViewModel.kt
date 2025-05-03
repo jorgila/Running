@@ -25,6 +25,7 @@ import com.estholon.running.domain.useCase.firestore.SetRunUseCase
 import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
 import com.estholon.running.domain.useCase.others.GetFormattedStopWatchUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
+import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
 import com.estholon.running.domain.useCase.others.GetUserInfoUseCase
 import com.estholon.running.domain.useCase.others.RoundNumberUseCase
 import com.estholon.running.domain.useCase.sharedPreferences.PreferencesGetBooleanUseCase
@@ -82,6 +83,7 @@ class HomeViewModel @Inject constructor(
     private val setRunUseCase: SetRunUseCase,
     private val setLocationUseCase: SetLocationUseCase,
     private val roundNumberUseCase: RoundNumberUseCase,
+    private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -220,15 +222,6 @@ class HomeViewModel @Inject constructor(
 
                 _totalTime.value = totals.totalTime
 
-                val segundosTotales = totals.totalTime / 1000
-                val minutosTotales = segundosTotales / 60
-                val horasTotales = minutosTotales / 60
-
-                val d = Math.floor(horasTotales / 24).toInt()
-                val h = Math.floor(horasTotales % 24).toInt()
-                val m = Math.floor(minutosTotales % 60).toInt()
-                val s = Math.floor(segundosTotales % 60).toInt()
-
                 _homeUIState.update { homeUIState ->
                     homeUIState.copy(
                         kpiRecordAvgSpeed = totals.recordAvgSpeed,
@@ -236,7 +229,7 @@ class HomeViewModel @Inject constructor(
                         kpiRecordSpeed = totals.recordSpeed,
                         kpiTotalDistance = totals.totalDistance,
                         kpiTotalRuns = totals.totalRuns,
-                        kpiTotalTime = "$d d $h h $m m $s s"
+                        kpiTotalTime = getStringWithDHMSFromMilisecondsUseCase(totals.totalTime)
                     )
                 }
             }

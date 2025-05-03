@@ -1,19 +1,19 @@
 package com.estholon.running.ui.screen.finished
 
 import android.content.Context
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.estholon.running.R
 import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataUseCase
+import com.estholon.running.domain.useCase.firestore.GetAvgSpeedRecordUseCase
+import com.estholon.running.domain.useCase.firestore.GetDistanceRecordUseCase
 import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
 import com.estholon.running.domain.useCase.firestore.GetRunUseCase
+import com.estholon.running.domain.useCase.firestore.GetSpeedRecordUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
 import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
-import com.estholon.running.domain.useCase.others.GetMilisecondsFromStringWithDHMS
+import com.estholon.running.domain.useCase.others.GetMilisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
-import com.estholon.running.ui.screen.home.HomeScreenViewState
+import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
@@ -30,8 +30,12 @@ class FinishedViewModel @Inject constructor(
     private val setTotalsUseCase: SetTotalsUseCase,
     private val getLevelsUseCase: GetLevelsUseCase,
     private val getRunUseCase: GetRunUseCase,
+    private val getDistanceRecordUseCase: GetDistanceRecordUseCase,
+    private val getAvgSpeedRecordUseCase: GetAvgSpeedRecordUseCase,
+    private val getSpeedRecordUseCase: GetSpeedRecordUseCase,
     private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataUseCase,
-    private val getMilisecondsFromStringWithDHMS: GetMilisecondsFromStringWithDHMS,
+    private val getMilisecondsFromStringWithDHMSUseCase: GetMilisecondsFromStringWithDHMSUseCase,
+    private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
 ) : ViewModel() {
 
@@ -136,19 +140,47 @@ class FinishedViewModel @Inject constructor(
                         )
                     }
 
-                    if(boolean){
+                    var newDistanceRecord = 0.0
+                    var newAvgSpeedRecord = 0.0
+                    var newSpeedRecord = 0.0
+
+                        if(boolean){
+
                         var newTotalDistance = _finishedUIState.value.kpiTotalDistance - _finishedUIState.value.kpiDistance
                         var newTotalRuns = _finishedUIState.value.kpiTotalRuns - 1
-                        var newTotalTime = (getMilisecondsFromStringWithDHMS(_finishedUIState.value.kpiTotalTime) - (getSecondsFromWatchUseCase(_finishedUIState.value.kpiDuration) * 1000)).toDouble()
-
-                        Log.e("FinishedViewModel TOTAL DISTANCE",newTotalDistance.toString())
-                        Log.e("FinishedViewModel DISTANCE",_finishedUIState.value.kpiDistance.toString())
+                        var newTotalTime =
+                            (getMilisecondsFromStringWithDHMSUseCase(_finishedUIState.value.kpiTotalTime)
+                            - (getSecondsFromWatchUseCase(_finishedUIState.value.kpiDuration) * 1000)
+                            ).toDouble()
 
                         viewModelScope.launch {
+
+                            newDistanceRecord = getDistanceRecordUseCase(
+                                { isSuccessful ->
+                                    if(!isSuccessful){
+                                        // TODO Message in UI
+                                    }
+                                }
+                            )
+                            newAvgSpeedRecord = getAvgSpeedRecordUseCase(
+                                { isSuccessful ->
+                                    if(!isSuccessful){
+                                        // TODO Message in UI
+                                    }
+                                }
+                            )
+                            newSpeedRecord = getSpeedRecordUseCase(
+                                { isSuccessful ->
+                                    if(!isSuccessful){
+                                        // TODO Message in UI
+                                    }
+                                }
+                            )
+                            delay(3000)
                             setTotalsUseCase(
-                                0.0,
-                                0.0,
-                                0.0,
+                                newAvgSpeedRecord,
+                                newDistanceRecord,
+                                newSpeedRecord,
                                 newTotalDistance,
                                 newTotalRuns,
                                 newTotalTime
@@ -161,6 +193,7 @@ class FinishedViewModel @Inject constructor(
                                     kpiRecordSpeed = 0.0,
                                     kpiTotalDistance = newTotalDistance,
                                     kpiTotalRuns = newTotalRuns,
+                                    kpiTotalTime = getStringWithDHMSFromMilisecondsUseCase(newTotalTime)
                                 )
                             }
                         }
