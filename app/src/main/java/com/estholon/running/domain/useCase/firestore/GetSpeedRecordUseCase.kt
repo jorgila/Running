@@ -8,9 +8,9 @@ class GetSpeedRecordUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(
-        callback: (Boolean) -> Unit
-    ) : Double {
-        return databaseRepository.getSpeedRecord(callback)
+        callback: (Boolean, Double) -> Unit
+    ) {
+        databaseRepository.getSpeedRecord(callback)
     }
 
 }

@@ -172,6 +172,7 @@ class DatabaseRepository @Inject constructor(
             "totalRuns" to dto.totalRuns,
             "totalTime" to dto.totalTime
         )
+
         db.collection(COLLECTION_TOTALS_RUNNING).document(authManager.getCurrentEmail().toString()).set(model)
 
     }
@@ -257,7 +258,7 @@ class DatabaseRepository @Inject constructor(
 
     }
 
-    fun getDistanceRecord(callback: (Boolean) -> Unit) : Double {
+    fun getDistanceRecord(callback: (Boolean, Double) -> Unit) {
 
         var record: Double = 0.0
 
@@ -267,24 +268,20 @@ class DatabaseRepository @Inject constructor(
             .whereEqualTo("user",authManager.getCurrentEmail())
             .get()
             .addOnSuccessListener { documents ->
-                if(documents.size() == 0) {
-                     record = 0.0
-                } else {
-                    record = documents.documents[1].get("kpiDistance").toString().toDouble()
+                if(documents.size() != 0) {
+                    record = documents.documents[0].get("kpiDistance").toString().toDouble()
                 }
-                callback(true)
+                callback(true, record)
             }
             .addOnFailureListener{
-                callback(false)
+                callback(false, 0.0)
             }
-
-            return record
 
     }
 
     fun getAvgSpeedRecord(
-        callback: (Boolean) -> Unit
-    ): Double {
+        callback: (Boolean,Double) -> Unit
+    ) {
         var record: Double = 0.0
 
         db
@@ -293,21 +290,18 @@ class DatabaseRepository @Inject constructor(
             .whereEqualTo("user",authManager.getCurrentEmail())
             .get()
             .addOnSuccessListener { documents ->
-                if(documents.size() == 0) {
-                    record = 0.0
-                } else {
-                    record = documents.documents[1].get("kpiAvgSpeed").toString().toDouble()
+                if(documents.size() != 0) {
+                    record = documents.documents[0].get("kpiAvgSpeed").toString().toDouble()
                 }
-                callback(true)
+                callback(true, record)
             }
             .addOnFailureListener{
-                callback(false)
+                callback(false, 0.0)
             }
 
-        return record
     }
 
-    fun getSpeedRecord(callback: (Boolean) -> Unit) : Double {
+    fun getSpeedRecord(callback: (Boolean, Double) -> Unit) {
         var record: Double = 0.0
 
         db
@@ -316,18 +310,14 @@ class DatabaseRepository @Inject constructor(
             .whereEqualTo("user",authManager.getCurrentEmail())
             .get()
             .addOnSuccessListener { documents ->
-                if(documents.size() == 0) {
-                    record = 0.0
-                } else {
-                    record = documents.documents[1].get("kpiMaxSpeed").toString().toDouble()
+                if(documents.size() != 0) {
+                    record = documents.documents[0].get("kpiMaxSpeed").toString().toDouble()
                 }
-                callback(true)
+                callback(true,record)
             }
             .addOnFailureListener{
-                callback(false)
+                callback(false,0.0)
             }
-
-        return record
     }
 
 }
