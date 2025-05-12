@@ -1,6 +1,7 @@
 package com.estholon.running.ui.screen.finished
 
 import android.content.Context
+import android.health.connect.datatypes.DistanceRecord
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -18,6 +19,7 @@ import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.coroutines.resume
 
@@ -149,65 +152,53 @@ class FinishedViewModel @Inject constructor(
                     var newAvgSpeedRecord = 0.0
                     var newSpeedRecord = 0.0
 
-                        if(boolean){
+                    if(boolean) {
 
-                        var newTotalDistance = _finishedUIState.value.kpiTotalDistance - _finishedUIState.value.kpiDistance
+                        var newTotalDistance =
+                            _finishedUIState.value.kpiTotalDistance - _finishedUIState.value.kpiDistance
                         var newTotalRuns = _finishedUIState.value.kpiTotalRuns - 1
                         var newTotalTime =
                             (getMilisecondsFromStringWithDHMSUseCase(_finishedUIState.value.kpiTotalTime)
-                            - (getSecondsFromWatchUseCase(_finishedUIState.value.kpiDuration) * 1000)
-                            ).toDouble()
+                                    - (getSecondsFromWatchUseCase(_finishedUIState.value.kpiDuration) * 1000)
+                                    ).toDouble()
+
+                        var newDistanceRecord: Double = 0.0
+                        var newAvgSpeedRecord: Double = 0.0
+                        var newSpeedRecord: Double = 0.0
 
                         viewModelScope.launch {
-
-                            val distanceRecordDeferred = async {
-                                var distanceRecord: Double? = null
-                                getDistanceRecordUseCase { isSuccessful, newRecord ->
-                                    distanceRecord = newRecord
-                                    if (!isSuccessful) {
-                                        Toast.makeText(context, "ERROR WHEN GETTING AVG SPEED RECORD", Toast.LENGTH_LONG).show()
-                                    }
+                            getDistanceRecordUseCase { isDistanceSuccessful, valueDistanceRecord ->
+                                if (!isDistanceSuccessful) {
+                                    Toast.makeText(
+                                        context,
+                                        "ERROR WHEN GETTING AVG SPEED RECORD",
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                 }
-                                distanceRecord
+                                newDistanceRecord = valueDistanceRecord
+                            }
+                            getAvgSpeedRecordUseCase { isAvgSpeedSuccessful, valueAvgSpeedRecord ->
+                                if (!isAvgSpeedSuccessful) {
+                                    Toast.makeText(
+                                        context,
+                                        "ERROR WHEN GETTING AVG SPEED RECORD",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                                newAvgSpeedRecord = valueAvgSpeedRecord
                             }
 
-                            val avgSpeedRecordDeferred = async {
-                                var avgSpeedRecord: Double? = null
-                                getAvgSpeedRecordUseCase { isSuccessful, newRecord ->
-                                    avgSpeedRecord = newRecord
-                                    if (!isSuccessful) {
-                                        Toast.makeText(context, "ERROR WHEN GETTING AVG SPEED RECORD", Toast.LENGTH_LONG).show()
-                                    }
+                            getSpeedRecordUseCase { isSpeedSuccessful, valueSpeedRecord ->
+                                if (!isSpeedSuccessful) {
+                                    Toast.makeText(
+                                        context,
+                                        "ERROR WHEN GETTING AVG SPEED RECORD",
+                                        Toast.LENGTH_LONG
+                                    ).show()
                                 }
-                                avgSpeedRecord
+                                newSpeedRecord = valueSpeedRecord
                             }
-
-                            val speedRecordDeferred = async {
-                                var speedRecord: Double? = null
-                                getSpeedRecordUseCase { isSuccessful, newRecord ->
-                                    speedRecord = newRecord
-                                    if (!isSuccessful) {
-                                        Toast.makeText(
-                                            context,
-                                            "ERROR WHEN GETTING AVG SPEED RECORD",
-                                            Toast.LENGTH_LONG
-                                        ).show()
-                                    }
-                                }
-                                speedRecord
-                            }
-
-                            val newDistanceRecord = distanceRecordDeferred.await()
-                            val newAvgSpeedRecord = avgSpeedRecordDeferred.await()
-                            val newSpeedRecord = speedRecordDeferred.await()
-
-                            Log.e("FinishedViewModel AVG SPEED", newAvgSpeedRecord.toString())
-                            Log.e("FinishedViewModel DISTANCE", newDistanceRecord.toString())
-                            Log.e("FinishedViewModel SPEED", newSpeedRecord.toString())
-                            Log.e("FinishedViewModel TOTAL DISTANCE", newTotalDistance.toString())
-                            Log.e("FinishedViewModel TOTAL RUNS", newTotalRuns.toString())
-                            Log.e("FinishedViewModel TOTAL TIME", newTotalTime.toString())
-
+                            delay(5000)
                             setTotalsUseCase(
                                 newAvgSpeedRecord ?: 0.0,
                                 newDistanceRecord ?: 0.0,
@@ -216,7 +207,7 @@ class FinishedViewModel @Inject constructor(
                                 newTotalRuns,
                                 newTotalTime
                             )
-
+                            delay(3000)
                             _finishedUIState.update { finishedUIState ->
                                 finishedUIState.copy(
                                     kpiRecordAvgSpeed = newAvgSpeedRecord ?: 0.0,
@@ -224,7 +215,9 @@ class FinishedViewModel @Inject constructor(
                                     kpiRecordSpeed = newSpeedRecord ?: 0.0,
                                     kpiTotalDistance = newTotalDistance,
                                     kpiTotalRuns = newTotalRuns,
-                                    kpiTotalTime = getStringWithDHMSFromMilisecondsUseCase(newTotalTime)
+                                    kpiTotalTime = getStringWithDHMSFromMilisecondsUseCase(
+                                        newTotalTime
+                                    )
                                 )
                             }
                         }
