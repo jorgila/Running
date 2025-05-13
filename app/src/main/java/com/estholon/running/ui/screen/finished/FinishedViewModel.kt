@@ -162,43 +162,29 @@ class FinishedViewModel @Inject constructor(
                                     - (getSecondsFromWatchUseCase(_finishedUIState.value.kpiDuration) * 1000)
                                     ).toDouble()
 
-                        var newDistanceRecord: Double = 0.0
+                        val distanceRecordDeferred = viewModelScope.async {
+                            var distanceRecord = 0.0
+                            getDistanceRecordUseCase { sucess, value ->
+                                if(!sucess){
+                                    Toast.makeText(
+                                        context,
+                                        "ERROR WHEN GETTING DISTANCE RECORD",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                                distanceRecord = value
+                            }
+                            distanceRecord
+                        }
+
+
+                        viewModelScope.launch {
+
+                        var newDistanceRecord: Double = distanceRecordDeferred.await() ?: 0.0
                         var newAvgSpeedRecord: Double = 0.0
                         var newSpeedRecord: Double = 0.0
 
-                        viewModelScope.launch {
-                            getDistanceRecordUseCase { isDistanceSuccessful, valueDistanceRecord ->
-                                if (!isDistanceSuccessful) {
-                                    Toast.makeText(
-                                        context,
-                                        "ERROR WHEN GETTING AVG SPEED RECORD",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                                newDistanceRecord = valueDistanceRecord
-                            }
-                            getAvgSpeedRecordUseCase { isAvgSpeedSuccessful, valueAvgSpeedRecord ->
-                                if (!isAvgSpeedSuccessful) {
-                                    Toast.makeText(
-                                        context,
-                                        "ERROR WHEN GETTING AVG SPEED RECORD",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                                newAvgSpeedRecord = valueAvgSpeedRecord
-                            }
-
-                            getSpeedRecordUseCase { isSpeedSuccessful, valueSpeedRecord ->
-                                if (!isSpeedSuccessful) {
-                                    Toast.makeText(
-                                        context,
-                                        "ERROR WHEN GETTING AVG SPEED RECORD",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                                newSpeedRecord = valueSpeedRecord
-                            }
-                            delay(5000)
+                            Log.e("FinishedViewModel POINT 0","PASA POR AQUÍ")
                             setTotalsUseCase(
                                 newAvgSpeedRecord ?: 0.0,
                                 newDistanceRecord ?: 0.0,
@@ -207,7 +193,7 @@ class FinishedViewModel @Inject constructor(
                                 newTotalRuns,
                                 newTotalTime
                             )
-                            delay(3000)
+                            Log.e("FinishedViewModel POINT 1", "PASA POR AQUÍ")
                             _finishedUIState.update { finishedUIState ->
                                 finishedUIState.copy(
                                     kpiRecordAvgSpeed = newAvgSpeedRecord ?: 0.0,
@@ -221,9 +207,11 @@ class FinishedViewModel @Inject constructor(
                                 )
                             }
                         }
+
                     }
                 }
             )
         }
     }
+
 }
