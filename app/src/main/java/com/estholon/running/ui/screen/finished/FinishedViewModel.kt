@@ -162,27 +162,34 @@ class FinishedViewModel @Inject constructor(
                                     - (getSecondsFromWatchUseCase(_finishedUIState.value.kpiDuration) * 1000)
                                     ).toDouble()
 
-                        val distanceRecordDeferred = viewModelScope.async {
-                            var distanceRecord = 0.0
-                            getDistanceRecordUseCase { sucess, value ->
-                                if(!sucess){
-                                    Toast.makeText(
-                                        context,
-                                        "ERROR WHEN GETTING DISTANCE RECORD",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                }
-                                distanceRecord = value
-                            }
-                            distanceRecord
-                        }
-
-
                         viewModelScope.launch {
 
-                        var newDistanceRecord: Double = distanceRecordDeferred.await() ?: 0.0
-                        var newAvgSpeedRecord: Double = 0.0
-                        var newSpeedRecord: Double = 0.0
+                            val distanceRecordDeferred = viewModelScope.async {
+                                suspendCancellableCoroutine<Double> { continuation ->
+                                    getDistanceRecordUseCase { success, value ->
+                                        Log.e("FinishedViewModel VALUE", value.toString())
+
+                                        if(continuation.isActive){
+                                            if (!success) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "ERROR WHEN GETTING DISTANCE RECORD",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                                continuation.resume(0.0)
+                                            } else {
+                                                continuation.resume(value)
+                                            }
+                                        }
+                                    }
+                                    continuation.invokeOnCancellation {
+                                    }
+                                }
+                            }
+
+                            var newDistanceRecord: Double = distanceRecordDeferred.await()
+                            var newAvgSpeedRecord: Double = 0.0
+                            var newSpeedRecord: Double = 0.0
 
                             Log.e("FinishedViewModel POINT 0","PASA POR AQUÍ")
                             setTotalsUseCase(
@@ -207,11 +214,9 @@ class FinishedViewModel @Inject constructor(
                                 )
                             }
                         }
-
                     }
                 }
             )
         }
     }
-
 }

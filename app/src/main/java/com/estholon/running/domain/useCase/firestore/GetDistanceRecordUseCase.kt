@@ -7,7 +7,7 @@ class GetDistanceRecordUseCase @Inject constructor(
     private val databaseRepository: DatabaseRepository
 ){
 
-    suspend operator fun invoke(
+    operator fun invoke(
         callback: (Boolean, Double) -> Unit
     ) {
         databaseRepository.getDistanceRecord(
