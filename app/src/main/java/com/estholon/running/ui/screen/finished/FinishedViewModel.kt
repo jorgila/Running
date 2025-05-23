@@ -141,13 +141,8 @@ class FinishedViewModel @Inject constructor(
                 deleteRunAndLinkedDataUseCase(
                     id,
                     { boolean ->
-                        _finishedUIState.update { finishedUIState ->
-                            finishedUIState.copy(
-                                message = boolean
-                            )
-                        }
                         viewModelScope.launch {
-                            processSuccessfulDeletion()
+                            processSuccessfulDeletion(boolean)
                         }
                     }
                 )
@@ -161,7 +156,7 @@ class FinishedViewModel @Inject constructor(
         }
     }
 
-    private suspend fun processSuccessfulDeletion() {
+    private suspend fun processSuccessfulDeletion(boolean: Boolean) {
         try {
             // Calculate new totals
             val newTotalDistance = _finishedUIState.value.kpiTotalDistance - _finishedUIState.value.kpiDistance
@@ -176,7 +171,7 @@ class FinishedViewModel @Inject constructor(
 
             Log.d("FinishedViewModel", "Actualizando totales...")
 
-            // Actualizar los totales
+            // Update totals
             setTotalsUseCase(
                 newAvgSpeedRecord,
                 newDistanceRecord,
@@ -188,9 +183,10 @@ class FinishedViewModel @Inject constructor(
 
             Log.d("FinishedViewModel", "Totales actualizados correctamente")
 
-            // Actualizar el UI state
+            // Update UI state
             _finishedUIState.update { finishedUIState ->
                 finishedUIState.copy(
+                    message = boolean,
                     kpiRecordAvgSpeed = newAvgSpeedRecord,
                     kpiRecordDistance = newDistanceRecord,
                     kpiRecordSpeed = newSpeedRecord,
@@ -207,6 +203,11 @@ class FinishedViewModel @Inject constructor(
                 "Error al actualizar los totales después de la eliminación",
                 Toast.LENGTH_LONG
             ).show()
+            _finishedUIState.update { finishedUIState ->
+                finishedUIState.copy(
+                    message = boolean
+                )
+            }
         }
     }
 
