@@ -1,7 +1,7 @@
 package com.estholon.running.domain.useCase.others
 
 import javax.inject.Inject
-class GetMilisecondsFromStringWithDHMSUseCase @Inject constructor(
+class GetMillisecondsFromStringWithDHMSUseCase @Inject constructor(
 
 ){
 

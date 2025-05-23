@@ -1,7 +1,6 @@
 package com.estholon.running.ui.screen.finished
 
 import android.content.Context
-import android.health.connect.datatypes.DistanceRecord
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -14,13 +13,12 @@ import com.estholon.running.domain.useCase.firestore.GetRunUseCase
 import com.estholon.running.domain.useCase.firestore.GetSpeedRecordUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
 import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
-import com.estholon.running.domain.useCase.others.GetMilisecondsFromStringWithDHMSUseCase
+import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +40,7 @@ class FinishedViewModel @Inject constructor(
     private val getAvgSpeedRecordUseCase: GetAvgSpeedRecordUseCase,
     private val getSpeedRecordUseCase: GetSpeedRecordUseCase,
     private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataUseCase,
-    private val getMilisecondsFromStringWithDHMSUseCase: GetMilisecondsFromStringWithDHMSUseCase,
+    private val getMillisecondsFromStringWithDHMSUseCase: GetMillisecondsFromStringWithDHMSUseCase,
     private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
 ) : ViewModel() {
@@ -139,84 +137,167 @@ class FinishedViewModel @Inject constructor(
     ){
 
         viewModelScope.launch {
-            deleteRunAndLinkedDataUseCase(
-                id,
-                { boolean ->
-                    _finishedUIState.update { finishedUIState ->
-                        finishedUIState.copy(
-                            message = boolean
-                        )
-                    }
-
-                    var newDistanceRecord = 0.0
-                    var newAvgSpeedRecord = 0.0
-                    var newSpeedRecord = 0.0
-
-                    if(boolean) {
-
-                        var newTotalDistance =
-                            _finishedUIState.value.kpiTotalDistance - _finishedUIState.value.kpiDistance
-                        var newTotalRuns = _finishedUIState.value.kpiTotalRuns - 1
-                        var newTotalTime =
-                            (getMilisecondsFromStringWithDHMSUseCase(_finishedUIState.value.kpiTotalTime)
-                                    - (getSecondsFromWatchUseCase(_finishedUIState.value.kpiDuration) * 1000)
-                                    ).toDouble()
-
-                        viewModelScope.launch {
-
-                            val distanceRecordDeferred = viewModelScope.async {
-                                suspendCancellableCoroutine<Double> { continuation ->
-                                    getDistanceRecordUseCase { success, value ->
-                                        Log.e("FinishedViewModel VALUE", value.toString())
-
-                                        if(continuation.isActive){
-                                            if (!success) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "ERROR WHEN GETTING DISTANCE RECORD",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
-                                                continuation.resume(0.0)
-                                            } else {
-                                                continuation.resume(value)
-                                            }
-                                        }
-                                    }
-                                    continuation.invokeOnCancellation {
-                                    }
-                                }
-                            }
-
-                            var newDistanceRecord: Double = distanceRecordDeferred.await()
-                            var newAvgSpeedRecord: Double = 0.0
-                            var newSpeedRecord: Double = 0.0
-
-                            Log.e("FinishedViewModel POINT 0","PASA POR AQUÍ")
-                            setTotalsUseCase(
-                                newAvgSpeedRecord ?: 0.0,
-                                newDistanceRecord ?: 0.0,
-                                newSpeedRecord ?: 0.0,
-                                newTotalDistance,
-                                newTotalRuns,
-                                newTotalTime
+            try {
+                deleteRunAndLinkedDataUseCase(
+                    id,
+                    { boolean ->
+                        _finishedUIState.update { finishedUIState ->
+                            finishedUIState.copy(
+                                message = boolean
                             )
-                            Log.e("FinishedViewModel POINT 1", "PASA POR AQUÍ")
-                            _finishedUIState.update { finishedUIState ->
-                                finishedUIState.copy(
-                                    kpiRecordAvgSpeed = newAvgSpeedRecord ?: 0.0,
-                                    kpiRecordDistance = newDistanceRecord ?: 0.0,
-                                    kpiRecordSpeed = newSpeedRecord ?: 0.0,
-                                    kpiTotalDistance = newTotalDistance,
-                                    kpiTotalRuns = newTotalRuns,
-                                    kpiTotalTime = getStringWithDHMSFromMilisecondsUseCase(
-                                        newTotalTime
-                                    )
-                                )
+                        }
+                        viewModelScope.launch {
+                            processSuccessfulDeletion()
+                        }
+                    }
+                )
+            } catch (e: Exception){
+                Toast.makeText(
+                    context,
+                    "Error inesperado al eliminar la carrera",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+    private suspend fun processSuccessfulDeletion() {
+        try {
+            // Calculate new totals
+            val newTotalDistance = _finishedUIState.value.kpiTotalDistance - _finishedUIState.value.kpiDistance
+            val newTotalRuns = _finishedUIState.value.kpiTotalRuns - 1
+            val newTotalTime = (getMillisecondsFromStringWithDHMSUseCase(_finishedUIState.value.kpiTotalTime)
+                    - (getSecondsFromWatchUseCase(_finishedUIState.value.kpiDuration) * 1000)).toDouble()
+
+            // Get Last Records
+            val newDistanceRecord = getDistanceRecordSafely()
+            val newAvgSpeedRecord = getAvgSpeedRecordSafely()
+            val newSpeedRecord = getSpeedRecordSafely()
+
+            Log.d("FinishedViewModel", "Actualizando totales...")
+
+            // Actualizar los totales
+            setTotalsUseCase(
+                newAvgSpeedRecord,
+                newDistanceRecord,
+                newSpeedRecord,
+                newTotalDistance,
+                newTotalRuns,
+                newTotalTime
+            )
+
+            Log.d("FinishedViewModel", "Totales actualizados correctamente")
+
+            // Actualizar el UI state
+            _finishedUIState.update { finishedUIState ->
+                finishedUIState.copy(
+                    kpiRecordAvgSpeed = newAvgSpeedRecord,
+                    kpiRecordDistance = newDistanceRecord,
+                    kpiRecordSpeed = newSpeedRecord,
+                    kpiTotalDistance = newTotalDistance,
+                    kpiTotalRuns = newTotalRuns,
+                    kpiTotalTime = getStringWithDHMSFromMilisecondsUseCase(newTotalTime)
+                )
+            }
+
+        } catch (e: Exception) {
+            Log.e("FinishedViewModel", "Error procesando eliminación exitosa: ${e.message}")
+            Toast.makeText(
+                context,
+                "Error al actualizar los totales después de la eliminación",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    private suspend fun getDistanceRecordSafely(): Double {
+        return withContext(Dispatchers.IO) {
+            suspendCancellableCoroutine { continuation ->
+                try {
+                    getDistanceRecordUseCase { success, value ->
+                        if (continuation.isActive) {
+                            if (success) {
+                                Log.d("FinishedViewModel", "Distance record obtenido: $value")
+                                continuation.resume(value)
+                            } else {
+                                Log.e("FinishedViewModel", "Error obteniendo distance record")
+                                continuation.resume(0.0)
                             }
                         }
                     }
+                } catch (e: Exception) {
+                    if (continuation.isActive) {
+                        Log.e("FinishedViewModel", "Excepción en getDistanceRecordSafely: ${e.message}")
+                        continuation.resume(0.0)
+                    }
                 }
-            )
+
+                // Configurar la cancelación
+                continuation.invokeOnCancellation {
+                    Log.d("FinishedViewModel", "getDistanceRecordSafely cancelado")
+                }
+            }
+        }
+    }
+
+    private suspend fun getAvgSpeedRecordSafely(): Double {
+        return withContext(Dispatchers.IO) {
+            suspendCancellableCoroutine { continuation ->
+                try {
+                    getAvgSpeedRecordUseCase { success, value ->
+                        if (continuation.isActive) {
+                            if (success) {
+                                Log.d("FinishedViewModel", "Avg speed record obtenido: $value")
+                                continuation.resume(value)
+                            } else {
+                                Log.e("FinishedViewModel", "Error obteniendo avg speed record")
+                                continuation.resume(0.0)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (continuation.isActive) {
+                        Log.e("FinishedViewModel", "Excepción en getAvgSpeedRecordSafely: ${e.message}")
+                        continuation.resume(0.0)
+                    }
+                }
+
+                continuation.invokeOnCancellation {
+                    Log.d("FinishedViewModel", "getAvgSpeedRecordSafely cancelado")
+                }
+            }
+        }
+    }
+
+    private suspend fun getSpeedRecordSafely(): Double {
+        return withContext(Dispatchers.IO) {
+            suspendCancellableCoroutine { continuation ->
+                try {
+                    getSpeedRecordUseCase { success, value ->
+                        if (continuation.isActive) {
+                            if (success) {
+                                Log.d("FinishedViewModel", "Speed record obtenido: $value")
+                                continuation.resume(value)
+                            } else {
+                                Log.e("FinishedViewModel", "Error obteniendo speed record")
+                                continuation.resume(0.0)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    if (continuation.isActive) {
+                        Log.e(
+                            "FinishedViewModel",
+                            "Excepción en getSpeedRecordSafely: ${e.message}"
+                        )
+                        continuation.resume(0.0)
+                    }
+                }
+
+                continuation.invokeOnCancellation {
+                    Log.d("FinishedViewModel", "getSpeedRecordSafely cancelado")
+                }
+            }
         }
     }
 }
