@@ -70,6 +70,7 @@ import com.estholon.running.R
 import com.estholon.running.ui.screen.components.BigSpinner
 import com.estholon.running.ui.screen.components.Picker
 import com.estholon.running.ui.screen.components.rememberPickerState
+import com.estholon.running.ui.screen.finished.FinishedViewModel
 import com.estholon.running.ui.theme.Black
 import com.estholon.running.ui.theme.Grey
 import com.estholon.running.ui.theme.White

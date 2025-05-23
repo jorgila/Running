@@ -229,7 +229,9 @@ fun FinishedScreen(
             ) {
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
-                    onClick = { finishedViewModel.deleteRunAndLinkedData(id = runId) },
+                    onClick = {
+                        finishedViewModel.deleteRunAndLinkedData(id = runId)
+                    },
                     colors = ButtonColors(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
