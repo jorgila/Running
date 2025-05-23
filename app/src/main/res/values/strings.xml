@@ -65,4 +65,10 @@
     <string name="error_in_run_creation">Error in run creation</string>
     <string name="deleted_successfully">Deleted successfully</string>
     <string name="an_error_has_happen_while_deleting_the_run">An error has happen while deleting the run</string>
+    <string name="errormessage_unexpected_error_when_deleting_the_race">Unexpected error when deleting the race</string>
+    <string name="errormessage_error_updating_totals_after_deletion">Error updating totals after deletion</string>
+    <string name="errormessage_error_processing_successful_deletion">Error processing successful deletion: %1$s</string>
+    <string name="errormessage_exception_obtaining_distance_record">Exception obtaining distance record: %1$s</string>
+    <string name="errormessage_exception_obtaining_avg_speed_record">Exception obtaining avg speed record: %1$s</string>
+    <string name="errormessage_exception_obtaining_speed_record">Exception obtaining speed record: %1$s</string>
 </resources>

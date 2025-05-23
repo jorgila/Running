@@ -5,6 +5,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.estholon.running.R
 import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataUseCase
 import com.estholon.running.domain.useCase.firestore.GetAvgSpeedRecordUseCase
 import com.estholon.running.domain.useCase.firestore.GetDistanceRecordUseCase
@@ -149,7 +150,7 @@ class FinishedViewModel @Inject constructor(
             } catch (e: Exception){
                 Toast.makeText(
                     context,
-                    "Error inesperado al eliminar la carrera",
+                    context.getString(R.string.errormessage_unexpected_error_when_deleting_the_race),
                     Toast.LENGTH_LONG
                 ).show()
             }
@@ -169,8 +170,6 @@ class FinishedViewModel @Inject constructor(
             val newAvgSpeedRecord = getAvgSpeedRecordSafely()
             val newSpeedRecord = getSpeedRecordSafely()
 
-            Log.d("FinishedViewModel", "Actualizando totales...")
-
             // Update totals
             setTotalsUseCase(
                 newAvgSpeedRecord,
@@ -180,8 +179,6 @@ class FinishedViewModel @Inject constructor(
                 newTotalRuns,
                 newTotalTime
             )
-
-            Log.d("FinishedViewModel", "Totales actualizados correctamente")
 
             // Update UI state
             _finishedUIState.update { finishedUIState ->
@@ -197,10 +194,14 @@ class FinishedViewModel @Inject constructor(
             }
 
         } catch (e: Exception) {
-            Log.e("FinishedViewModel", "Error procesando eliminación exitosa: ${e.message}")
+            Log.e("FinishedViewModel",
+                context.getString(
+                    R.string.errormessage_error_processing_successful_deletion,
+                    e.message
+                ))
             Toast.makeText(
                 context,
-                "Error al actualizar los totales después de la eliminación",
+                context.getString(R.string.errormessage_error_updating_totals_after_deletion),
                 Toast.LENGTH_LONG
             ).show()
             _finishedUIState.update { finishedUIState ->
@@ -218,17 +219,19 @@ class FinishedViewModel @Inject constructor(
                     getDistanceRecordUseCase { success, value ->
                         if (continuation.isActive) {
                             if (success) {
-                                Log.d("FinishedViewModel", "Distance record obtenido: $value")
                                 continuation.resume(value)
                             } else {
-                                Log.e("FinishedViewModel", "Error obteniendo distance record")
                                 continuation.resume(0.0)
                             }
                         }
                     }
                 } catch (e: Exception) {
                     if (continuation.isActive) {
-                        Log.e("FinishedViewModel", "Excepción en getDistanceRecordSafely: ${e.message}")
+                        Log.e("FinishedViewModel",
+                            context.getString(
+                                R.string.errormessage_exception_obtaining_distance_record,
+                                e.message
+                            ))
                         continuation.resume(0.0)
                     }
                 }
@@ -248,17 +251,19 @@ class FinishedViewModel @Inject constructor(
                     getAvgSpeedRecordUseCase { success, value ->
                         if (continuation.isActive) {
                             if (success) {
-                                Log.d("FinishedViewModel", "Avg speed record obtenido: $value")
                                 continuation.resume(value)
                             } else {
-                                Log.e("FinishedViewModel", "Error obteniendo avg speed record")
                                 continuation.resume(0.0)
                             }
                         }
                     }
                 } catch (e: Exception) {
                     if (continuation.isActive) {
-                        Log.e("FinishedViewModel", "Excepción en getAvgSpeedRecordSafely: ${e.message}")
+                        Log.e("FinishedViewModel",
+                            context.getString(
+                                R.string.errormessage_exception_obtaining_avg_speed_record,
+                                e.message
+                            ))
                         continuation.resume(0.0)
                     }
                 }
@@ -277,10 +282,8 @@ class FinishedViewModel @Inject constructor(
                     getSpeedRecordUseCase { success, value ->
                         if (continuation.isActive) {
                             if (success) {
-                                Log.d("FinishedViewModel", "Speed record obtenido: $value")
                                 continuation.resume(value)
                             } else {
-                                Log.e("FinishedViewModel", "Error obteniendo speed record")
                                 continuation.resume(0.0)
                             }
                         }
@@ -289,7 +292,10 @@ class FinishedViewModel @Inject constructor(
                     if (continuation.isActive) {
                         Log.e(
                             "FinishedViewModel",
-                            "Excepción en getSpeedRecordSafely: ${e.message}"
+                            context.getString(
+                                R.string.errormessage_exception_obtaining_speed_record,
+                                e.message
+                            )
                         )
                         continuation.resume(0.0)
                     }
