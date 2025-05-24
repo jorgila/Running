@@ -320,4 +320,31 @@ class DatabaseRepository @Inject constructor(
             }
     }
 
+    fun deleteLocations(
+        id: String,
+        callback: (Boolean) -> Unit
+    ){
+
+        db
+            .collection("locations/${authManager.getCurrentEmail()}/${id}")
+            .get()
+            .addOnSuccessListener { documents ->
+                var status : Boolean = true
+                for (document in documents){
+                    db
+                        .collection("locations/${authManager.getCurrentEmail()}/${id}")
+                        .document(document.id)
+                        .delete()
+                        .addOnFailureListener{
+                            status = false
+                        }
+                }
+                callback(status)
+            }
+            .addOnFailureListener{
+                callback(false)
+            }
+
+    }
+
 }

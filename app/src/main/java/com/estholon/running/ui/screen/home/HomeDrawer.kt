@@ -61,7 +61,11 @@ fun HomeDrawer(
 
    val homeUIState = homeViewModel.homeUIState.collectAsState().value
 
-    var showResetPreferences by rememberSaveable {
+    var showResetPreferencesAlertDialog by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    var showSignOutAlertDialog by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -214,7 +218,7 @@ fun HomeDrawer(
             label = { Text(text = stringResource(R.string.reset_preferences)) },
             selected = false,
             onClick = {
-                showResetPreferences = true
+                showResetPreferencesAlertDialog = true
             },
             icon = {
                 Icon(
@@ -228,8 +232,7 @@ fun HomeDrawer(
             label = { Text(text = stringResource(R.string.logout)) },
             selected = false,
             onClick = {
-                homeViewModel.logout()
-                navigateToSignIn()
+                showSignOutAlertDialog = true
             },
             icon = {
                 Icon(
@@ -241,7 +244,7 @@ fun HomeDrawer(
         )
     }
 
-    if(showResetPreferences){
+    if(showResetPreferencesAlertDialog){
         AlertDialog(
             title = {
                 Text(text = stringResource(R.string.reset_preferences))
@@ -250,7 +253,7 @@ fun HomeDrawer(
                 Text(text = stringResource(R.string.if_you_continue_you_can_reset_the_preferences_saved_from_your_last_run))
             },
             onDismissRequest = {
-                showResetPreferences = false
+                showResetPreferencesAlertDialog = false
             },
             confirmButton = {
                 TextButton (
@@ -261,7 +264,7 @@ fun HomeDrawer(
                             Toast.makeText(context,
                                 context.getString(R.string.reset_has_been_successful),Toast.LENGTH_LONG).show()
                         }
-                        showResetPreferences = false
+                        showResetPreferencesAlertDialog = false
                     }
                 ) {
                     Text(text= stringResource(R.string.reset))
@@ -273,7 +276,7 @@ fun HomeDrawer(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showResetPreferences = false
+                        showResetPreferencesAlertDialog = false
                     }
                 ) {
                     Text(text= stringResource(R.string.cancel))
@@ -281,5 +284,41 @@ fun HomeDrawer(
             },
         )
     }
+
+    if(showSignOutAlertDialog){
+        AlertDialog(
+            title = { Text(text=stringResource(R.string.sign_out)) },
+            text = {
+                Text( text = stringResource(R.string.if_you_want_to_close_your_session_click_in_sign_out))
+            },
+            onDismissRequest = {
+                showSignOutAlertDialog = false
+            },
+            confirmButton = {
+
+                TextButton(
+                    onClick = {
+                        homeViewModel.logout()
+                        navigateToSignIn()
+                    }
+                ) {
+                    Text(text = stringResource(R.string.sign_out).uppercase())
+                }
+
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showSignOutAlertDialog = false
+                    }
+                ) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+
 }
+
 

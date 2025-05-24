@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
+import com.estholon.running.domain.useCase.firestore.DeleteLocationsUseCase
 import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataUseCase
 import com.estholon.running.domain.useCase.firestore.GetAvgSpeedRecordUseCase
 import com.estholon.running.domain.useCase.firestore.GetDistanceRecordUseCase
@@ -41,6 +42,7 @@ class FinishedViewModel @Inject constructor(
     private val getAvgSpeedRecordUseCase: GetAvgSpeedRecordUseCase,
     private val getSpeedRecordUseCase: GetSpeedRecordUseCase,
     private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataUseCase,
+    private val deleteLocationsUseCase: DeleteLocationsUseCase,
     private val getMillisecondsFromStringWithDHMSUseCase: GetMillisecondsFromStringWithDHMSUseCase,
     private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
@@ -143,7 +145,7 @@ class FinishedViewModel @Inject constructor(
                     id,
                     { boolean ->
                         viewModelScope.launch {
-                            processSuccessfulDeletion(boolean)
+                            processSuccessfulDeletion(boolean, id)
                         }
                     }
                 )
@@ -157,7 +159,10 @@ class FinishedViewModel @Inject constructor(
         }
     }
 
-    private suspend fun processSuccessfulDeletion(boolean: Boolean) {
+    private suspend fun processSuccessfulDeletion(boolean: Boolean, id: String) {
+
+        var message : Boolean = boolean
+
         try {
             // Calculate new totals
             val newTotalDistance = _finishedUIState.value.kpiTotalDistance - _finishedUIState.value.kpiDistance
@@ -180,10 +185,18 @@ class FinishedViewModel @Inject constructor(
                 newTotalTime
             )
 
+            // Delete locations
+            deleteLocationsUseCase(
+                id,
+                { booleanDeleteLocations ->
+                    message = booleanDeleteLocations
+                }
+            )
+
             // Update UI state
             _finishedUIState.update { finishedUIState ->
                 finishedUIState.copy(
-                    message = boolean,
+                    message = message,
                     kpiRecordAvgSpeed = newAvgSpeedRecord,
                     kpiRecordDistance = newDistanceRecord,
                     kpiRecordSpeed = newSpeedRecord,
@@ -192,6 +205,8 @@ class FinishedViewModel @Inject constructor(
                     kpiTotalTime = getStringWithDHMSFromMilisecondsUseCase(newTotalTime)
                 )
             }
+
+
 
         } catch (e: Exception) {
             Log.e("FinishedViewModel",
