@@ -61,6 +61,7 @@ fun FinishedScreen(
     avgSpeed: String,
     maxSpeed: String,
     dismissDialog: () -> Unit,
+    navigateToCameraScreen: (String) -> Unit,
     finishedViewModel: FinishedViewModel = hiltViewModel()
 ){
 
@@ -244,7 +245,9 @@ fun FinishedScreen(
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Button(
-                    onClick = {},
+                    onClick = {
+                        navigateToCameraScreen(runId)
+                    },
                     colors = ButtonColors(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,

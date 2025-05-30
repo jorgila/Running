@@ -31,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import com.estholon.running.ui.screen.authentication.RecoverScreen
 import com.estholon.running.ui.screen.authentication.SignInScreen
 import com.estholon.running.ui.screen.authentication.SignUpScreen
+import com.estholon.running.ui.screen.camera.CameraScreen
 import com.estholon.running.ui.screen.finished.FinishedScreen
 import com.estholon.running.ui.screen.history.HistoryScreen
 import com.estholon.running.ui.screen.history.HistoryTopBar
@@ -208,6 +209,16 @@ fun AppNavigation(
                     composable(Routes.HistoryScreen.route){
                         HistoryScreen()
                     }
+                    composable(
+                        route = "${Routes.CameraScreen.route}/{runId}"
+                    ){ backStackEntry ->
+
+                        val runId = backStackEntry.arguments?.getString("runId") ?: ""
+
+                        CameraScreen(
+                            runId = runId
+                        )
+                    }
                     dialog(
                         route = "${Routes.FinishedScreen.route}/{chrono}/{durationGoal}/{intervalDuration}/{runIntervalDuration}/{walkIntervalDuration}/{distance}/{distanceGoal}/{minAltitude}/{maxAltitude}/{avgSpeed}/{maxSpeed}/{runId}",
                         dialogProperties = DialogProperties(
@@ -244,7 +255,10 @@ fun AppNavigation(
                             maxAltitude = maxAltitude,
                             avgSpeed = avgSpeed,
                             maxSpeed = maxSpeed,
-                            dismissDialog = { navController.popBackStack() }
+                            dismissDialog = { navController.popBackStack() },
+                            navigateToCameraScreen = { runId ->
+                                navController.navigate("${Routes.CameraScreen.route}/$runId")
+                            }
                         )
                     }
                 }
