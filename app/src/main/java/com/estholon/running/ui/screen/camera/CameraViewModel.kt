@@ -1,7 +1,9 @@
 package com.estholon.running.ui.screen.camera
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.estholon.running.data.repository.CameraRepositoryImpl
 import com.estholon.running.domain.model.CameraModel
 import com.estholon.running.domain.repository.CameraRepository
 import com.estholon.running.domain.useCase.camera.CapturePhotoUseCase
@@ -14,6 +16,7 @@ import com.estholon.running.domain.useCase.camera.StopVideoRecordingUseCase
 import com.estholon.running.domain.useCase.camera.SwitchCameraUseCase
 import com.estholon.running.domain.useCase.camera.ToggleFlashUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +25,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CameraViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val initializeCameraUseCase: InitializeCameraUseCase,
     private val capturePhotoUseCase: CapturePhotoUseCase,
     private val startVideoRecordingUseCase: StartVideoRecordingUseCase,

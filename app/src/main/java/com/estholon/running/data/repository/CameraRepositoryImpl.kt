@@ -24,6 +24,7 @@ import com.estholon.running.domain.exception.CameraException
 import com.estholon.running.domain.model.CameraLensFacing
 import com.estholon.running.domain.model.CameraModel
 import com.estholon.running.domain.repository.CameraRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,7 +39,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class CameraRepositoryImpl @Inject constructor(
-    private val context: Context
+    @ApplicationContext private val context: Context
 ) : CameraRepository {
 
     private val _cameraState = MutableStateFlow(CameraModel())
