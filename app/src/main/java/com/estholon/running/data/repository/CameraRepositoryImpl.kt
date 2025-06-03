@@ -25,10 +25,13 @@ import com.estholon.running.domain.model.CameraLensFacing
 import com.estholon.running.domain.model.CameraModel
 import com.estholon.running.domain.repository.CameraRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -53,63 +56,104 @@ class CameraRepositoryImpl @Inject constructor(
     private var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     private var recording: Recording? = null
 
+    init {
+        Log.d("CameraRepository", "NEW INSTANCE CREATED: ${this.hashCode()}")
+    }
+
     override suspend fun initializeCamera(
         surfaceProvider: Any,
         lifecycleOwner: Any
     ): Result<Unit> {
-        return try {
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-            cameraProvider = cameraProviderFuture.get()
+        Log.d("CameraRepository","InitializeCamera called on instance: ${this.hashCode()}")
+        if(_cameraState.value.isInitialized){
+            Log.d("CameraRepository","Camera already initialized, skipping...")
+            return Result.success(Unit)
+        }
 
+        return try {
+            Log.d("CameraRepository", "Starting camera initialization on instance: ${this.hashCode()}")
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+            Log.d("CameraRepository","Getting camera provider...")
+            cameraProvider = cameraProviderFuture.get()
+            Log.d("CameraRepository","Camera provider obtained sucessfully")
+            Log.d("CameraRepository","Setting up camera...")
             setupCamera(
                 surfaceProvider as androidx.camera.core.Preview.SurfaceProvider,
                 lifecycleOwner as LifecycleOwner
             )
+            Log.d("CameraRepository","Camera setup completed")
+            Log.d("CameraRepository", "Updating camera state to initialized on instance: ${this.hashCode()}")
 
-            _cameraState.value = _cameraState.value.copy(
+            val currentState = _cameraState.value
+            Log.d("CameraRepository", "Current state before update: isInitialized=${currentState.isInitialized}")
+
+            val newState = currentState.copy(
                 isInitialized = true,
                 error = null
             )
+
+            _cameraState.value = newState
+            Log.d("CameraRepository", "State updated directly: isInitialized=${_cameraState.value.isInitialized} on instance: ${this.hashCode()}")
+
+            delay(100)
+            Log.d("CameraRepository", "Final verification: isInitialized=${_cameraState.value.isInitialized} on instance: ${this.hashCode()}")
+
+            Log.d("CameraRepository", "Camera initialization completed successfully")
             Result.success(Unit)
         } catch (e: Exception) {
-            Log.e("CameraRepository", "Error initializing camera", e)
+            Log.e("CameraRepository", "Error initializing camera on instance: ${this.hashCode()}", e)
             val error = "Error initializing camera: ${e.message}"
-            _cameraState.value = _cameraState.value.copy(error = error)
+            Log.e("CameraRepository", "Setting error state: $error")
+
+            _cameraState.value = _cameraState.value.copy(
+                isInitialized = false,
+                error = error
+            )
+
             Result.failure(CameraException.InitializationFailed(e.message ?: "Unknown error"))
         }
     }
 
     private fun setupCamera(
-        surfaceProvider: androidx.camera.core.Preview.SurfaceProvider,
+        surfaceProvider: Preview.SurfaceProvider,
         lifecycleOwner: LifecycleOwner
     ){
+        Log.d("CameraRepository", "setupCamera started")
         val lensFacing = when (_cameraState.value.lensFacing){
             CameraLensFacing.FRONT -> CameraSelector.LENS_FACING_FRONT
             CameraLensFacing.BACK -> CameraSelector.LENS_FACING_BACK
         }
-
+        Log.d("CameraRepository", "Using lens facing: $lensFacing")
         val cameraSelector = CameraSelector.Builder()
             .requireLensFacing(lensFacing)
             .build()
-
+        Log.d("CameraRepository", "Camera selector built")
         // Preview
+        Log.d("CameraRepository", "Building preview...")
         preview = Preview.Builder().build().also {
             it.setSurfaceProvider(surfaceProvider)
         }
+        Log.d("CameraRepository", "Preview built and surface provider set")
 
         // ImageCapture
+        Log.d("CameraRepository", "Building image capture...")
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
             .build()
+        Log.d("CameraRepository", "Image capture built")
 
         // VideoCapture
+        Log.d("CameraRepository", "Building video capture...")
         val recorder = Recorder.Builder()
             .setQualitySelector(QualitySelector.from(Quality.HIGHEST))
             .build()
         videoCapture = VideoCapture.withOutput(recorder)
+        Log.d("CameraRepository", "Video capture built")
 
         try {
+            Log.d("CameraRepository", "Unbinding all use cases...")
             cameraProvider?.unbindAll()
+            Log.d("CameraRepository", "Binding to lifecycle...")
             camera = cameraProvider?.bindToLifecycle(
                 lifecycleOwner,
                 cameraSelector,
@@ -117,8 +161,12 @@ class CameraRepositoryImpl @Inject constructor(
                 imageCapture,
                 videoCapture
             )
+            Log.d("CameraRepository", "Successfully bound to lifecycle")
 
             updateFlashMode()
+            Log.d("CameraRepository", "Flash mode updated")
+            Log.d("CameraRepository", "setupCamera completed successfully")
+
         } catch (e: Exception) {
             Log.e("CameraRepository", "Use case binding failed", e)
             _cameraState.value = _cameraState.value.copy(error = "Camera binding failed: ${e.message}")

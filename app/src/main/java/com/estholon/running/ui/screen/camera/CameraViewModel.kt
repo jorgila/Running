@@ -1,8 +1,10 @@
 package com.estholon.running.ui.screen.camera
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.estholon.running.data.repository.CameraRepositoryImpl
 import com.estholon.running.domain.model.CameraModel
 import com.estholon.running.domain.repository.CameraRepository
@@ -20,6 +22,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,24 +43,49 @@ class CameraViewModel @Inject constructor(
     
     val uiState: StateFlow<CameraModel> = cameraRepository.cameraState
 
-    fun initializeCamera(surfaceProvider: Any, lifecycleOwner: Any) {
+    init {
+        Log.d("CameraViewModel", "ViewModel created with repository instance: ${cameraRepository.hashCode()}")
+
+        // Agregar logging para monitorear cambios de estado
         viewModelScope.launch {
+            uiState.collect { state ->
+                Log.d("CameraViewModel", "State changed in ViewModel from repository ${cameraRepository.hashCode()}: isInitialized=${state.isInitialized}, error=${state.error}")
+            }
+        }
+    }
+
+    fun initializeCamera(surfaceProvider: Any, lifecycleOwner: Any) {
+        Log.d("CameraViewModel", "initializeCamera called from UI - using repository: ${cameraRepository.hashCode()}")
+        viewModelScope.launch {
+            Log.d("CameraViewModel","Starting initialization coroutine")
             initializeCameraUseCase(surfaceProvider, lifecycleOwner)
+                .onSuccess {
+                    Log.d("CameraViewModel","Successfully initialized camera")
+                    // Verificar el estado después de la inicialización
+                    Log.d("CameraViewModel", "Post-init state from repository ${cameraRepository.hashCode()}: isInitialized=${uiState.value.isInitialized}")
+                }
                 .onFailure { exception ->
                     // Handle error - already handled in use case and repository
                     android.util.Log.e("CameraViewModel", "Failed to initialize camera", exception)
                 }
+            Log.d("CameraViewModel","Initialization coroutine completed")
         }
     }
 
     fun capturePhoto() {
         viewModelScope.launch {
+
+            if(!uiState.value.isInitialized){
+                Log.e("CameraViewModel","Cannot capture photo: Camera not initializated")
+                return@launch
+            }
+
             capturePhotoUseCase()
                 .onSuccess { uri ->
-                    android.util.Log.d("CameraViewModel", "Photo captured: $uri")
+                    Log.d("CameraViewModel", "Photo captured: $uri")
                 }
                 .onFailure { exception ->
-                    android.util.Log.e("CameraViewModel", "Failed to capture photo", exception)
+                    Log.e("CameraViewModel", "Failed to capture photo", exception)
                 }
         }
     }

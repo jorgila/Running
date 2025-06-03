@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -190,6 +191,12 @@ fun CameraContent(viewModel: CameraViewModel) {
     val uiState by viewModel.uiState.collectAsState()
 
     var showFlashEffect by remember { mutableStateOf(false) }
+    var previewView by remember { mutableStateOf<PreviewView?>(null) }
+
+    // Debug - Log state changes
+    LaunchedEffect(uiState.isInitialized, uiState.error) {
+        Log.d("CameraScreen", "UI State changed - isInitialized: ${uiState.isInitialized}, error: ${uiState.error}")
+    }
 
     // Flash effect
     LaunchedEffect(uiState.lastCapturedPhotoUri) {
@@ -204,15 +211,21 @@ fun CameraContent(viewModel: CameraViewModel) {
         // Camera Preview
         AndroidView(
             factory = { ctx ->
+                Log.d("CameraScreen","Creating PreviewView")
                 PreviewView(ctx).apply {
                     scaleType = PreviewView.ScaleType.FILL_CENTER
                     implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                 }
             },
-            modifier = Modifier.fillMaxSize(),
-            update = { previewView ->
-                viewModel.initializeCamera(previewView.surfaceProvider, lifecycleOwner)
-            }
+            update = { preview ->
+                previewView = preview
+                Log.d("CameraScreen", "AndroidView update - isInitialized: ${uiState.isInitialized}")
+                if (!uiState.isInitialized) {
+                    Log.d("CameraScreen", "Initializing camera from AndroidView update...")
+                    viewModel.initializeCamera(preview.surfaceProvider, lifecycleOwner)
+                }
+            },
+            modifier = Modifier.fillMaxSize()
         )
 
         // Flash Effect
@@ -239,6 +252,7 @@ fun CameraContent(viewModel: CameraViewModel) {
             // Flash Toggle
             IconButton(
                 onClick = { viewModel.toggleFlash() },
+                enabled = uiState.isInitialized,
                 modifier = Modifier
                     .background(
                         Color.Black.copy(alpha = 0.5f),
@@ -260,8 +274,9 @@ fun CameraContent(viewModel: CameraViewModel) {
             // Camera Switch
             IconButton(
                 onClick = {
-                    // Need to get preview surface provider here - simplified for example
-                    // In real implementation, you'd pass this from the AndroidView
+                    if(previewView != null){
+                        viewModel.switchCamera(previewView!!.surfaceProvider, lifecycleOwner)
+                    }
                 },
                 modifier = Modifier
                     .background(
@@ -282,17 +297,62 @@ fun CameraContent(viewModel: CameraViewModel) {
             modifier = Modifier.align(Alignment.BottomCenter),
             isRecording = uiState.isRecording,
             isPaused = uiState.isPaused,
-            onCapturePhoto = { viewModel.capturePhoto() },
-            onStartRecording = { viewModel.startRecording() },
+            isInitialized = uiState.isInitialized,
+            onCapturePhoto = {
+                Log.d("CameraScreen", "Capture photo button pressed, isInitialized: ${uiState.isInitialized}")
+                if (uiState.isInitialized) {
+                    viewModel.capturePhoto()
+                } else {
+                    Log.w("CameraScreen", "Cannot capture photo: Camera not initialized")
+                }
+            },
+            onStartRecording = {
+                if (uiState.isInitialized) {
+                    viewModel.startRecording()
+                } else {
+                    Log.w("CameraScreen", "Cannot start recording: Camera not initialized")
+                }
+            },
             onStopRecording = { viewModel.stopRecording() },
             onPauseRecording = { viewModel.pauseRecording() },
             onResumeRecording = { viewModel.resumeRecording() }
         )
 
+        if (!uiState.isInitialized && uiState.error == null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.7f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(color = Color.White)
+                    Text(
+                        text = "Initializing Camera...",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = "isInitialized: ${uiState.isInitialized}",
+                        color = Color.Yellow,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = "Current timestamp: ${System.currentTimeMillis()}",
+                        color = Color.Yellow,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        }
+
         // Error Snackbar
         uiState.error?.let { error ->
             LaunchedEffect(error) {
-                delay(3000)
+                delay(5000)
                 viewModel.clearError()
             }
 
@@ -360,6 +420,7 @@ fun CameraControls(
     modifier: Modifier = Modifier,
     isRecording: Boolean,
     isPaused: Boolean,
+    isInitialized: Boolean,
     onCapturePhoto: () -> Unit,
     onStartRecording: () -> Unit,
     onStopRecording: () -> Unit,
@@ -378,12 +439,12 @@ fun CameraControls(
             FloatingActionButton(
                 onClick = onCapturePhoto,
                 modifier = Modifier.size(64.dp),
-                containerColor = Color.White
+                containerColor = if (isInitialized) Color.White else Color.Gray
             ) {
                 Icon(
                     imageVector = Icons.Default.PhotoCamera,
                     contentDescription = "Take Photo",
-                    tint = Color.Black,
+                    tint = if (isInitialized) Color.Black else Color.DarkGray,
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -403,15 +464,15 @@ fun CameraControls(
                 .size(80.dp)
                 .border(
                     4.dp,
-                    if (isRecording) Color.Red else Color.White,
+                    if (isRecording) Color.Red else if (isInitialized) Color.White else Color.Gray,
                     CircleShape
                 ),
-            containerColor = if (isRecording) Color.Red else Color.White
+            containerColor = if (isRecording) Color.Red else if (isInitialized) Color.White else Color.Gray
         ) {
             Icon(
                 imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Videocam,
                 contentDescription = if (isRecording) "Stop Recording" else "Start Recording",
-                tint = if (isRecording) Color.White else Color.Black,
+                tint = if (isRecording) Color.White else if (isInitialized) Color.Black else Color.DarkGray,
                 modifier = Modifier.size(36.dp)
             )
         }
