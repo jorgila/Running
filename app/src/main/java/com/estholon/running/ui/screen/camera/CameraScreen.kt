@@ -335,16 +335,6 @@ fun CameraContent(viewModel: CameraViewModel) {
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium
                     )
-                    Text(
-                        text = "isInitialized: ${uiState.isInitialized}",
-                        color = Color.Yellow,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Text(
-                        text = "Current timestamp: ${System.currentTimeMillis()}",
-                        color = Color.Yellow,
-                        style = MaterialTheme.typography.bodySmall
-                    )
                 }
             }
         }

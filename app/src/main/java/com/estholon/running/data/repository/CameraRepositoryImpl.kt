@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -218,7 +219,7 @@ class CameraRepositoryImpl @Inject constructor(
                         override fun onImageSaved(output: ImageCapture.OutputFileResults) {
                             val uri = output.savedUri?.toString()
                             if (uri != null) {
-                                Log.d("CameraRepository", "Photo capture succeeded: $uri")
+                                Toast.makeText(context,"Photo capture succeeded: $uri",Toast.LENGTH_LONG).show()
                                 _cameraState.value = _cameraState.value.copy(
                                     lastCapturedPhotoUri = uri,
                                     error = null
@@ -254,7 +255,7 @@ class CameraRepositoryImpl @Inject constructor(
                 put(MediaStore.MediaColumns.DISPLAY_NAME, name)
                 put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
                 if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                    put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/CameraX-Video")
+                    put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/Running-Video")
                 }
             }
 
@@ -291,7 +292,8 @@ class CameraRepositoryImpl @Inject constructor(
     private fun handleRecordingFinalized(recordEvent: VideoRecordEvent.Finalize) {
         if (!recordEvent.hasError()) {
             val uri = recordEvent.outputResults.outputUri.toString()
-            Log.d("CameraRepository", "Video capture succeeded: $uri")
+            Toast.makeText(context,"Video capture succeeded: $uri",Toast.LENGTH_LONG).show()
+
             _cameraState.value = _cameraState.value.copy(
                 isRecording = false,
                 isPaused = false,
