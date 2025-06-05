@@ -2,7 +2,6 @@ package com.estholon.running.ui.screen.history
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,34 +13,42 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.running.R
+import com.estholon.running.domain.model.RunModel
 import com.estholon.running.ui.theme.White
 
 @Composable
 fun HistoryScreen(
-
+    historyViewModel: HistoryViewModel = hiltViewModel()
 ){
 
-    val runs = listOf(1,2,3,4,5)
+    val state by historyViewModel.historyUIState.collectAsState()
 
     Column {
         LazyColumn() {
-            items(runs){ run ->
-                RunItem(run = run)
+            items(state.runs){ run ->
+                RunItem(
+                    run = run,
+                    onDeleteSelected = { runId, runDistance, runDuration ->
+                        historyViewModel.deleteRunAndLinkedData(runId, runDistance, runDuration)
+                    }
+                )
             }
         }
     }
@@ -49,20 +56,10 @@ fun HistoryScreen(
 }
 
 @Composable
-fun RunItem(run: Int){
-
-    val chrono = "00:10:00"
-    val durationGoal = "00:15:00"
-    val intervalDuration = "10"
-    val runIntervalDuration = "00:05:00"
-    val walkIntervalDuration = "00:05:00"
-    val distance = "10.0"
-    val distanceGoal = "15.0"
-    val minAltitude = "0.0"
-    val maxAltitude = "0.0"
-    val avgSpeed = "10.0"
-    val maxSpeed = "30.0"
-
+fun RunItem(
+    run: RunModel,
+    onDeleteSelected: (String, Double, String) -> Unit
+){
 
     var showDetail by rememberSaveable { mutableStateOf(false) }
     val showDetailIcon = if(showDetail) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown
@@ -78,22 +75,22 @@ fun RunItem(run: Int){
             ) {
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = "00/00/0000",
+                    text = run.startDate?.replace(Regex("(\\d{4})/(\\d{2})/(\\d{2})"), "$3/$2/$1") ?: "00/00/0000",
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = chrono,
+                    text = run.kpiDuration,
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = distance,
+                    text = run.kpiDistance.toString(),
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = avgSpeed,
+                    text = run.kpiAvgSpeed.toString(),
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -121,13 +118,13 @@ fun RunItem(run: Int){
                 ) {
                     Text(stringResource(R.string.duration))
                     Text(
-                        text = chrono,
+                        text = run.kpiDuration,
                         fontSize = 20.sp
                     )
                     Text("Goal")
-                    Text(durationGoal)
+                    Text("${run.goalHoursDefault}:${run.goalMinutesDefault}:${run.goalSecondsDefault}")
                     Text("Intervals")
-                    Text("$intervalDuration ($runIntervalDuration / $walkIntervalDuration)")
+                    Text("${run.intervalDefault} (${run.intervalRunDuration} / ${run.intervalWalkDuration})")
                 }
                 Column(
                     modifier = Modifier
@@ -137,13 +134,13 @@ fun RunItem(run: Int){
                 ) {
                     Text(stringResource(R.string.distance))
                     Text(
-                        text = "$distance Km",
+                        text = "${run.kpiDistance} Km",
                         fontSize = 20.sp
                     )
                     Text("Goal")
-                    Text("$distanceGoal.00 Km")
+                    Text("${run.goalDistanceDefault}.00 Km")
                     Text("Slope")
-                    Text("min: $minAltitude / max: $maxAltitude")
+                    Text("min: ${run.kpiMinAltitude} / max: ${run.kpiMaxAltitude}")
                 }
                 Column(
                     modifier = Modifier
@@ -153,15 +150,26 @@ fun RunItem(run: Int){
                 ){
                     Text("Average Speed")
                     Text(
-                        text = "$avgSpeed Km/H",
+                        text = "${run.kpiAvgSpeed} Km/H",
                         fontSize = 20.sp
                     )
                     Text("Maximum Speed")
                     Text(
-                        text = "$maxSpeed Km/H",
+                        text = "${run.kpiMaxSpeed} Km/H",
                         fontSize = 20.sp
                     )
                 }
+            }
+            Row {
+                Spacer(modifier = Modifier.weight(1f))
+                Button(
+                    onClick = {
+                        onDeleteSelected(run.runId, run.kpiDistance, run.kpiDuration)
+                    }
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }

@@ -134,12 +134,14 @@ class DatabaseRepository @Inject constructor(
     private fun runToDomain(rr: RunResponse) : RunModel? {
         return if (
             rr.user!=null &&
+            rr.runId!=null &&
             rr.startDate != null &&
             rr.startTime != null &&
             rr.kpiDuration != "00:00:00"
         ) {
             RunModel(
                 user = rr.user,
+                runId = rr.runId,
                 startDate = rr.startDate,
                 startTime = rr.startTime,
                 kpiDuration = rr.kpiDuration,
@@ -185,6 +187,7 @@ class DatabaseRepository @Inject constructor(
 
             val model = hashMapOf(
                 "user" to dto.user,
+                "runId" to dto.runId,
                 "startDate" to dto.startDate,
                 "startTime" to dto.startTime,
                 "kpiDuration" to dto.kpiDuration,
@@ -343,6 +346,24 @@ class DatabaseRepository @Inject constructor(
             }
             .addOnFailureListener{
                 callback(false)
+            }
+
+    }
+
+    fun getAllRuns(): Flow<List<RunModel>> {
+        return db
+            .collection(COLLECTION_RUNS_RUNNING)
+            .snapshots()
+            .mapNotNull { qr ->
+                val runsList = mutableListOf<RunModel>()
+                for (document in qr.documents){
+                    document.toObject(RunResponse::class.java)?.let { rr ->
+                        runToDomain(rr)?.let { runModel ->
+                            runsList.add(runModel)
+                        }
+                    }
+                }
+                runsList.sortedBy { it.startDate }
             }
 
     }

@@ -91,6 +91,7 @@ class SetRunUseCase @Inject constructor(
         return try {
             RunDTO(
                 user,
+                id,
                 startDate,
                 startTime,
                 kpiDuration,

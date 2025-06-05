@@ -2,6 +2,7 @@ package com.estholon.running.domain.model
 
 data class RunModel(
     val user: String?,
+    val runId: String,
     val startDate : String?,
     val startTime : String?,
     val kpiDuration : String,

@@ -259,19 +259,6 @@ fun FinishedScreen(
                     Icon(imageVector = Icons.Filled.CameraAlt, contentDescription = "Camera")
                 }
                 Spacer(modifier = Modifier.weight(1f))
-                Button(
-                    onClick = {},
-                    colors = ButtonColors(
-                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        disabledContentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer
-                    ),
-                    modifier = Modifier.padding(20.dp)
-                ) {
-                    Icon(imageVector = Icons.Filled.Share, contentDescription = "Share")
-                }
-                Spacer(modifier = Modifier.weight(1f))
             }
         }
     }

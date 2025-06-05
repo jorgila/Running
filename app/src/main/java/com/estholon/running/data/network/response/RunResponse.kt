@@ -2,6 +2,7 @@ package com.estholon.running.data.network.response
 
 data class RunResponse (
     val user: String? = null,
+    val runId: String? = null,
     val startDate : String? = null,
     val startTime : String? = null,
     val kpiDuration : String = "00:00:00",

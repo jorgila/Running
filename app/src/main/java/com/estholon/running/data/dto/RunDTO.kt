@@ -5,6 +5,7 @@ import com.google.maps.android.compose.MapType
 
 data class RunDTO(
     val user: String,
+    val runId: String,
     val startDate : String,
     val startTime : String,
     val kpiDuration : String,
