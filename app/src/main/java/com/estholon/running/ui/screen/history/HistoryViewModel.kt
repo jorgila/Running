@@ -55,36 +55,51 @@ class HistoryViewModel @Inject constructor(
 
     private fun initRuns(){
         viewModelScope.launch {
-            getAllRunsUseCase().collect(){ runs ->
-                _historyUIState.update { historyUIState ->
-                    historyUIState.copy(
-                        runs = runs
-                    )
-                }
+            getAllRunsUseCase().collect(){ result ->
+                result.fold(
+                    onSuccess = { runs ->
+                        _historyUIState.update { historyUIState ->
+                            historyUIState.copy(
+                                runs = runs
+                            )
+                        }
+                    },
+                    onFailure = { exception ->
+                        Log.e("HistoryViewModel","Error loading runs", exception)
+                    }
+                )
             }
         }
     }
 
     private fun initTotals(){
         viewModelScope.launch {
-            getTotalsUseCase.invoke().collect(){ totals ->
+            getTotalsUseCase.invoke().collect(){ result ->
+                result.fold(
+                    onSuccess = { totals ->
+                        val segundosTotales = totals.totalTime / 1000
+                        val minutosTotales = segundosTotales / 60
+                        val horasTotales = minutosTotales / 60
 
-                val segundosTotales = totals.totalTime / 1000
-                val minutosTotales = segundosTotales / 60
-                val horasTotales = minutosTotales / 60
+                        val d = Math.floor(horasTotales / 24).toInt()
+                        val h = Math.floor(horasTotales % 24).toInt()
+                        val m = Math.floor(minutosTotales % 60).toInt()
+                        val s = Math.floor(segundosTotales % 60).toInt()
 
-                val d = Math.floor(horasTotales / 24).toInt()
-                val h = Math.floor(horasTotales % 24).toInt()
-                val m = Math.floor(minutosTotales % 60).toInt()
-                val s = Math.floor(segundosTotales % 60).toInt()
+                        _historyUIState.update { historyUIState ->
+                            historyUIState.copy(
+                                kpiTotalDistance = totals.totalDistance,
+                                kpiTotalRuns = totals.totalRuns,
+                                kpiTotalTime = "$d d $h h $m m $s s"
+                            )
+                        }
 
-                _historyUIState.update { historyUIState ->
-                    historyUIState.copy(
-                        kpiTotalDistance = totals.totalDistance,
-                        kpiTotalRuns = totals.totalRuns,
-                        kpiTotalTime = "$d d $h h $m m $s s"
-                    )
-                }
+                    },
+                    onFailure = { exception ->
+                        Log.e("HistoryViewModel","Error loading totals", exception)
+                    }
+                )
+
             }
         }
     }
@@ -99,14 +114,12 @@ class HistoryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                deleteRunAndLinkedDataUseCase(
-                    id,
-                    { boolean ->
+                deleteRunAndLinkedDataUseCase(id)
+                    .onSuccess {
                         viewModelScope.launch {
-                            processSuccessfulDeletion(boolean, id, runDistance, runDuration)
+                            processSuccessfulDeletion(true,id,runDistance,runDuration)
                         }
                     }
-                )
             } catch (e: Exception){
                 Toast.makeText(
                     context,
@@ -149,12 +162,13 @@ class HistoryViewModel @Inject constructor(
             )
 
             // Delete locations
-            deleteLocationsUseCase(
-                id,
-                { booleanDeleteLocations ->
-                    message = booleanDeleteLocations
+            deleteLocationsUseCase(id)
+                .onSuccess {
+                    message = true
                 }
-            )
+                .onFailure {
+                    message = false
+                }
 
             // Update UI state
             _historyUIState.update { historyUIState ->
@@ -186,96 +200,59 @@ class HistoryViewModel @Inject constructor(
 
     private suspend fun getDistanceRecordSafely(): Double {
         return withContext(Dispatchers.IO) {
-            suspendCancellableCoroutine { continuation ->
-                try {
-                    getDistanceRecordUseCase { success, value ->
-                        if (continuation.isActive) {
-                            if (success) {
-                                continuation.resume(value)
-                            } else {
-                                continuation.resume(0.0)
-                            }
-                        }
+            try {
+                getDistanceRecordUseCase()
+                    .getOrElse { exception ->
+                        context.getString(R.string.errormessage_exception_obtaining_distance_record, exception.message)
+                        0.0
                     }
-                } catch (e: Exception) {
-                    if (continuation.isActive) {
-                        Log.e("HistoryViewModel",
-                            context.getString(
-                                R.string.errormessage_exception_obtaining_distance_record,
-                                e.message
-                            ))
-                        continuation.resume(0.0)
-                    }
-                }
-
-                // Configurar la cancelación
-                continuation.invokeOnCancellation {
-                    Log.d("HistoryViewModel", "getDistanceRecordSafely cancelado")
-                }
+            } catch (e: Exception) {
+                Log.e("HistoryViewModel",
+                    context.getString(
+                        R.string.errormessage_exception_obtaining_distance_record,
+                        e.message
+                    ))
+                0.0
             }
         }
     }
 
     private suspend fun getAvgSpeedRecordSafely(): Double {
         return withContext(Dispatchers.IO) {
-            suspendCancellableCoroutine { continuation ->
-                try {
-                    getAvgSpeedRecordUseCase { success, value ->
-                        if (continuation.isActive) {
-                            if (success) {
-                                continuation.resume(value)
-                            } else {
-                                continuation.resume(0.0)
-                            }
-                        }
+            try {
+                getAvgSpeedRecordUseCase()
+                    .getOrElse { exception ->
+                        context.getString(R.string.errormessage_exception_obtaining_avg_speed_record,exception.message)
+                        0.0
                     }
-                } catch (e: Exception) {
-                    if (continuation.isActive) {
-                        Log.e("HistoryViewModel",
-                            context.getString(
-                                R.string.errormessage_exception_obtaining_avg_speed_record,
-                                e.message
-                            ))
-                        continuation.resume(0.0)
-                    }
-                }
-
-                continuation.invokeOnCancellation {
-                    Log.d("HistoryViewModel", "getAvgSpeedRecordSafely cancelado")
-                }
+            } catch (e: Exception) {
+                Log.e("HistoryViewModel",
+                    context.getString(
+                        R.string.errormessage_exception_obtaining_avg_speed_record,
+                        e.message
+                    ))
+                0.0
             }
         }
     }
 
     private suspend fun getSpeedRecordSafely(): Double {
         return withContext(Dispatchers.IO) {
-            suspendCancellableCoroutine { continuation ->
-                try {
-                    getSpeedRecordUseCase { success, value ->
-                        if (continuation.isActive) {
-                            if (success) {
-                                continuation.resume(value)
-                            } else {
-                                continuation.resume(0.0)
-                            }
-                        }
+            try {
+                getSpeedRecordUseCase()
+                    .getOrElse { exception ->
+                        context.getString(R.string.errormessage_exception_obtaining_speed_record,exception.message)
+                        0.0
                     }
-                } catch (e: Exception) {
-                    if (continuation.isActive) {
-                        Log.e(
-                            "HistoryViewModel",
-                            context.getString(
-                                R.string.errormessage_exception_obtaining_speed_record,
-                                e.message
-                            )
-                        )
-                        continuation.resume(0.0)
-                    }
-                }
-
-                continuation.invokeOnCancellation {
-                    Log.d("HistoryViewModel", "getSpeedRecordSafely cancelado")
-                }
+            } catch (e: Exception) {
+                Log.e(
+                    "HistoryViewModel",
+                    context.getString(
+                        R.string.errormessage_exception_obtaining_speed_record,
+                        e.message
+                    )
+                )
+                0.0
             }
         }
     }

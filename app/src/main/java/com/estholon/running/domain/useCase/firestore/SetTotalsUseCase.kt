@@ -2,13 +2,14 @@ package com.estholon.running.domain.useCase.firestore
 
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.data.dto.TotalDTO
-import com.estholon.running.data.network.DatabaseRepository
+import com.estholon.running.domain.model.TotalModel
+import com.estholon.running.domain.repository.RunningRepository
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class SetTotalsUseCase @Inject constructor(
-    val databaseRepository: DatabaseRepository
+    val runningRepository: RunningRepository
 ) {
 
     suspend operator fun invoke(
@@ -18,8 +19,9 @@ class SetTotalsUseCase @Inject constructor(
         totalDistance : Double,
         totalRuns : Double,
         totalTime : Double
-    ){
-        val dto = prepareDTO(
+    ) : Result<Unit> {
+
+        val model = TotalModel(
             recordAvgSpeed,
             recordDistance,
             recordSpeed,
@@ -27,33 +29,9 @@ class SetTotalsUseCase @Inject constructor(
             totalRuns,
             totalTime
         )
-        if(dto!=null){
-            databaseRepository.setTotals(dto)
-        }
 
-    }
+        return runningRepository.setTotals(model)
 
-    fun prepareDTO(
-        recordAvgSpeed : Double,
-        recordDistance : Double,
-        recordSpeed : Double,
-        totalDistance : Double,
-        totalRuns : Double,
-        totalTime : Double
-    ) : TotalDTO? {
-
-        return try {
-            TotalDTO(
-                recordAvgSpeed,
-                recordDistance,
-                recordSpeed,
-                totalDistance,
-                totalRuns,
-                totalTime
-            )
-        } catch (e: Exception){
-            null
-        }
     }
 
 }

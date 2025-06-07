@@ -23,4 +23,4 @@ data class RunDTO(
     val intervalRunDuration : String,
     val intervalWalkDuration : String,
     var rounds : Int,
-    )
+)

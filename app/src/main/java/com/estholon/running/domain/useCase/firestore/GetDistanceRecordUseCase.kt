@@ -1,18 +1,14 @@
 package com.estholon.running.domain.useCase.firestore
 
-import com.estholon.running.data.network.DatabaseRepository
+import com.estholon.running.domain.repository.RunningRepository
 import javax.inject.Inject
 
 class GetDistanceRecordUseCase @Inject constructor(
-    private val databaseRepository: DatabaseRepository
+    private val runningRepository: RunningRepository
 ){
 
-    operator fun invoke(
-        callback: (Boolean, Double) -> Unit
-    ) {
-        databaseRepository.getDistanceRecord(
-            callback = callback
-        )
+    suspend operator fun invoke() : Result<Double> {
+        return runningRepository.getDistanceRecord()
     }
 
 }

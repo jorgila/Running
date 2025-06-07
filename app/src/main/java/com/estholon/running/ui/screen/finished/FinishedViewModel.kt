@@ -60,45 +60,63 @@ class FinishedViewModel @Inject constructor(
 
     private fun initTotals(){
         viewModelScope.launch {
-            getTotalsUseCase.invoke().collect(){ totals ->
+            getTotalsUseCase.invoke().collect(){ result ->
 
-                val segundosTotales = totals.totalTime / 1000
-                val minutosTotales = segundosTotales / 60
-                val horasTotales = minutosTotales / 60
+                result.fold(
+                    onSuccess = { totals ->
 
-                val d = Math.floor(horasTotales / 24).toInt()
-                val h = Math.floor(horasTotales % 24).toInt()
-                val m = Math.floor(minutosTotales % 60).toInt()
-                val s = Math.floor(segundosTotales % 60).toInt()
+                        val segundosTotales = totals.totalTime / 1000
+                        val minutosTotales = segundosTotales / 60
+                        val horasTotales = minutosTotales / 60
 
-                _finishedUIState.update { homeUIState ->
-                    homeUIState.copy(
-                        kpiTotalDistance = totals.totalDistance,
-                        kpiTotalRuns = totals.totalRuns,
-                        kpiTotalTime = "$d d $h h $m m $s s"
-                    )
-                }
+                        val d = Math.floor(horasTotales / 24).toInt()
+                        val h = Math.floor(horasTotales % 24).toInt()
+                        val m = Math.floor(minutosTotales % 60).toInt()
+                        val s = Math.floor(segundosTotales % 60).toInt()
+
+                        _finishedUIState.update { homeUIState ->
+                            homeUIState.copy(
+                                kpiTotalDistance = totals.totalDistance,
+                                kpiTotalRuns = totals.totalRuns,
+                                kpiTotalTime = "$d d $h h $m m $s s"
+                            )
+                        }
+
+                    },
+                    onFailure = { exception ->
+                        Log.e("FinishedViewModel","Error loading totals", exception)
+                    }
+                )
+
             }
         }
     }
 
     private fun initLevels(){
         viewModelScope.launch {
-            getLevelsUseCase.invoke().collect{ levels ->
-                delay(3000)
-                for (level in levels) {
+            getLevelsUseCase.invoke().collect{ result ->
+                result.fold(
+                    onSuccess = { levels ->
+                        for (level in levels) {
 
-                    if( _finishedUIState.value.kpiTotalDistance < level.distanceTarget || _finishedUIState.value.kpiTotalRuns < level.runsTarget) {
-                        _finishedUIState.update { homeUIState ->
-                            homeUIState.copy(
-                                kpiLevel = level.level,
-                                kpiLevelDistance = level.distanceTarget,
-                                kpiLevelRuns = level.runsTarget
-                            )
+                            if( _finishedUIState.value.kpiTotalDistance < level.distanceTarget || _finishedUIState.value.kpiTotalRuns < level.runsTarget) {
+                                _finishedUIState.update { homeUIState ->
+                                    homeUIState.copy(
+                                        kpiLevel = level.level,
+                                        kpiLevelDistance = level.distanceTarget,
+                                        kpiLevelRuns = level.runsTarget
+                                    )
+                                }
+                                break
+                            }
                         }
-                        break
+
+                    },
+                    onFailure = { exception ->
+                        Log.e("FinishedViewModel","Error loading levels", exception)
                     }
-                }
+                )
+
 
             }
         }
@@ -107,29 +125,36 @@ class FinishedViewModel @Inject constructor(
     fun initRun(id: String){
 
         viewModelScope.launch {
-            getRunUseCase.invoke(id).collect{ run ->
-                _finishedUIState.update { finishedUIState ->
-                    finishedUIState.copy(
-                        user = run.user,
-                        startDate = run.startDate,
-                        startTime = run.startTime,
-                        kpiDuration = run.kpiDuration,
-                        kpiDistance = run.kpiDistance,
-                        kpiAvgSpeed = run.kpiAvgSpeed,
-                        kpiMaxSpeed = run.kpiMaxSpeed,
-                        kpiMinAltitude = run.kpiMinAltitude,
-                        kpiMaxAltitude = run.kpiMaxAltitude,
-                        goalDurationSelected = run.goalDurationSelected,
-                        goalHoursDefault = run.goalHoursDefault,
-                        goalMinutesDefault = run.goalMinutesDefault,
-                        goalSecondsDefault = run.goalSecondsDefault,
-                        goalDistanceDefault = run.goalDistanceDefault,
-                        intervalDefault = run.intervalDefault,
-                        intervalRunDuration = run.intervalRunDuration,
-                        intervalWalkDuration = run.intervalWalkDuration,
-                        rounds = run.rounds,
-                    )
-                }
+            getRunUseCase.invoke(id).collect{ result ->
+                result.fold(
+                    onSuccess = { run ->
+                        _finishedUIState.update { finishedUIState ->
+                            finishedUIState.copy(
+                                user = run.user,
+                                startDate = run.startDate,
+                                startTime = run.startTime,
+                                kpiDuration = run.kpiDuration,
+                                kpiDistance = run.kpiDistance,
+                                kpiAvgSpeed = run.kpiAvgSpeed,
+                                kpiMaxSpeed = run.kpiMaxSpeed,
+                                kpiMinAltitude = run.kpiMinAltitude,
+                                kpiMaxAltitude = run.kpiMaxAltitude,
+                                goalDurationSelected = run.goalDurationSelected,
+                                goalHoursDefault = run.goalHoursDefault,
+                                goalMinutesDefault = run.goalMinutesDefault,
+                                goalSecondsDefault = run.goalSecondsDefault,
+                                goalDistanceDefault = run.goalDistanceDefault,
+                                intervalDefault = run.intervalDefault,
+                                intervalRunDuration = run.intervalRunDuration,
+                                intervalWalkDuration = run.intervalWalkDuration,
+                                rounds = run.rounds,
+                            )
+                        }
+                    },
+                    onFailure = { exception ->
+                        Log.e("FinishedViewModel","Error loading run", exception)
+                    }
+                )
             }
         }
 
@@ -141,14 +166,12 @@ class FinishedViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                deleteRunAndLinkedDataUseCase(
-                    id,
-                    { boolean ->
+                deleteRunAndLinkedDataUseCase(id)
+                    .onSuccess {
                         viewModelScope.launch {
-                            processSuccessfulDeletion(boolean, id)
+                            processSuccessfulDeletion(true,id)
                         }
                     }
-                )
             } catch (e: Exception){
                 Toast.makeText(
                     context,
@@ -186,12 +209,13 @@ class FinishedViewModel @Inject constructor(
             )
 
             // Delete locations
-            deleteLocationsUseCase(
-                id,
-                { booleanDeleteLocations ->
-                    message = booleanDeleteLocations
+            deleteLocationsUseCase(id)
+                .onSuccess {
+                    message = true
                 }
-            )
+                .onFailure {
+                    message = false
+                }
 
             // Update UI state
             _finishedUIState.update { finishedUIState ->
@@ -229,96 +253,59 @@ class FinishedViewModel @Inject constructor(
 
     private suspend fun getDistanceRecordSafely(): Double {
         return withContext(Dispatchers.IO) {
-            suspendCancellableCoroutine { continuation ->
-                try {
-                    getDistanceRecordUseCase { success, value ->
-                        if (continuation.isActive) {
-                            if (success) {
-                                continuation.resume(value)
-                            } else {
-                                continuation.resume(0.0)
-                            }
-                        }
+            try {
+                getDistanceRecordUseCase()
+                    .getOrElse { exception ->
+                        context.getString(R.string.errormessage_exception_obtaining_distance_record, exception.message)
+                        0.0
                     }
-                } catch (e: Exception) {
-                    if (continuation.isActive) {
-                        Log.e("FinishedViewModel",
-                            context.getString(
-                                R.string.errormessage_exception_obtaining_distance_record,
-                                e.message
-                            ))
-                        continuation.resume(0.0)
-                    }
-                }
-
-                // Configurar la cancelación
-                continuation.invokeOnCancellation {
-                    Log.d("FinishedViewModel", "getDistanceRecordSafely cancelado")
-                }
+            } catch (e: Exception) {
+                Log.e("FinishedViewModel",
+                    context.getString(
+                        R.string.errormessage_exception_obtaining_distance_record,
+                        e.message
+                    ))
+                0.0
             }
         }
     }
 
     private suspend fun getAvgSpeedRecordSafely(): Double {
         return withContext(Dispatchers.IO) {
-            suspendCancellableCoroutine { continuation ->
-                try {
-                    getAvgSpeedRecordUseCase { success, value ->
-                        if (continuation.isActive) {
-                            if (success) {
-                                continuation.resume(value)
-                            } else {
-                                continuation.resume(0.0)
-                            }
-                        }
+            try {
+                getAvgSpeedRecordUseCase()
+                    .getOrElse { exception ->
+                        context.getString(R.string.errormessage_exception_obtaining_avg_speed_record,exception.message)
+                        0.0
                     }
-                } catch (e: Exception) {
-                    if (continuation.isActive) {
-                        Log.e("FinishedViewModel",
-                            context.getString(
-                                R.string.errormessage_exception_obtaining_avg_speed_record,
-                                e.message
-                            ))
-                        continuation.resume(0.0)
-                    }
-                }
-
-                continuation.invokeOnCancellation {
-                    Log.d("FinishedViewModel", "getAvgSpeedRecordSafely cancelado")
-                }
+            } catch (e: Exception) {
+                Log.e("FinishedViewModel",
+                    context.getString(
+                            R.string.errormessage_exception_obtaining_avg_speed_record,
+                            e.message
+                        ))
+                0.0
             }
         }
     }
 
     private suspend fun getSpeedRecordSafely(): Double {
         return withContext(Dispatchers.IO) {
-            suspendCancellableCoroutine { continuation ->
-                try {
-                    getSpeedRecordUseCase { success, value ->
-                        if (continuation.isActive) {
-                            if (success) {
-                                continuation.resume(value)
-                            } else {
-                                continuation.resume(0.0)
-                            }
-                        }
+            try {
+                getSpeedRecordUseCase()
+                    .getOrElse { exception ->
+                        context.getString(R.string.errormessage_exception_obtaining_speed_record,exception.message)
+                    0.0
                     }
-                } catch (e: Exception) {
-                    if (continuation.isActive) {
-                        Log.e(
-                            "FinishedViewModel",
-                            context.getString(
-                                R.string.errormessage_exception_obtaining_speed_record,
-                                e.message
-                            )
-                        )
-                        continuation.resume(0.0)
-                    }
-                }
-
-                continuation.invokeOnCancellation {
-                    Log.d("FinishedViewModel", "getSpeedRecordSafely cancelado")
-                }
+            } catch (e: Exception) {
+                Log.e(
+                    "FinishedViewModel",
+                    context.getString(
+                        R.string.errormessage_exception_obtaining_speed_record,
+                        e.message
+                    )
+                )
+                0.0
             }
         }
     }

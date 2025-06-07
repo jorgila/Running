@@ -9,6 +9,7 @@ import android.location.Location
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -178,6 +179,11 @@ class HomeViewModel @Inject constructor(
     val intervalDuration : StateFlow<Long> get() = _intervalDuration
 
     init {
+
+
+
+
+
         getUserInfo()
         setKPI()
         mHandler = Handler()
@@ -218,42 +224,56 @@ class HomeViewModel @Inject constructor(
     fun initTotals(){
 
         viewModelScope.launch {
-            getTotalsUseCase.invoke().collect{ totals ->
+            getTotalsUseCase.invoke().collect{ result ->
 
-                _totalTime.value = totals.totalTime
+                result.fold(
+                    onSuccess = { totals ->
 
-                _homeUIState.update { homeUIState ->
-                    homeUIState.copy(
-                        kpiRecordAvgSpeed = totals.recordAvgSpeed,
-                        kpiRecordDistance = totals.recordDistance,
-                        kpiRecordSpeed = totals.recordSpeed,
-                        kpiTotalDistance = totals.totalDistance,
-                        kpiTotalRuns = totals.totalRuns,
-                        kpiTotalTime = getStringWithDHMSFromMilisecondsUseCase(totals.totalTime)
-                    )
-                }
+                        _totalTime.value = totals.totalTime
+
+                        _homeUIState.update { homeUIState ->
+                            homeUIState.copy(
+                                kpiRecordAvgSpeed = totals.recordAvgSpeed,
+                                kpiRecordDistance = totals.recordDistance,
+                                kpiRecordSpeed = totals.recordSpeed,
+                                kpiTotalDistance = totals.totalDistance,
+                                kpiTotalRuns = totals.totalRuns,
+                                kpiTotalTime = getStringWithDHMSFromMilisecondsUseCase(totals.totalTime)
+                            )
+                        }
+
+                    },
+                    onFailure = { exception ->
+                        Log.e("HomeViewModel","Error loading totals", exception)
+                    }
+                )
             }
         }
     }
 
     fun initLevels(){
         viewModelScope.launch {
-            getLevelsUseCase.invoke().collect{ levels ->
-                delay(3000)
-                for (level in levels) {
+            getLevelsUseCase.invoke().collect{ result ->
+                result.fold(
+                    onSuccess = { levels ->
+                        for (level in levels) {
 
-                    if( _homeUIState.value.kpiTotalDistance < level.distanceTarget || _homeUIState.value.kpiTotalRuns < level.runsTarget) {
-                        _homeUIState.update { homeUIState ->
-                            homeUIState.copy(
-                                kpiLevel = level.level,
-                                kpiLevelDistance = level.distanceTarget,
-                                kpiLevelRuns = level.runsTarget
-                            )
+                            if (_homeUIState.value.kpiTotalDistance < level.distanceTarget || _homeUIState.value.kpiTotalRuns < level.runsTarget) {
+                                _homeUIState.update { homeUIState ->
+                                    homeUIState.copy(
+                                        kpiLevel = level.level,
+                                        kpiLevelDistance = level.distanceTarget,
+                                        kpiLevelRuns = level.runsTarget
+                                    )
+                                }
+                                break
+                            }
                         }
-                        break
+                    },
+                    onFailure = { exception ->
+                        Log.e("HomeViewModel","Error loading levels", exception)
                     }
-                }
-
+                )
             }
         }
     }
@@ -580,7 +600,7 @@ class HomeViewModel @Inject constructor(
 
     private fun setLocation(location: Location){
 
-        var id = homeUIState.value.runId
+        var id = homeUIState.value.runId ?: ""
 
         var docName = timeInSeconds.toString()
         while(docName.length < 5) docName = "0" + docName
@@ -747,12 +767,12 @@ class HomeViewModel @Inject constructor(
 
     private fun setRun(){
 
-        var id = _homeUIState.value.runId
-
+        var id = _homeUIState.value.runId ?: ""
+        var user = _homeUIState.value.user ?: ""
         viewModelScope.launch {
             setRunUseCase(
                 id,
-                _homeUIState.value.user,
+                user,
                 startDate,
                 startTime,
                 _homeUIState.value.chrono,
@@ -766,7 +786,6 @@ class HomeViewModel @Inject constructor(
                 _homeUIState.value.goalMinutesDefault,
                 _homeUIState.value.goalSecondsDefault,
                 _homeUIState.value.goalDistanceDefault,
-                _homeUIState.value.goalDistance,
                 _homeUIState.value.intervalDefault,
                 _homeUIState.value.intervalRunDuration,
                 _homeUIState.value.intervalWalkDuration,
