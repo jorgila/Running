@@ -5,59 +5,26 @@ import com.estholon.running.data.dto.TotalDTO
 import com.estholon.running.domain.exception.RunningException
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.domain.repository.RunningRepository
+import com.estholon.running.domain.useCase.BaseUseCase
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
 class SetRunUseCase @Inject constructor(
-    private val runningRepository: RunningRepository
-) {
+    private val runningRepository: RunningRepository,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO
+) : BaseUseCase<SetRunUseCase.Params, Unit>(dispatcher) {
 
+    data class Params(
+        val model: RunModel
+    )
 
-    suspend operator fun invoke(
-        id: String,
-        user: String,
-        startDate : String,
-        startTime : String,
-        kpiDuration : String,
-        kpiDistance : Double,
-        kpiAvgSpeed : Double,
-        kpiMaxSpeed : Double,
-        kpiMinAltitude : Double?,
-        kpiMaxAltitude : Double?,
-        goalDurationSelected : Boolean,
-        goalHoursDefault : Int,
-        goalMinutesDefault: Int,
-        goalSecondsDefault : Int,
-        goalDistanceDefault : Int,
-        intervalDefault : Int,
-        intervalRunDuration : String,
-        intervalWalkDuration : String,
-        rounds : Int,
-    ) : Result<Unit> {
+    override suspend fun execute(parameters: Params) {
 
-        val model = RunModel(
-            user,
-            id,
-            startDate,
-            startTime,
-            kpiDuration,
-            kpiDistance,
-            kpiAvgSpeed,
-            kpiMaxSpeed,
-            kpiMinAltitude,
-            kpiMaxAltitude,
-            goalDurationSelected,
-            goalHoursDefault,
-            goalMinutesDefault,
-            goalSecondsDefault,
-            goalDistanceDefault,
-            intervalDefault,
-            intervalRunDuration,
-            intervalWalkDuration,
-            rounds
-        )
-
-        return runningRepository.setRun(id,model)
-
+        val result = runningRepository.setRun(parameters.model)
+        if(result.isFailure){
+            throw  result.exceptionOrNull() ?: RuntimeException("Unknown error setting run")
+        }
     }
 
 }

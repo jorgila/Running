@@ -128,9 +128,9 @@ class FirestoreDataSource @Inject constructor(
 
     }
 
-    override suspend fun setRun(runId: String, run: RunDTO) : Result<Unit> {
+    override suspend fun setRun(run: RunDTO) : Result<Unit> {
 
-        val id = "${authManager.getCurrentEmail()}${runId}"
+        val id = "${authManager.getCurrentEmail()}${run.runId}"
 
         val model = hashMapOf(
             "user" to run.user,

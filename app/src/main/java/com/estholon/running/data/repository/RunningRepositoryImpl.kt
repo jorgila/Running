@@ -47,9 +47,9 @@ class RunningRepositoryImpl @Inject constructor(
             return databaseDataSource.setTotals(dto)
     }
 
-    override suspend fun setRun(runId: String, run: RunModel): Result<Unit> {
+    override suspend fun setRun(run: RunModel): Result<Unit> {
             val dto = runMapper.runDomainToDto(run)
-            return databaseDataSource.setRun(runId, dto)
+            return databaseDataSource.setRun(dto)
     }
 
     override suspend fun deleteRun(id: String): Result<Unit> {

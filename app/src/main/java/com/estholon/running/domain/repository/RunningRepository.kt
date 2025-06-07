@@ -13,7 +13,7 @@ interface RunningRepository {
     fun getRun(id: String) : Flow<RunModel>
     fun getAllRuns() : Flow<List<RunModel>>
     suspend fun setTotals(total: TotalModel) : Result<Unit>
-    suspend fun setRun(runId: String, run: RunModel) : Result<Unit>
+    suspend fun setRun(run: RunModel) : Result<Unit>
     suspend fun deleteRun(id: String) : Result<Unit>
     suspend fun getDistanceRecord() : Result<Double>
     suspend fun getAvgSpeedRecord() : Result<Double>

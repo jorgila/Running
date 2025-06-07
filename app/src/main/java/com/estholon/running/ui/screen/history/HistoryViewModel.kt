@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
+import com.estholon.running.domain.model.TotalModel
 import com.estholon.running.domain.useCase.firestore.DeleteLocationsUseCase
 import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataUseCase
 import com.estholon.running.domain.useCase.firestore.GetAllRunsUseCase
@@ -153,12 +154,16 @@ class HistoryViewModel @Inject constructor(
 
             // Update totals
             setTotalsUseCase(
-                newAvgSpeedRecord,
-                newDistanceRecord,
-                newSpeedRecord,
-                newTotalDistance,
-                newTotalRuns,
-                newTotalTime
+                SetTotalsUseCase.Params(
+                    TotalModel(
+                        newAvgSpeedRecord,
+                        newDistanceRecord,
+                        newSpeedRecord,
+                        newTotalDistance,
+                        newTotalRuns,
+                        newTotalTime
+                    )
+                )
             )
 
             // Delete locations

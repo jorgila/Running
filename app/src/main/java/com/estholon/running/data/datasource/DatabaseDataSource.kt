@@ -13,7 +13,7 @@ interface DatabaseDataSource {
     fun getRun(runId: String) : Flow<RunDTO>
     fun getAllRuns() : Flow<List<RunDTO>>
     suspend fun setTotals(total: TotalDTO): Result<Unit>
-    suspend fun setRun(runId:String, run: RunDTO): Result<Unit>
+    suspend fun setRun(run: RunDTO): Result<Unit>
     suspend fun deleteRun(runId: String): Result<Unit>
     suspend fun getDistanceRecord() : Result<Double>
     suspend fun getAvgSpeedRecord() : Result<Double>

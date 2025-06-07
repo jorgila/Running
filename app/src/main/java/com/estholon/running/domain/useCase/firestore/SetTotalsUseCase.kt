@@ -4,34 +4,26 @@ import androidx.lifecycle.viewModelScope
 import com.estholon.running.data.dto.TotalDTO
 import com.estholon.running.domain.model.TotalModel
 import com.estholon.running.domain.repository.RunningRepository
+import com.estholon.running.domain.useCase.BaseUseCase
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class SetTotalsUseCase @Inject constructor(
-    val runningRepository: RunningRepository
-) {
+    private val runningRepository: RunningRepository,
+    dispatcher: CoroutineDispatcher = Dispatchers.IO
+) : BaseUseCase<SetTotalsUseCase.Params, Unit>(dispatcher){
 
-    suspend operator fun invoke(
-        recordAvgSpeed : Double,
-        recordDistance : Double,
-        recordSpeed : Double,
-        totalDistance : Double,
-        totalRuns : Double,
-        totalTime : Double
-    ) : Result<Unit> {
+    data class Params(val model: TotalModel)
 
-        val model = TotalModel(
-            recordAvgSpeed,
-            recordDistance,
-            recordSpeed,
-            totalDistance,
-            totalRuns,
-            totalTime
-        )
+    override suspend fun execute(parameters: Params) {
 
-        return runningRepository.setTotals(model)
-
+        val result = runningRepository.setTotals(parameters.model)
+        if (result.isFailure){
+            throw result.exceptionOrNull() ?: RuntimeException("Unkown error setting total")
+        }
     }
 
 }

@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
+import com.estholon.running.domain.model.TotalModel
 import com.estholon.running.domain.useCase.firestore.DeleteLocationsUseCase
 import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataUseCase
 import com.estholon.running.domain.useCase.firestore.GetAvgSpeedRecordUseCase
@@ -21,15 +22,12 @@ import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecon
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.coroutines.resume
 
 @HiltViewModel
 class FinishedViewModel @Inject constructor(
@@ -200,12 +198,16 @@ class FinishedViewModel @Inject constructor(
 
             // Update totals
             setTotalsUseCase(
-                newAvgSpeedRecord,
-                newDistanceRecord,
-                newSpeedRecord,
-                newTotalDistance,
-                newTotalRuns,
-                newTotalTime
+                SetTotalsUseCase.Params(
+                    TotalModel(
+                        newAvgSpeedRecord,
+                        newDistanceRecord,
+                        newSpeedRecord,
+                        newTotalDistance,
+                        newTotalRuns,
+                        newTotalTime
+                    )
+                )
             )
 
             // Delete locations

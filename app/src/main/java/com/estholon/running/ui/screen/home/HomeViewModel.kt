@@ -18,6 +18,8 @@ import com.estholon.running.R
 import com.estholon.running.common.Constants.INTERVAL_LOCATION
 import com.estholon.running.common.Constants.LIMIT_DISTANCE_ACCEPTED
 import com.estholon.running.common.SharedPreferencesKeys
+import com.estholon.running.domain.model.RunModel
+import com.estholon.running.domain.model.TotalModel
 import com.estholon.running.domain.useCase.authentication.SignOutUseCase
 import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
@@ -769,27 +771,32 @@ class HomeViewModel @Inject constructor(
 
         var id = _homeUIState.value.runId ?: ""
         var user = _homeUIState.value.user ?: ""
+
         viewModelScope.launch {
             setRunUseCase(
-                id,
-                user,
-                startDate,
-                startTime,
-                _homeUIState.value.chrono,
-                _homeUIState.value. kpiDistance,
-                _homeUIState.value.kpiAvgSpeed,
-                _maxSpeed.value,
-                _homeUIState.value.kpiMinAltitude,
-                _homeUIState.value.kpiMaxAltitude,
-                _homeUIState.value.goalDurationSelected,
-                _homeUIState.value.goalHoursDefault,
-                _homeUIState.value.goalMinutesDefault,
-                _homeUIState.value.goalSecondsDefault,
-                _homeUIState.value.goalDistanceDefault,
-                _homeUIState.value.intervalDefault,
-                _homeUIState.value.intervalRunDuration,
-                _homeUIState.value.intervalWalkDuration,
-                _homeUIState.value.rounds
+                SetRunUseCase.Params(
+                    RunModel(
+                        user,
+                        id,
+                        startDate,
+                        startTime,
+                        _homeUIState.value.chrono,
+                        _homeUIState.value. kpiDistance,
+                        _homeUIState.value.kpiAvgSpeed,
+                        _maxSpeed.value,
+                        _homeUIState.value.kpiMinAltitude,
+                        _homeUIState.value.kpiMaxAltitude,
+                        _homeUIState.value.goalDurationSelected,
+                        _homeUIState.value.goalHoursDefault,
+                        _homeUIState.value.goalMinutesDefault,
+                        _homeUIState.value.goalSecondsDefault,
+                        _homeUIState.value.goalDistanceDefault,
+                        _homeUIState.value.intervalDefault,
+                        _homeUIState.value.intervalRunDuration,
+                        _homeUIState.value.intervalWalkDuration,
+                        _homeUIState.value.rounds
+                    )
+                )
             )
         }
     }
@@ -806,12 +813,16 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             setTotalsUseCase(
-                recordAvgSpeed,
-                recordDistance,
-                recordSpeed,
-                totalDistance,
-                totalRuns,
-                totalTime
+                SetTotalsUseCase.Params(
+                    TotalModel(
+                        recordAvgSpeed,
+                        recordDistance,
+                        recordSpeed,
+                        totalDistance,
+                        totalRuns,
+                        totalTime
+                    )
+                )
             )
         }
     }
