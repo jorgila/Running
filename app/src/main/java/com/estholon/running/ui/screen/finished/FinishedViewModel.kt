@@ -3,6 +3,7 @@ package com.estholon.running.ui.screen.finished
 import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
@@ -15,25 +16,34 @@ import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
 import com.estholon.running.domain.useCase.firestore.GetRunUseCase
 import com.estholon.running.domain.useCase.firestore.GetSpeedRecordUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
-import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
+import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendUseCase
 import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 @HiltViewModel
 class FinishedViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val savedStateHandle: SavedStateHandle,
     private val getTotalsUseCase: GetTotalsUseCase,
-    private val setTotalsUseCase: SetTotalsUseCase,
+    private val setTotalsUseCase: SetTotalsSuspendUseCase,
     private val getLevelsUseCase: GetLevelsUseCase,
     private val getRunUseCase: GetRunUseCase,
     private val getDistanceRecordUseCase: GetDistanceRecordUseCase,
@@ -51,9 +61,19 @@ class FinishedViewModel @Inject constructor(
     private val _finishedUIState = MutableStateFlow<FinishedScreenViewState.FinishedUIState>(FinishedScreenViewState.FinishedUIState())
     val finishedUIState : StateFlow<FinishedScreenViewState.FinishedUIState> = _finishedUIState
 
+    // VARIABLE
+
+    private val runId : String? = savedStateHandle.get<String>("runId")
+
     init {
+
         initTotals()
         initLevels()
+
+        runId?.let { id ->
+            initRun(id)
+        }
+
     }
 
     private fun initTotals(){
@@ -120,10 +140,9 @@ class FinishedViewModel @Inject constructor(
         }
     }
 
-    fun initRun(id: String){
-
+    private fun initRun(id: String){
         viewModelScope.launch {
-            getRunUseCase.invoke(id).collect{ result ->
+            getRunUseCase.invoke(GetRunUseCase.Params(id)).collect{ result ->
                 result.fold(
                     onSuccess = { run ->
                         _finishedUIState.update { finishedUIState ->
@@ -155,7 +174,6 @@ class FinishedViewModel @Inject constructor(
                 )
             }
         }
-
     }
 
     fun deleteRunAndLinkedData(
@@ -164,7 +182,7 @@ class FinishedViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                deleteRunAndLinkedDataUseCase(id)
+                deleteRunAndLinkedDataUseCase(DeleteRunAndLinkedDataUseCase.Params(id))
                     .onSuccess {
                         viewModelScope.launch {
                             processSuccessfulDeletion(true,id)
@@ -198,7 +216,7 @@ class FinishedViewModel @Inject constructor(
 
             // Update totals
             setTotalsUseCase(
-                SetTotalsUseCase.Params(
+                SetTotalsSuspendUseCase.Params(
                     TotalModel(
                         newAvgSpeedRecord,
                         newDistanceRecord,
@@ -211,7 +229,7 @@ class FinishedViewModel @Inject constructor(
             )
 
             // Delete locations
-            deleteLocationsUseCase(id)
+            deleteLocationsUseCase(DeleteLocationsUseCase.Params(id))
                 .onSuccess {
                     message = true
                 }

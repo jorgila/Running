@@ -5,6 +5,7 @@ sealed class FinishedScreenViewState {
     data class FinishedUIState(
         val mapIsLoading: Boolean = false,
         val user: String? = null,
+        val runId : String? = null,
         val startDate: String? = null,
         val startTime: String? = null,
         val kpiDuration: String = "00:00:00",

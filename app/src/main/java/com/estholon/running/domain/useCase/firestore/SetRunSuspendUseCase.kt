@@ -1,19 +1,16 @@
 package com.estholon.running.domain.useCase.firestore
 
-import com.estholon.running.data.dto.RunDTO
-import com.estholon.running.data.dto.TotalDTO
-import com.estholon.running.domain.exception.RunningException
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.domain.repository.RunningRepository
-import com.estholon.running.domain.useCase.BaseUseCase
+import com.estholon.running.domain.useCase.BaseSuspendUseCase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import javax.inject.Inject
 
-class SetRunUseCase @Inject constructor(
+class SetRunSuspendUseCase @Inject constructor(
     private val runningRepository: RunningRepository,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : BaseUseCase<SetRunUseCase.Params, Unit>(dispatcher) {
+) : BaseSuspendUseCase<SetRunSuspendUseCase.Params, Unit>(dispatcher) {
 
     data class Params(
         val model: RunModel

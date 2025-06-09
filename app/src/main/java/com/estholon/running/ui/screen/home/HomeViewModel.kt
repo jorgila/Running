@@ -18,14 +18,15 @@ import com.estholon.running.R
 import com.estholon.running.common.Constants.INTERVAL_LOCATION
 import com.estholon.running.common.Constants.LIMIT_DISTANCE_ACCEPTED
 import com.estholon.running.common.SharedPreferencesKeys
+import com.estholon.running.domain.model.LocationModel
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.domain.model.TotalModel
 import com.estholon.running.domain.useCase.authentication.SignOutUseCase
 import com.estholon.running.domain.useCase.firestore.GetLevelsUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
-import com.estholon.running.domain.useCase.firestore.SetLocationUseCase
-import com.estholon.running.domain.useCase.firestore.SetRunUseCase
-import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
+import com.estholon.running.domain.useCase.firestore.SetLocationSuspendUseCase
+import com.estholon.running.domain.useCase.firestore.SetRunSuspendUseCase
+import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendUseCase
 import com.estholon.running.domain.useCase.others.GetFormattedStopWatchUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
@@ -52,7 +53,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -64,7 +64,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
 import javax.inject.Inject
-import kotlin.math.round
 import kotlin.math.roundToInt
 
 @HiltViewModel
@@ -82,9 +81,9 @@ class HomeViewModel @Inject constructor(
     private val preferencesResetUseCase: PreferencesResetUseCase,
     private val getTotalsUseCase: GetTotalsUseCase,
     private val getLevelsUseCase: GetLevelsUseCase,
-    private val setTotalsUseCase: SetTotalsUseCase,
-    private val setRunUseCase: SetRunUseCase,
-    private val setLocationUseCase: SetLocationUseCase,
+    private val setTotalsUseCase: SetTotalsSuspendUseCase,
+    private val setRunUseCase: SetRunSuspendUseCase,
+    private val setLocationUseCase: SetLocationSuspendUseCase,
     private val roundNumberUseCase: RoundNumberUseCase,
     private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
     @ApplicationContext private val context: Context
@@ -611,17 +610,21 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             setLocationUseCase(
-                id,
-                docName,
-                _homeUIState.value.chrono,
-                location.latitude,
-                location.longitude,
-                location.altitude,
-                location.hasAltitude(),
-                location.speed,
-                _homeUIState.value.kpiSpeed,
-                ms,
-                _isWalkingInterval.value
+                SetLocationSuspendUseCase.Params(
+                    id,
+                    docName,
+                    LocationModel(
+                        _homeUIState.value.chrono,
+                        location.latitude,
+                        location.longitude,
+                        location.altitude,
+                        location.hasAltitude(),
+                        location.speed,
+                        _homeUIState.value.kpiSpeed,
+                        ms,
+                        _isWalkingInterval.value
+                    )
+                )
             )
         }
     }
@@ -774,7 +777,7 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             setRunUseCase(
-                SetRunUseCase.Params(
+                SetRunSuspendUseCase.Params(
                     RunModel(
                         user,
                         id,
@@ -813,7 +816,7 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             setTotalsUseCase(
-                SetTotalsUseCase.Params(
+                SetTotalsSuspendUseCase.Params(
                     TotalModel(
                         recordAvgSpeed,
                         recordDistance,

@@ -67,9 +67,11 @@ class FirestoreDataSource @Inject constructor(
 
     override fun getRun(runId: String): Flow<RunDTO> {
 
+        val id = "${authManager.getCurrentEmail()}${runId}"
+
         return firestore
             .collection(COLLECTION_RUNS_RUNNING)
-            .document(runId)
+            .document(id)
             .snapshots()
             .mapNotNull { querySnapshot ->
                 querySnapshot.toObject(RunResponse::class.java)?.let { response ->

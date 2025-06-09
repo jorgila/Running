@@ -14,7 +14,7 @@ import com.estholon.running.domain.useCase.firestore.GetAvgSpeedRecordUseCase
 import com.estholon.running.domain.useCase.firestore.GetDistanceRecordUseCase
 import com.estholon.running.domain.useCase.firestore.GetSpeedRecordUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
-import com.estholon.running.domain.useCase.firestore.SetTotalsUseCase
+import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendUseCase
 import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
@@ -25,16 +25,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.coroutines.resume
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val getAllRunsUseCase: GetAllRunsUseCase,
     private val getTotalsUseCase: GetTotalsUseCase,
-    private val setTotalsUseCase: SetTotalsUseCase,
+    private val setTotalsUseCase: SetTotalsSuspendUseCase,
     private val getDistanceRecordUseCase: GetDistanceRecordUseCase,
     private val getAvgSpeedRecordUseCase: GetAvgSpeedRecordUseCase,
     private val getSpeedRecordUseCase: GetSpeedRecordUseCase,
@@ -115,7 +113,7 @@ class HistoryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                deleteRunAndLinkedDataUseCase(id)
+                deleteRunAndLinkedDataUseCase(DeleteRunAndLinkedDataUseCase.Params(id))
                     .onSuccess {
                         viewModelScope.launch {
                             processSuccessfulDeletion(true,id,runDistance,runDuration)
@@ -154,7 +152,7 @@ class HistoryViewModel @Inject constructor(
 
             // Update totals
             setTotalsUseCase(
-                SetTotalsUseCase.Params(
+                SetTotalsSuspendUseCase.Params(
                     TotalModel(
                         newAvgSpeedRecord,
                         newDistanceRecord,
@@ -167,7 +165,7 @@ class HistoryViewModel @Inject constructor(
             )
 
             // Delete locations
-            deleteLocationsUseCase(id)
+            deleteLocationsUseCase(DeleteLocationsUseCase.Params(id))
                 .onSuccess {
                     message = true
                 }

@@ -39,12 +39,17 @@ class RecoverViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            val reset = resetPasswordUseCase(email)
+            val reset = resetPasswordUseCase(ResetPasswordUseCase.Params(email))
 
-            when(reset){
-                "Success" -> navigateToSignIn()
-                else -> communicateError(reset)
-            }
+            reset.fold(
+                onSuccess = {
+                    navigateToSignIn()
+                },
+                onFailure = { exception ->
+                    communicateError(exception.toString())
+                }
+            )
+
         }
 
         _isLoading.value = false

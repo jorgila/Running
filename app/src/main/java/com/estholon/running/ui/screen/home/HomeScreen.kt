@@ -85,7 +85,8 @@ import java.text.DecimalFormat
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
-    navigateToFinishedScreen: (String, String, String, String, String, String, String, String, String, String, String, runId: String?) -> Unit
+    navigateToFinishedScreen: (String?) -> Unit,
+    navigateToCameraScreen: (String) -> Unit
 ){
 
     // CONTEXTO
@@ -512,14 +513,17 @@ fun HomeScreen(
                     .height(50.dp)
                     .width(50.dp)
             ) {
-                if(!stopped) {
+                if(stopped && homeUIState.chrono!="00:00:00") {
                     IconButton(
-                        onClick = { },
+                        onClick = {
+                            if (homeUIState.runId != null){
+                                navigateToCameraScreen(homeUIState.runId!!)
+                            }
+                        },
                         colors = IconButtonDefaults.iconButtonColors(
                             containerColor = White
                         ),
                         modifier = Modifier
-
                     ) {
                         Image(
                             painter = painterResource(R.drawable.ic_camera),
@@ -918,17 +922,6 @@ fun HomeScreen(
             FloatingActionButton(
                 onClick = {
                     navigateToFinishedScreen(
-                        homeUIState.chrono,
-                        "${homeUIState.goalHoursDefault}:${homeUIState.goalMinutesDefault}:${homeUIState.goalSecondsDefault}",
-                        (homeUIState.intervalDefault + 1).toString(),
-                        homeUIState.intervalRunDuration,
-                        homeUIState.intervalWalkDuration,
-                        homeUIState.kpiDistance.toString(),
-                        homeUIState.goalDistanceDefault.toString(),
-                        (homeUIState.kpiMinAltitude ?: 0).toString(),
-                        (homeUIState.kpiMaxAltitude ?: 0).toString(),
-                        homeUIState.kpiAvgSpeed.toString(),
-                        maxSpeed.toString(),
                         homeUIState.runId
                     )
                     homeViewModel.stopChrono()

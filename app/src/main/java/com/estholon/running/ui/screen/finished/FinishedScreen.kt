@@ -28,6 +28,7 @@ import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,17 +50,6 @@ import com.estholon.running.ui.theme.White
 @Composable
 fun FinishedScreen(
     runId: String?,
-    chrono: String,
-    durationGoal: String,
-    intervalDuration: String,
-    runIntervalDuration: String,
-    walkIntervalDuration: String,
-    distance: String,
-    distanceGoal: String,
-    minAltitude: String,
-    maxAltitude: String,
-    avgSpeed: String,
-    maxSpeed: String,
     dismissDialog: () -> Unit,
     navigateToCameraScreen: (String) -> Unit,
     finishedViewModel: FinishedViewModel = hiltViewModel()
@@ -74,7 +64,6 @@ fun FinishedScreen(
     if(runId==null){
         Toast.makeText(context, stringResource(R.string.error_in_run_creation),Toast.LENGTH_LONG).show()
     } else {
-        finishedViewModel.initRun(runId)
         Column(
             modifier = Modifier
                 .width(400.dp)
@@ -174,13 +163,13 @@ fun FinishedScreen(
                 ) {
                     Text(stringResource(R.string.duration))
                     Text(
-                        text = chrono,
+                        text = finishedUIState.kpiDuration,
                         fontSize = 32.sp
                     )
                     Text("Goal")
-                    Text(durationGoal)
+                    Text("${"%02d".format(finishedUIState.goalHoursDefault)}:${"%02d".format(finishedUIState.goalMinutesDefault)}:${"%02d".format(finishedUIState.goalSecondsDefault)}")
                     Text("Intervals")
-                    Text("$intervalDuration ($runIntervalDuration / $walkIntervalDuration)")
+                    Text("${finishedUIState.intervalDefault} (${finishedUIState.intervalRunDuration} / ${finishedUIState.intervalWalkDuration})")
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Column(
@@ -195,13 +184,13 @@ fun FinishedScreen(
                     ) {
                         Text(stringResource(R.string.distance))
                         Text(
-                            text = "$distance Km",
+                            text = "${finishedUIState.kpiDistance} Km",
                             fontSize = 32.sp
                         )
                         Text("Goal")
-                        Text("$distanceGoal.00 Km")
+                        Text("${finishedUIState.goalDistanceDefault}.00 Km")
                         Text("Slope")
-                        Text("min: $minAltitude / max: $maxAltitude")
+                        Text("min: ${finishedUIState.kpiMinAltitude} / max: ${finishedUIState.kpiMaxAltitude}")
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Column(
@@ -212,12 +201,12 @@ fun FinishedScreen(
                     ){
                         Text("Average Speed")
                         Text(
-                            text = "$avgSpeed Km/H",
+                            text = "${finishedUIState.kpiAvgSpeed} Km/H",
                             fontSize = 32.sp
                         )
                         Text("Maximum Speed")
                         Text(
-                            text = "$maxSpeed Km/H",
+                            text = "${finishedUIState.kpiMaxSpeed} Km/H",
                             fontSize = 32.sp
                         )
                     }

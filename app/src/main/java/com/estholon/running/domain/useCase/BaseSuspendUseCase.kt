@@ -1,10 +1,11 @@
 package com.estholon.running.domain.useCase
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-abstract class BaseUseCase<in P, R>(
-    private val coroutineDispatcher: CoroutineDispatcher
+abstract class BaseSuspendUseCase<in P, R>(
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
     suspend operator fun invoke(parameters: P): Result<R> {
         return try {
