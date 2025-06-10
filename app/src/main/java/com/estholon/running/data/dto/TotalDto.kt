@@ -1,6 +1,6 @@
 package com.estholon.running.data.dto
 
-data class TotalDTO (
+data class TotalDto (
     val recordAvgSpeed : Double,
     val recordDistance : Double,
     val recordSpeed : Double,

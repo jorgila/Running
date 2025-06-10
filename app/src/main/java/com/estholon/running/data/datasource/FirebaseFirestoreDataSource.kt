@@ -1,10 +1,9 @@
 package com.estholon.running.data.datasource
 
-import com.estholon.running.data.dto.LevelDTO
-import com.estholon.running.data.dto.LocationDTO
-import com.estholon.running.data.dto.RunDTO
-import com.estholon.running.data.dto.TotalDTO
-import com.estholon.running.data.manager.AuthManager
+import com.estholon.running.data.dto.LevelDto
+import com.estholon.running.data.dto.LocationDto
+import com.estholon.running.data.dto.RunDto
+import com.estholon.running.data.dto.TotalDto
 import com.estholon.running.data.mapper.LevelMapper
 import com.estholon.running.data.mapper.RunMapper
 import com.estholon.running.data.mapper.TotalMapper
@@ -12,6 +11,7 @@ import com.estholon.running.data.network.response.LevelResponse
 import com.estholon.running.data.network.response.RunResponse
 import com.estholon.running.data.network.response.TotalResponse
 import com.estholon.running.domain.exception.RunningException
+import com.estholon.running.domain.repository.AuthenticationRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.snapshots
@@ -21,9 +21,9 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class FirestoreDataSource @Inject constructor(
+class FirebaseFirestoreDataSource @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val authManager: AuthManager,
+    private val authenticationRepository: AuthenticationRepository,
     private val runMapper : RunMapper,
     private val levelMapper : LevelMapper,
     private val totalMapper: TotalMapper
@@ -35,10 +35,10 @@ class FirestoreDataSource @Inject constructor(
         private const val COLLECTION_TOTALS_RUNNING = "totalsRunning"
     }
 
-    override fun getTotals(): Flow<TotalDTO> {
+    override fun getTotals(): Flow<TotalDto> {
         return firestore
             .collection(COLLECTION_TOTALS_RUNNING)
-            .document(authManager.getCurrentEmail().toString())
+            .document(authenticationRepository.getCurrentEmail().toString())
             .snapshots()
             .mapNotNull { querySnapshot ->
                 querySnapshot.toObject(TotalResponse::class.java)?.let { response ->
@@ -47,12 +47,12 @@ class FirestoreDataSource @Inject constructor(
             }
     }
 
-    override fun getLevels(): Flow<List<LevelDTO>> {
+    override fun getLevels(): Flow<List<LevelDto>> {
         return firestore
             .collection(COLLECTION_LEVELS_RUNNING)
             .snapshots()
             .mapNotNull { querySnapshot ->
-                val levels = mutableListOf<LevelDTO>()
+                val levels = mutableListOf<LevelDto>()
                 for (document in querySnapshot.documents) {
                     document.toObject(LevelResponse::class.java)?.let { response ->
                         levelMapper.levelResponseToDto(response)?.let { dto ->
@@ -65,9 +65,9 @@ class FirestoreDataSource @Inject constructor(
 
     }
 
-    override fun getRun(runId: String): Flow<RunDTO> {
+    override fun getRun(runId: String): Flow<RunDto> {
 
-        val id = "${authManager.getCurrentEmail()}${runId}"
+        val id = "${authenticationRepository.getCurrentEmail()}${runId}"
 
         return firestore
             .collection(COLLECTION_RUNS_RUNNING)
@@ -81,13 +81,13 @@ class FirestoreDataSource @Inject constructor(
 
     }
 
-    override fun getAllRuns(): Flow<List<RunDTO>> {
+    override fun getAllRuns(): Flow<List<RunDto>> {
         return firestore
             .collection(COLLECTION_RUNS_RUNNING)
-            .whereEqualTo("user",authManager.getCurrentEmail())
+            .whereEqualTo("user",authenticationRepository.getCurrentEmail())
             .snapshots()
             .mapNotNull { querySnapshot ->
-                val runsDTOs = mutableListOf<RunDTO>()
+                val runsDTOs = mutableListOf<RunDto>()
                 for (document in querySnapshot.documents){
                     try {
                         document.toObject(RunResponse::class.java)?.let { response ->
@@ -106,7 +106,7 @@ class FirestoreDataSource @Inject constructor(
             }
     }
 
-    override suspend fun setTotals(total: TotalDTO) : Result<Unit> {
+    override suspend fun setTotals(total: TotalDto) : Result<Unit> {
 
         val model = hashMapOf(
             "recordAvgSpeed" to total.recordAvgSpeed,
@@ -120,7 +120,7 @@ class FirestoreDataSource @Inject constructor(
         return try {
             firestore
                 .collection(COLLECTION_TOTALS_RUNNING)
-                .document(authManager.getCurrentEmail().toString())
+                .document(authenticationRepository.getCurrentEmail().toString())
                 .set(model)
                 .await()
             Result.success(Unit)
@@ -130,9 +130,9 @@ class FirestoreDataSource @Inject constructor(
 
     }
 
-    override suspend fun setRun(run: RunDTO) : Result<Unit> {
+    override suspend fun setRun(run: RunDto) : Result<Unit> {
 
-        val id = "${authManager.getCurrentEmail()}${run.runId}"
+        val id = "${authenticationRepository.getCurrentEmail()}${run.runId}"
 
         val model = hashMapOf(
             "user" to run.user,
@@ -170,7 +170,7 @@ class FirestoreDataSource @Inject constructor(
 
     override suspend fun deleteRun(runId: String) : Result<Unit> {
 
-        val user = authManager.getCurrentEmail()
+        val user = authenticationRepository.getCurrentEmail()
         val id = "$user$runId"
 
         return try {
@@ -193,7 +193,7 @@ class FirestoreDataSource @Inject constructor(
             val documents = firestore
                 .collection(COLLECTION_RUNS_RUNNING)
                 .orderBy("kpiDistance", Query.Direction.DESCENDING)
-                .whereEqualTo("user",authManager.getCurrentEmail())
+                .whereEqualTo("user",authenticationRepository.getCurrentEmail())
                 .limit(1)
                 .get()
                 .await()
@@ -218,7 +218,7 @@ class FirestoreDataSource @Inject constructor(
             val documents = firestore
                 .collection(COLLECTION_RUNS_RUNNING)
                 .orderBy("kpiAvgSpeed", Query.Direction.DESCENDING)
-                .whereEqualTo("user",authManager.getCurrentEmail())
+                .whereEqualTo("user",authenticationRepository.getCurrentEmail())
                 .limit(1)
                 .get()
                 .await()
@@ -243,7 +243,7 @@ class FirestoreDataSource @Inject constructor(
             val documents = firestore
                 .collection(COLLECTION_RUNS_RUNNING)
                 .orderBy("kpiSpeed", Query.Direction.DESCENDING)
-                .whereEqualTo("user",authManager.getCurrentEmail())
+                .whereEqualTo("user",authenticationRepository.getCurrentEmail())
                 .limit(1)
                 .get()
                 .await()
@@ -265,9 +265,9 @@ class FirestoreDataSource @Inject constructor(
     override suspend fun setLocation(
         runId: String,
         docName: String,
-        location: LocationDTO
+        location: LocationDto
     ) : Result<Unit> {
-        val user = authManager.getCurrentEmail()
+        val user = authenticationRepository.getCurrentEmail()
 
         val model = hashMapOf(
             "time" to location.time,
@@ -298,7 +298,7 @@ class FirestoreDataSource @Inject constructor(
         return try {
 
             val querySnapshot = firestore
-                .collection("locations/${authManager.getCurrentEmail()}/${runId}")
+                .collection("locations/${authenticationRepository.getCurrentEmail()}/${runId}")
                 .get()
                 .await()
 

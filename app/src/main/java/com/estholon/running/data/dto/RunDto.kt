@@ -1,9 +1,6 @@
 package com.estholon.running.data.dto
 
-import com.google.android.gms.maps.model.LatLng
-import com.google.maps.android.compose.MapType
-
-data class RunDTO(
+data class RunDto(
     val user: String,
     val runId: String,
     val startDate : String,

@@ -1,6 +1,6 @@
 package com.estholon.running.data.dto
 
-data class LocationDTO (
+data class LocationDto (
     val time : String,
     val latitude : Double,
     val longitude : Double,

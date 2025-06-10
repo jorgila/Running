@@ -1,14 +1,14 @@
 package com.estholon.running.data.mapper
 
-import com.estholon.running.data.dto.LevelDTO
+import com.estholon.running.data.dto.LevelDto
 import com.estholon.running.data.network.response.LevelResponse
 import com.estholon.running.domain.model.LevelModel
 
 class LevelMapper {
 
-    fun levelResponseToDto(response: LevelResponse): LevelDTO? {
+    fun levelResponseToDto(response: LevelResponse): LevelDto? {
         return if (isValidLevelResponse(response)) {
-            LevelDTO(
+            LevelDto(
                 distanceTarget = response.distanceTarget!!,
                 level = response.level!!,
                 runsTarget = response.runsTarget!!
@@ -16,7 +16,7 @@ class LevelMapper {
         } else null
     }
 
-    fun levelDtoToDomain(dto: LevelDTO): LevelModel {
+    fun levelDtoToDomain(dto: LevelDto): LevelModel {
         return LevelModel(
             distanceTarget = dto.distanceTarget,
             level = dto.level,

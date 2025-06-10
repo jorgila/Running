@@ -1,9 +1,7 @@
 package com.estholon.running.data.mapper
 
-import com.estholon.running.data.dto.RunDTO
-import com.estholon.running.data.dto.TotalDTO
+import com.estholon.running.data.dto.TotalDto
 import com.estholon.running.data.network.response.TotalResponse
-import com.estholon.running.domain.model.RunModel
 import com.estholon.running.domain.model.TotalModel
 import javax.inject.Inject
 
@@ -11,9 +9,9 @@ class TotalMapper @Inject constructor(
 
 ) {
 
-    fun totalResponseToDto(response: TotalResponse): TotalDTO? {
+    fun totalResponseToDto(response: TotalResponse): TotalDto? {
         return if (isValidTotalResponse(response)) {
-            TotalDTO(
+            TotalDto(
                 recordAvgSpeed = response.recordAvgSpeed!!,
                 recordDistance = response.recordDistance!!,
                 recordSpeed = response.recordSpeed!!,
@@ -24,7 +22,7 @@ class TotalMapper @Inject constructor(
         } else null
     }
 
-    fun totalDtoToDomain(dto: TotalDTO): TotalModel {
+    fun totalDtoToDomain(dto: TotalDto): TotalModel {
         return TotalModel(
             recordAvgSpeed = dto.recordAvgSpeed,
             recordDistance = dto.recordDistance,
@@ -35,8 +33,8 @@ class TotalMapper @Inject constructor(
         )
     }
 
-    fun totalDomainToDto(model: TotalModel): TotalDTO {
-        return TotalDTO(
+    fun totalDomainToDto(model: TotalModel): TotalDto {
+        return TotalDto(
             recordAvgSpeed = model.recordAvgSpeed,
             recordDistance = model.recordDistance,
             recordSpeed = model.recordSpeed,

@@ -1,6 +1,6 @@
 package com.estholon.running.data.mapper
 
-import com.estholon.running.data.dto.RunDTO
+import com.estholon.running.data.dto.RunDto
 import com.estholon.running.data.network.response.RunResponse
 import com.estholon.running.domain.model.RunModel
 import javax.inject.Inject
@@ -8,9 +8,9 @@ import javax.inject.Inject
 class RunMapper @Inject constructor(
 
 ) {
-    fun runResponseToDto(response: RunResponse): RunDTO? {
+    fun runResponseToDto(response: RunResponse): RunDto? {
         return if (isValidRunResponse(response)) {
-            RunDTO(
+            RunDto(
                 user = response.user!!,
                 runId = response.runId!!,
                 startDate = response.startDate!!,
@@ -34,7 +34,7 @@ class RunMapper @Inject constructor(
         } else null
     }
 
-    fun runDtoToDomain(dto: RunDTO): RunModel {
+    fun runDtoToDomain(dto: RunDto): RunModel {
         return RunModel(
             user = dto.user,
             runId = dto.runId,
@@ -58,8 +58,8 @@ class RunMapper @Inject constructor(
         )
     }
 
-    fun runDomainToDto(model: RunModel): RunDTO {
-        return RunDTO(
+    fun runDomainToDto(model: RunModel): RunDto {
+        return RunDto(
             user = model.user ?: "",
             runId = model.runId,
             startDate = model.startDate ?: "",

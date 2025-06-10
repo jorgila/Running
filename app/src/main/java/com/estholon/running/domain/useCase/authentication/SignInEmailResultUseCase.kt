@@ -1,14 +1,14 @@
 package com.estholon.running.domain.useCase.authentication
 
-import com.estholon.running.data.manager.AnalyticsManager
-import com.estholon.running.data.manager.AuthManager
-import com.estholon.running.data.model.AnalyticModel
+import com.estholon.running.domain.model.AnalyticsModel
+import com.estholon.running.domain.repository.AnalyticsRepository
+import com.estholon.running.domain.repository.AuthenticationRepository
 import com.estholon.running.domain.useCase.BaseSuspendResultUseCase
 import javax.inject.Inject
 
 class SignInEmailResultUseCase @Inject constructor(
-    private val auth: AuthManager,
-    private val analytics: AnalyticsManager
+    private val authenticationRepository: AuthenticationRepository,
+    private val analyticsRepository: AnalyticsRepository
 ) : BaseSuspendResultUseCase<SignInEmailResultUseCase.Params,Unit>() {
 
     data class Params(
@@ -17,20 +17,20 @@ class SignInEmailResultUseCase @Inject constructor(
     )
 
     override suspend fun execute(parameters: Params) {
-        val result = auth.signInWithEmail(parameters.email, parameters.password)
+        val result = authenticationRepository.signInWithEmail(parameters.email, parameters.password)
 
         result.fold(
             onSuccess = {
-                val analyticModel = AnalyticModel(
+                val analyticsModel = AnalyticsModel(
                     title = "Sign In", analyticsString = listOf(Pair("Email", "Successful Sign In"))
                 )
-                analytics.sendEvent(analyticModel)
+                analyticsRepository.sendEvent(analyticsModel)
             },
             onFailure = { exception ->
-                val analyticModel = AnalyticModel(
+                val analyticsModel = AnalyticsModel(
                     title = "Sign In", analyticsString = listOf(Pair("Email", "Failed Sign In: ${exception.message}"))
                 )
-                analytics.sendEvent(analyticModel)
+                analyticsRepository.sendEvent(analyticsModel)
                 throw RuntimeException(exception.message)
             }
         )
