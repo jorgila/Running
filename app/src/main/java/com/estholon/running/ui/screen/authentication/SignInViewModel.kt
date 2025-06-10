@@ -5,7 +5,7 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
-import com.estholon.running.domain.useCase.authentication.SignInEmailUseCase
+import com.estholon.running.domain.useCase.authentication.SignInEmailResultUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
-    private val signInEmailUseCase: SignInEmailUseCase,
+    private val signInEmailResultUseCase: SignInEmailResultUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -38,15 +38,14 @@ class SignInViewModel @Inject constructor(
     ) {
         _isLoading.value = true
         viewModelScope.launch {
-            val signIn = signInEmailUseCase(
-                email,
-                password
+            val signIn = signInEmailResultUseCase(
+                SignInEmailResultUseCase.Params(email,password)
             )
-            when(signIn){
-                "Success" -> navigateToHome()
-                null -> communicateError(context.getString(R.string.unknown_error))
-                else -> communicateError(signIn)
-            }
+            signIn.fold(
+                onSuccess = { navigateToHome()},
+                onFailure = { exception -> communicateError(exception.message ?: "Unknown error") }
+            )
+
         }
         _isLoading.value = false
     }

@@ -1,17 +1,17 @@
 package com.estholon.running.domain.useCase.sharedPreferences
 
-import com.estholon.running.data.manager.PreferencesManager
+import com.estholon.running.domain.repository.PreferencesRepository
 import javax.inject.Inject
 
 class PreferencesPutIntUseCase @Inject constructor(
-    private val preferencesManager: PreferencesManager
+    private val preferencesRepository: PreferencesRepository
 ) {
 
     suspend operator fun invoke(
         key: String,
         value: Int
     ){
-        preferencesManager.putInt(key,value)
+        preferencesRepository.putInt(key,value)
     }
 
 }

@@ -4,8 +4,7 @@ import android.content.Context
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.estholon.running.domain.useCase.authentication.ResetPasswordUseCase
-import com.estholon.running.domain.useCase.authentication.SignInEmailUseCase
+import com.estholon.running.domain.useCase.authentication.ResetPasswordResultUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RecoverViewModel @Inject constructor(
-    private val resetPasswordUseCase: ResetPasswordUseCase,
+    private val resetPasswordUseCase: ResetPasswordResultUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -39,7 +38,7 @@ class RecoverViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            val reset = resetPasswordUseCase(ResetPasswordUseCase.Params(email))
+            val reset = resetPasswordUseCase(ResetPasswordResultUseCase.Params(email))
 
             reset.fold(
                 onSuccess = {

@@ -7,14 +7,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
 import com.estholon.running.domain.model.TotalModel
-import com.estholon.running.domain.useCase.firestore.DeleteLocationsUseCase
-import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataUseCase
-import com.estholon.running.domain.useCase.firestore.GetAllRunsUseCase
-import com.estholon.running.domain.useCase.firestore.GetAvgSpeedRecordUseCase
-import com.estholon.running.domain.useCase.firestore.GetDistanceRecordUseCase
-import com.estholon.running.domain.useCase.firestore.GetSpeedRecordUseCase
-import com.estholon.running.domain.useCase.firestore.GetTotalsUseCase
-import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendUseCase
+import com.estholon.running.domain.useCase.firestore.DeleteLocationsResultUseCase
+import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataResultUseCase
+import com.estholon.running.domain.useCase.firestore.GetAllRunsResultUseCase
+import com.estholon.running.domain.useCase.firestore.GetAvgSpeedRecordResultUseCase
+import com.estholon.running.domain.useCase.firestore.GetDistanceRecordResultUseCase
+import com.estholon.running.domain.useCase.firestore.GetSpeedRecordResultUseCase
+import com.estholon.running.domain.useCase.firestore.GetTotalsResultUseCase
+import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendResultUseCase
 import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
@@ -30,14 +30,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val getAllRunsUseCase: GetAllRunsUseCase,
-    private val getTotalsUseCase: GetTotalsUseCase,
-    private val setTotalsUseCase: SetTotalsSuspendUseCase,
-    private val getDistanceRecordUseCase: GetDistanceRecordUseCase,
-    private val getAvgSpeedRecordUseCase: GetAvgSpeedRecordUseCase,
-    private val getSpeedRecordUseCase: GetSpeedRecordUseCase,
-    private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataUseCase,
-    private val deleteLocationsUseCase: DeleteLocationsUseCase,
+    private val getAllRunsUseCase: GetAllRunsResultUseCase,
+    private val getTotalsUseCase: GetTotalsResultUseCase,
+    private val setTotalsUseCase: SetTotalsSuspendResultUseCase,
+    private val getDistanceRecordUseCase: GetDistanceRecordResultUseCase,
+    private val getAvgSpeedRecordUseCase: GetAvgSpeedRecordResultUseCase,
+    private val getSpeedRecordUseCase: GetSpeedRecordResultUseCase,
+    private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataResultUseCase,
+    private val deleteLocationsUseCase: DeleteLocationsResultUseCase,
     private val getMillisecondsFromStringWithDHMSUseCase: GetMillisecondsFromStringWithDHMSUseCase,
     private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
@@ -113,7 +113,7 @@ class HistoryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                deleteRunAndLinkedDataUseCase(DeleteRunAndLinkedDataUseCase.Params(id))
+                deleteRunAndLinkedDataUseCase(DeleteRunAndLinkedDataResultUseCase.Params(id))
                     .onSuccess {
                         viewModelScope.launch {
                             processSuccessfulDeletion(true,id,runDistance,runDuration)
@@ -152,7 +152,7 @@ class HistoryViewModel @Inject constructor(
 
             // Update totals
             setTotalsUseCase(
-                SetTotalsSuspendUseCase.Params(
+                SetTotalsSuspendResultUseCase.Params(
                     TotalModel(
                         newAvgSpeedRecord,
                         newDistanceRecord,
@@ -165,7 +165,7 @@ class HistoryViewModel @Inject constructor(
             )
 
             // Delete locations
-            deleteLocationsUseCase(DeleteLocationsUseCase.Params(id))
+            deleteLocationsUseCase(DeleteLocationsResultUseCase.Params(id))
                 .onSuccess {
                     message = true
                 }

@@ -4,40 +4,35 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.estholon.running.data.repository.CameraRepositoryImpl
 import com.estholon.running.domain.model.CameraModel
 import com.estholon.running.domain.repository.CameraRepository
-import com.estholon.running.domain.useCase.camera.CapturePhotoUseCase
-import com.estholon.running.domain.useCase.camera.ClearErrorUseCase
-import com.estholon.running.domain.useCase.camera.InitializeCameraUseCase
-import com.estholon.running.domain.useCase.camera.PauseVideoRecordingUseCase
-import com.estholon.running.domain.useCase.camera.ResumeVideoRecordingUseCase
-import com.estholon.running.domain.useCase.camera.StartVideoRecordingUseCase
-import com.estholon.running.domain.useCase.camera.StopVideoRecordingUseCase
-import com.estholon.running.domain.useCase.camera.SwitchCameraUseCase
-import com.estholon.running.domain.useCase.camera.ToggleFlashUseCase
+import com.estholon.running.domain.useCase.camera.CapturePhotoResultUseCase
+import com.estholon.running.domain.useCase.camera.ClearErrorResultUseCase
+import com.estholon.running.domain.useCase.camera.InitializeCameraResultUseCase
+import com.estholon.running.domain.useCase.camera.PauseVideoRecordingResultUseCase
+import com.estholon.running.domain.useCase.camera.ResumeVideoRecordingResultUseCase
+import com.estholon.running.domain.useCase.camera.StartVideoRecordingResultUseCase
+import com.estholon.running.domain.useCase.camera.StopVideoRecordingResultUseCase
+import com.estholon.running.domain.useCase.camera.SwitchCameraResultUseCase
+import com.estholon.running.domain.useCase.camera.ToggleFlashResultUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CameraViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val initializeCameraUseCase: InitializeCameraUseCase,
-    private val capturePhotoUseCase: CapturePhotoUseCase,
-    private val startVideoRecordingUseCase: StartVideoRecordingUseCase,
-    private val stopVideoRecordingUseCase: StopVideoRecordingUseCase,
-    private val pauseRecordingUseCase: PauseVideoRecordingUseCase,
-    private val resumeRecordingUseCase: ResumeVideoRecordingUseCase,
-    private val switchCameraUseCase: SwitchCameraUseCase,
-    private val toggleFlashUseCase: ToggleFlashUseCase,
-    private val clearErrorUseCase: ClearErrorUseCase,
+    private val initializeCameraResultUseCase: InitializeCameraResultUseCase,
+    private val capturePhotoUseCase: CapturePhotoResultUseCase,
+    private val startVideoRecordingUseCase: StartVideoRecordingResultUseCase,
+    private val stopVideoRecordingUseCase: StopVideoRecordingResultUseCase,
+    private val pauseRecordingUseCase: PauseVideoRecordingResultUseCase,
+    private val resumeRecordingUseCase: ResumeVideoRecordingResultUseCase,
+    private val switchCameraResultUseCase: SwitchCameraResultUseCase,
+    private val toggleFlashUseCase: ToggleFlashResultUseCase,
+    private val clearErrorResultUseCase: ClearErrorResultUseCase,
     private val cameraRepository: CameraRepository
 ) : ViewModel() {
     
@@ -58,7 +53,9 @@ class CameraViewModel @Inject constructor(
         Log.d("CameraViewModel", "initializeCamera called from UI - using repository: ${cameraRepository.hashCode()}")
         viewModelScope.launch {
             Log.d("CameraViewModel","Starting initialization coroutine")
-            initializeCameraUseCase(surfaceProvider, lifecycleOwner)
+            initializeCameraResultUseCase(
+                InitializeCameraResultUseCase.Params(surfaceProvider, lifecycleOwner)
+            )
                 .onSuccess {
                     Log.d("CameraViewModel","Successfully initialized camera")
                     // Verificar el estado después de la inicialización
@@ -125,7 +122,9 @@ class CameraViewModel @Inject constructor(
 
     fun switchCamera(surfaceProvider: Any, lifecycleOwner: Any) {
         viewModelScope.launch {
-            switchCameraUseCase(surfaceProvider, lifecycleOwner)
+            switchCameraResultUseCase(
+                SwitchCameraResultUseCase.Params(surfaceProvider, lifecycleOwner)
+            )
         }
     }
 
@@ -136,7 +135,9 @@ class CameraViewModel @Inject constructor(
     }
 
     fun clearError() {
-        clearErrorUseCase()
+        viewModelScope.launch {
+            clearErrorResultUseCase()
+        }
     }
 
     override fun onCleared() {

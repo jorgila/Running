@@ -1,7 +1,6 @@
 package com.estholon.running.data.manager
 
 import android.content.Context
-import com.estholon.running.data.model.AuthRes
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,19 +31,19 @@ class AuthManager @Inject constructor(
 
     // Email Sign Up
 
-    suspend fun signUpWithEmail(email: String, password: String): AuthRes<FirebaseUser?> {
+    suspend fun signUpWithEmail(email: String, password: String): Result<FirebaseUser?> {
         return suspendCancellableCoroutine { cancellableContinuation ->
             firebaseAuth.createUserWithEmailAndPassword(email,password)
                 .addOnSuccessListener {
                     val result = if (it.user != null) {
-                        AuthRes.Success(it.user)
+                        Result.success(it.user)
                     } else {
-                        AuthRes.Error("Error al iniciar sesión")
+                        Result.failure(Exception("Error al iniciar sesión"))
                     }
                     cancellableContinuation.resume(result)
                 }
                 .addOnFailureListener {
-                    val result = AuthRes.Error(it.message.toString())
+                    val result = Result.failure<FirebaseUser?>(Exception(it.message.toString()))
                     cancellableContinuation.resume(result)
                 }
         }
@@ -52,35 +51,35 @@ class AuthManager @Inject constructor(
 
     // Email Recover
 
-    suspend fun resetPassword(email: String): AuthRes<Unit> {
+    suspend fun resetPassword(email: String): Result<Unit> {
         return suspendCancellableCoroutine {cancellableContinuation ->
             firebaseAuth.sendPasswordResetEmail(email)
                 .addOnSuccessListener {
-                    val result = AuthRes.Success(Unit)
+                    val result = Result.success(Unit)
                     cancellableContinuation.resume(result)
                 }
                 .addOnFailureListener{
-                    val result = AuthRes.Error(it.message ?: "Error al restablecer la contraseña")
+                    val result = Result.failure<Unit>(Exception(it.message ?: "Error al restablecer la contraseña"))
                     cancellableContinuation.resume(result)
                 }
         }
     }
 
     // Email Sign In
-    suspend fun signInWithEmail(user: String, password: String): AuthRes<FirebaseUser?> {
+    suspend fun signInWithEmail(user: String, password: String): Result<FirebaseUser?> {
 
         return suspendCancellableCoroutine { cancellableContinuation ->
             firebaseAuth.signInWithEmailAndPassword(user,password)
                 .addOnSuccessListener {
                     val result = if (it.user != null) {
-                        AuthRes.Success(it.user)
+                        Result.success(it.user)
                     } else {
-                        AuthRes.Error("Error al iniciar sesión")
+                        Result.failure(Exception("Error al iniciar sesión"))
                     }
                     cancellableContinuation.resume(result)
                 }
                 .addOnFailureListener {
-                    val result = AuthRes.Error(it.message.toString())
+                    val result = Result.failure<FirebaseUser?>(Exception(it.message.toString()))
                     cancellableContinuation.resume(result)
                 }
         }

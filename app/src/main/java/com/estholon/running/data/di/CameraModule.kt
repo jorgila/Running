@@ -3,19 +3,18 @@ package com.estholon.running.data.di
 import android.content.Context
 import com.estholon.running.data.repository.CameraRepositoryImpl
 import com.estholon.running.domain.repository.CameraRepository
-import com.estholon.running.domain.useCase.camera.CapturePhotoUseCase
-import com.estholon.running.domain.useCase.camera.ClearErrorUseCase
-import com.estholon.running.domain.useCase.camera.InitializeCameraUseCase
-import com.estholon.running.domain.useCase.camera.PauseVideoRecordingUseCase
-import com.estholon.running.domain.useCase.camera.ResumeVideoRecordingUseCase
-import com.estholon.running.domain.useCase.camera.StartVideoRecordingUseCase
-import com.estholon.running.domain.useCase.camera.StopVideoRecordingUseCase
-import com.estholon.running.domain.useCase.camera.SwitchCameraUseCase
-import com.estholon.running.domain.useCase.camera.ToggleFlashUseCase
+import com.estholon.running.domain.useCase.camera.CapturePhotoResultUseCase
+import com.estholon.running.domain.useCase.camera.ClearErrorResultUseCase
+import com.estholon.running.domain.useCase.camera.InitializeCameraResultUseCase
+import com.estholon.running.domain.useCase.camera.PauseVideoRecordingResultUseCase
+import com.estholon.running.domain.useCase.camera.ResumeVideoRecordingResultUseCase
+import com.estholon.running.domain.useCase.camera.StartVideoRecordingResultUseCase
+import com.estholon.running.domain.useCase.camera.StopVideoRecordingResultUseCase
+import com.estholon.running.domain.useCase.camera.SwitchCameraResultUseCase
+import com.estholon.running.domain.useCase.camera.ToggleFlashResultUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.components.ViewModelComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -35,64 +34,64 @@ object CameraModule {
     @Provides
     fun provideInitializeCameraUseCase(
         cameraRepository: CameraRepository
-    ): InitializeCameraUseCase {
-        return InitializeCameraUseCase(cameraRepository)
+    ): InitializeCameraResultUseCase {
+        return InitializeCameraResultUseCase(cameraRepository)
     }
 
     @Provides
     fun provideCapturePhotoUseCase(
         cameraRepository: CameraRepository
-    ): CapturePhotoUseCase {
-        return CapturePhotoUseCase(cameraRepository)
+    ): CapturePhotoResultUseCase {
+        return CapturePhotoResultUseCase(cameraRepository)
     }
 
     @Provides
     fun provideStartVideoRecordingUseCase(
         cameraRepository: CameraRepository
-    ): StartVideoRecordingUseCase {
-        return StartVideoRecordingUseCase(cameraRepository)
+    ): StartVideoRecordingResultUseCase {
+        return StartVideoRecordingResultUseCase(cameraRepository)
     }
 
     @Provides
     fun provideStopVideoRecordingUseCase(
         cameraRepository: CameraRepository
-    ): StopVideoRecordingUseCase {
-        return StopVideoRecordingUseCase(cameraRepository)
+    ): StopVideoRecordingResultUseCase {
+        return StopVideoRecordingResultUseCase(cameraRepository)
     }
 
     @Provides
     fun providePauseVideoRecordingUseCase(
         cameraRepository: CameraRepository
-    ): PauseVideoRecordingUseCase {
-        return PauseVideoRecordingUseCase(cameraRepository)
+    ): PauseVideoRecordingResultUseCase {
+        return PauseVideoRecordingResultUseCase(cameraRepository)
     }
 
     @Provides
     fun provideResumeRecordingUseCase(
         cameraRepository: CameraRepository
-    ): ResumeVideoRecordingUseCase {
-        return ResumeVideoRecordingUseCase(cameraRepository)
+    ): ResumeVideoRecordingResultUseCase {
+        return ResumeVideoRecordingResultUseCase(cameraRepository)
     }
 
     @Provides
     fun provideSwitchCameraUseCase(
         cameraRepository: CameraRepository
-    ): SwitchCameraUseCase {
-        return SwitchCameraUseCase(cameraRepository)
+    ): SwitchCameraResultUseCase {
+        return SwitchCameraResultUseCase(cameraRepository)
     }
 
     @Provides
     fun provideToggleFlashUseCase(
         cameraRepository: CameraRepository
-    ): ToggleFlashUseCase {
-        return ToggleFlashUseCase(cameraRepository)
+    ): ToggleFlashResultUseCase {
+        return ToggleFlashResultUseCase(cameraRepository)
     }
 
     @Provides
     fun provideClearErrorUseCase(
         cameraRepository: CameraRepository
-    ): ClearErrorUseCase {
-        return ClearErrorUseCase(cameraRepository)
+    ): ClearErrorResultUseCase {
+        return ClearErrorResultUseCase(cameraRepository)
     }
 
 }

@@ -5,21 +5,18 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.estholon.running.R
-import com.estholon.running.domain.useCase.authentication.SignInEmailUseCase
-import com.estholon.running.domain.useCase.authentication.SignUpEmailUseCase
+import com.estholon.running.domain.useCase.authentication.SignInEmailResultUseCase
+import com.estholon.running.domain.useCase.authentication.SignUpEmailResultUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
-import kotlin.math.sign
 
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
-    private val signUpEmailUseCase: SignUpEmailUseCase,
+    private val signUpEmailResultUseCase: SignUpEmailResultUseCase,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -42,15 +39,15 @@ class SignUpViewModel @Inject constructor(
     ) {
         _isLoading.value = true
         viewModelScope.launch {
-            val signUp = signUpEmailUseCase(
-                email,
-                password
+
+            val signUp = signUpEmailResultUseCase(
+                SignUpEmailResultUseCase.Params(email,password)
             )
-            when(signUp){
-                "Success" -> navigateToSignIn()
-                null -> communicateError(context.getString(R.string.unknown_error))
-                else -> communicateError(signUp)
-            }
+            signUp.fold(
+                onSuccess = { navigateToSignIn() },
+                onFailure = { exception -> communicateError(exception.message ?: "Unknown error") }
+            )
+
         }
         _isLoading.value = false
     }

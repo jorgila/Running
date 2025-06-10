@@ -1,17 +1,17 @@
 package com.estholon.running.domain.useCase.sharedPreferences
 
-import com.estholon.running.data.manager.PreferencesManager
+import com.estholon.running.domain.repository.PreferencesRepository
 import javax.inject.Inject
 
 class PreferencesGetFloatUseCase @Inject constructor(
-    private val preferencesManager: PreferencesManager
+    private val preferencesRepository: PreferencesRepository
 ) {
 
     suspend operator fun invoke(
         key: String,
         defaultValue: Float = 0F
     ) : Float {
-        return preferencesManager.getFloat(key,defaultValue)
+        return preferencesRepository.getFloat(key,defaultValue)
     }
 
 }
