@@ -5,16 +5,16 @@ import com.estholon.running.domain.model.AudioProgress
 
 interface AudioRepository {
 
-    fun initialize() : Result<Unit>
-    fun playTrack(audio: AudioModel) : Result<Unit>
-    fun pauseTrack(audio: AudioModel) : Result<Unit>
-    fun stopTrack(audio: AudioModel) : Result<Unit>
-    fun stopAll() : Result<Unit>
-    fun setVolume(audio: AudioModel, volume: Float) : Result<Unit>
-    fun seekAudioMusic(audio: AudioModel, position: Float) : Result<Unit>
-    fun isPlaying(audio: AudioModel) : Result<Boolean>
-    fun getProgress() : Result<AudioProgress>
-    fun release() : Result<Unit>
+    suspend fun initialize() : Result<Unit>
+    suspend fun playTrack(audio: AudioModel) : Result<Unit>
+    suspend fun pauseTrack(audio: AudioModel) : Result<Unit>
+    suspend fun stopTrack(audio: AudioModel) : Result<Unit>
+    suspend fun stopAll() : Result<Unit>
+    suspend fun setVolume(audio: AudioModel, volume: Float) : Result<Unit>
+    suspend fun seekAudioMusic(audio: AudioModel, position: Float) : Result<Unit>
+    suspend fun isPlaying(audio: AudioModel) : Result<Boolean>
+    suspend fun getProgress(audio: AudioModel) : Result<AudioProgress>
+    suspend fun release() : Result<Unit>
 
 }
 

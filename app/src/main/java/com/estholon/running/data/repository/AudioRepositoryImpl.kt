@@ -10,43 +10,43 @@ class AudioRepositoryImpl @Inject constructor(
     private val audioDataSource: AudioDataSource
 ) : AudioRepository {
 
-    override fun initialize(): Result<Unit> {
+    override suspend fun initialize(): Result<Unit> {
         return audioDataSource.initialize()
     }
 
-    override fun playTrack(audio: AudioModel): Result<Unit> {
+    override suspend fun playTrack(audio: AudioModel): Result<Unit> {
         return audioDataSource.playTrack(audio)
     }
 
-    override fun pauseTrack(audio: AudioModel): Result<Unit> {
+    override suspend fun pauseTrack(audio: AudioModel): Result<Unit> {
         return audioDataSource.pauseTrack(audio)
     }
 
-    override fun stopTrack(audio: AudioModel): Result<Unit> {
+    override suspend fun stopTrack(audio: AudioModel): Result<Unit> {
         return audioDataSource.stopTrack(audio)
     }
 
-    override fun stopAll(): Result<Unit> {
+    override suspend fun stopAll(): Result<Unit> {
         return audioDataSource.stopAll()
     }
 
-    override fun setVolume(audio: AudioModel, volume: Float): Result<Unit> {
+    override suspend fun setVolume(audio: AudioModel, volume: Float): Result<Unit> {
         return audioDataSource.setVolume(audio,volume)
     }
 
-    override fun seekAudioMusic(audio: AudioModel, position: Float): Result<Unit> {
+    override suspend fun seekAudioMusic(audio: AudioModel, position: Float): Result<Unit> {
         return audioDataSource.seekAudioMusic(audio,position)
     }
 
-    override fun isPlaying(audio: AudioModel): Result<Boolean> {
+    override suspend fun isPlaying(audio: AudioModel): Result<Boolean> {
         return audioDataSource.isPlaying(audio)
     }
 
-    override fun getProgress(): Result<AudioProgress> {
-        return audioDataSource.getProgress()
+    override suspend fun getProgress(audio: AudioModel): Result<AudioProgress> {
+        return audioDataSource.getProgress(audio)
     }
 
-    override fun release(): Result<Unit> {
+    override suspend fun release(): Result<Unit> {
         return audioDataSource.release()
     }
 }

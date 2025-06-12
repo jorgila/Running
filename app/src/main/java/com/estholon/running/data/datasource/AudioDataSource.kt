@@ -13,7 +13,7 @@ interface AudioDataSource {
     suspend fun setVolume(audio: AudioModel, volume: Float) : Result<Unit>
     suspend fun seekAudioMusic(audio: AudioModel, position: Float) : Result<Unit>
     suspend fun isPlaying(audio: AudioModel) : Result<Boolean>
-    suspend fun getProgress() : Result<AudioProgress>
+    suspend fun getProgress(audio: AudioModel) : Result<AudioProgress>
     suspend fun release() : Result<Unit>
 
 }
