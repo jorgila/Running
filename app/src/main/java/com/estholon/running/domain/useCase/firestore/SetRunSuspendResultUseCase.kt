@@ -10,13 +10,13 @@ import javax.inject.Inject
 class SetRunSuspendResultUseCase @Inject constructor(
     private val runningRepository: RunningRepository,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : BaseSuspendResultUseCase<SetRunSuspendResultUseCase.Params, Unit>(dispatcher) {
+) : BaseSuspendResultUseCase<SetRunSuspendResultUseCase.SetRunParams, Unit>(dispatcher) {
 
-    data class Params(
+    data class SetRunParams(
         val model: RunModel
     )
 
-    override suspend fun execute(parameters: Params) {
+    override suspend fun execute(parameters: SetRunParams) {
 
         val result = runningRepository.setRun(parameters.model)
         if(result.isFailure){

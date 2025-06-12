@@ -481,7 +481,7 @@ class HomeViewModel @Inject constructor(
 
                 _homeUIState.update { homeUIState ->
                     homeUIState.copy(
-                        chrono = getFormattedStopWatchUseCase(timeInSeconds*1000)
+                        kpiDuration = getFormattedStopWatchUseCase(timeInSeconds*1000)
                     )
                 }
 
@@ -621,11 +621,11 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             setLocationUseCase(
-                SetLocationSuspendResultUseCase.Params(
+                SetLocationSuspendResultUseCase.SetLocationParams(
                     id,
                     docName,
                     LocationModel(
-                        _homeUIState.value.chrono,
+                        _homeUIState.value.kpiDuration,
                         location.latitude,
                         location.longitude,
                         location.altitude,
@@ -763,7 +763,7 @@ class HomeViewModel @Inject constructor(
 
         _homeUIState.update { homeUIState ->
             homeUIState.copy(
-                started = b
+                isStarted = b
             )
         }
 
@@ -788,13 +788,13 @@ class HomeViewModel @Inject constructor(
 
         viewModelScope.launch {
             setRunUseCase(
-                SetRunSuspendResultUseCase.Params(
+                SetRunSuspendResultUseCase.SetRunParams(
                     RunModel(
                         user,
                         id,
                         startDate,
                         startTime,
-                        _homeUIState.value.chrono,
+                        _homeUIState.value.kpiDuration,
                         _homeUIState.value. kpiDistance,
                         _homeUIState.value.kpiAvgSpeed,
                         _maxSpeed.value,
@@ -823,11 +823,11 @@ class HomeViewModel @Inject constructor(
         val recordSpeed = _homeUIState.value.kpiRecordSpeed
         val totalDistance = roundNumberUseCase((_homeUIState.value.kpiTotalDistance + _homeUIState.value.kpiDistance).toString(),2).toDouble()
         val totalRuns = _homeUIState.value.kpiTotalRuns + 1
-        val totalTime = _totalTime.value + (getSecondsFromWatchUseCase(_homeUIState.value.chrono) * 1000).toDouble()
+        val totalTime = _totalTime.value + (getSecondsFromWatchUseCase(_homeUIState.value.kpiDuration) * 1000).toDouble()
 
         viewModelScope.launch {
             setTotalsUseCase(
-                SetTotalsSuspendResultUseCase.Params(
+                SetTotalsSuspendResultUseCase.SetTotalsParams(
                     TotalModel(
                         recordAvgSpeed,
                         recordDistance,
@@ -860,7 +860,7 @@ class HomeViewModel @Inject constructor(
         timeInSeconds = 0
         _homeUIState.update { homeUIState ->
             homeUIState.copy(
-                chrono = "00:00:00",
+                kpiDuration = "00:00:00",
                 rounds = 1,
                 kpiDistance = 0.00,
                 kpiMinAltitude = null,

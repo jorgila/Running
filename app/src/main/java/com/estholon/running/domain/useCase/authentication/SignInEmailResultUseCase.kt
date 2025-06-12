@@ -9,14 +9,14 @@ import javax.inject.Inject
 class SignInEmailResultUseCase @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
     private val analyticsRepository: AnalyticsRepository
-) : BaseSuspendResultUseCase<SignInEmailResultUseCase.Params,Unit>() {
+) : BaseSuspendResultUseCase<SignInEmailResultUseCase.SignInEmailParams,Unit>() {
 
-    data class Params(
+    data class SignInEmailParams(
         val email: String,
         val password: String
     )
 
-    override suspend fun execute(parameters: Params) {
+    override suspend fun execute(parameters: SignInEmailParams) {
         val result = authenticationRepository.signInWithEmail(parameters.email, parameters.password)
 
         result.fold(

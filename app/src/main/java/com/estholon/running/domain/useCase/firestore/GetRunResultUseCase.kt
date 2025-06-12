@@ -8,13 +8,13 @@ import javax.inject.Inject
 
 class GetRunResultUseCase @Inject constructor(
     private val runningRepository: RunningRepository
-) : BaseFlowResultUseCase<GetRunResultUseCase.Params,RunModel>() {
+) : BaseFlowResultUseCase<GetRunResultUseCase.GetRunParams,RunModel>() {
 
-    data class Params(
+    data class GetRunParams(
         val id: String
     )
 
-    override fun execute(parameters: Params) : Flow<RunModel> {
+    override fun execute(parameters: GetRunParams) : Flow<RunModel> {
         return runningRepository.getRun(parameters.id)
     }
 

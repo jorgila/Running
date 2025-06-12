@@ -10,11 +10,11 @@ import javax.inject.Inject
 class SetTotalsSuspendResultUseCase @Inject constructor(
     private val runningRepository: RunningRepository,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : BaseSuspendResultUseCase<SetTotalsSuspendResultUseCase.Params, Unit>(dispatcher){
+) : BaseSuspendResultUseCase<SetTotalsSuspendResultUseCase.SetTotalsParams, Unit>(dispatcher){
 
-    data class Params(val model: TotalModel)
+    data class SetTotalsParams(val model: TotalModel)
 
-    override suspend fun execute(parameters: Params) {
+    override suspend fun execute(parameters: SetTotalsParams) {
 
         val result = runningRepository.setTotals(parameters.model)
         if (result.isFailure){

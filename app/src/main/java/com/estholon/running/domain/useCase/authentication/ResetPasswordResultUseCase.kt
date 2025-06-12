@@ -9,11 +9,11 @@ import javax.inject.Inject
 class ResetPasswordResultUseCase @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
     private val analyticsRepository: AnalyticsRepository
-) : BaseSuspendResultUseCase<ResetPasswordResultUseCase.Params, Unit>() {
+) : BaseSuspendResultUseCase<ResetPasswordResultUseCase.ResetPasswordParams, Unit>() {
 
-    data class Params (val email: String)
+    data class ResetPasswordParams (val email: String)
 
-    override suspend fun execute(parameters: Params) : Unit {
+    override suspend fun execute(parameters: ResetPasswordParams) : Unit {
         val result = authenticationRepository.resetPassword(parameters.email)
 
         result.fold(

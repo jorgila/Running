@@ -34,10 +34,10 @@ sealed class HomeScreenViewState {
         val kpiLevelRuns : Double = 0.00,
         val kpiMinAltitude : Double? = null,
         val kpiMaxAltitude : Double? = null,
-        val chrono : String = "00:00:00",
+        val kpiDuration : String = "00:00:00",
         var rounds : Int = 1,
-        val started : Boolean = false,
-        val stopped : Boolean = false,
+        val isStarted : Boolean = false,
+        val isStopped : Boolean = false,
         val mapType: MapType = MapType.NORMAL,
         val mapLatLongTarget : LatLng = LatLng(0.0,0.0),
         val goalSwitch : Boolean = false,
@@ -64,6 +64,9 @@ sealed class HomeScreenViewState {
         val audioWalkTrack : Float = 0F,
         val audioWalkTrackPosition : String = "00:00:00",
         val audioWalkRemainingTrackPosition : String = "00:00:00",
+        val isRunMusicPlaying: Boolean = false,
+        val isWalkMusicPlaying: Boolean = false
+
 
         ) : HomeScreenViewState()
 

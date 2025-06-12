@@ -134,7 +134,7 @@ class FinishedViewModel @Inject constructor(
 
     private fun initRun(id: String){
         viewModelScope.launch {
-            getRunUseCase.invoke(GetRunResultUseCase.Params(id)).collect{ result ->
+            getRunUseCase.invoke(GetRunResultUseCase.GetRunParams(id)).collect{ result ->
                 result.fold(
                     onSuccess = { run ->
                         _finishedUIState.update { finishedUIState ->
@@ -174,7 +174,7 @@ class FinishedViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                deleteRunAndLinkedDataUseCase(DeleteRunAndLinkedDataResultUseCase.Params(id))
+                deleteRunAndLinkedDataUseCase(DeleteRunAndLinkedDataResultUseCase.DeleteRunParams(id))
                     .onSuccess {
                         viewModelScope.launch {
                             processSuccessfulDeletion(true,id)
@@ -208,7 +208,7 @@ class FinishedViewModel @Inject constructor(
 
             // Update totals
             setTotalsUseCase(
-                SetTotalsSuspendResultUseCase.Params(
+                SetTotalsSuspendResultUseCase.SetTotalsParams(
                     TotalModel(
                         newAvgSpeedRecord,
                         newDistanceRecord,
@@ -221,7 +221,7 @@ class FinishedViewModel @Inject constructor(
             )
 
             // Delete locations
-            deleteLocationsUseCase(DeleteLocationsResultUseCase.Params(id))
+            deleteLocationsUseCase(DeleteLocationsResultUseCase.DeleteLocationsParams(id))
                 .onSuccess {
                     message = true
                 }

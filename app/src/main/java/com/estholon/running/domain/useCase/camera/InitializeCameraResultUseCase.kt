@@ -6,14 +6,14 @@ import javax.inject.Inject
 
 class InitializeCameraResultUseCase @Inject constructor(
     private val cameraRepository: CameraRepository
-) : BaseSuspendResultUseCase<InitializeCameraResultUseCase.Params,Unit>(){
+) : BaseSuspendResultUseCase<InitializeCameraResultUseCase.InitializeCameraParams,Unit>(){
 
-    data class Params(
+    data class InitializeCameraParams(
         val surfaceProvider: Any,
         val lifecycleOwner: Any
     )
 
-    override suspend fun execute(parameters: Params) {
+    override suspend fun execute(parameters: InitializeCameraParams) {
         val result = cameraRepository.initializeCamera(parameters.surfaceProvider,parameters.lifecycleOwner)
         result.getOrThrow()
     }

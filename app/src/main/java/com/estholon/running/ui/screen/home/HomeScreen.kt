@@ -70,7 +70,6 @@ import com.estholon.running.R
 import com.estholon.running.ui.screen.components.BigSpinner
 import com.estholon.running.ui.screen.components.Picker
 import com.estholon.running.ui.screen.components.rememberPickerState
-import com.estholon.running.ui.screen.finished.FinishedViewModel
 import com.estholon.running.ui.theme.Black
 import com.estholon.running.ui.theme.Grey
 import com.estholon.running.ui.theme.White
@@ -349,7 +348,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = homeUIState.chrono,
+                        text = homeUIState.kpiDuration,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Black,
                         textAlign = if(homeUIState.intervalSwitch) TextAlign.End else TextAlign.Center,
@@ -513,7 +512,7 @@ fun HomeScreen(
                     .height(50.dp)
                     .width(50.dp)
             ) {
-                if(stopped && homeUIState.chrono!="00:00:00") {
+                if(stopped && homeUIState.kpiDuration!="00:00:00") {
                     IconButton(
                         onClick = {
                             if (homeUIState.runId != null){
@@ -917,7 +916,7 @@ fun HomeScreen(
     }
 
 
-    if(homeUIState.chrono!="00:00:00"){
+    if(homeUIState.kpiDuration!="00:00:00"){
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd){
             FloatingActionButton(
                 onClick = {

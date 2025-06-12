@@ -6,14 +6,14 @@ import javax.inject.Inject
 
 class DeleteRunAndLinkedDataResultUseCase @Inject constructor(
     private val runningRepository: RunningRepository,
-) : BaseSuspendResultUseCase<DeleteRunAndLinkedDataResultUseCase.Params,Unit>(){
+) : BaseSuspendResultUseCase<DeleteRunAndLinkedDataResultUseCase.DeleteRunParams,Unit>(){
 
-    data class Params(
+    data class DeleteRunParams(
         val runId: String
     )
 
     override suspend fun execute(
-        parameters: Params,
+        parameters: DeleteRunParams,
     ) : Unit {
         val result = runningRepository.deleteRun(parameters.runId)
         if(result.isFailure){

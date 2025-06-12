@@ -6,13 +6,13 @@ import javax.inject.Inject
 
 class DeleteLocationsResultUseCase @Inject constructor(
     private val runningRepository: RunningRepository
-) : BaseSuspendResultUseCase<DeleteLocationsResultUseCase.Params,Unit>() {
+) : BaseSuspendResultUseCase<DeleteLocationsResultUseCase.DeleteLocationsParams,Unit>() {
 
-    data class Params(
+    data class DeleteLocationsParams(
         val runId: String
     )
 
-    override suspend fun execute(params: Params) : Unit {
+    override suspend fun execute(params: DeleteLocationsParams) : Unit {
         val result = runningRepository.deleteLocations(params.runId)
         if(result.isFailure){
             throw result.exceptionOrNull() ?: RuntimeException("Unkown error deleting location")

@@ -10,15 +10,15 @@ import javax.inject.Inject
 class SetLocationSuspendResultUseCase @Inject constructor(
     private val runningRepository: RunningRepository,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : BaseSuspendResultUseCase<SetLocationSuspendResultUseCase.Params, Unit>(dispatcher) {
+) : BaseSuspendResultUseCase<SetLocationSuspendResultUseCase.SetLocationParams, Unit>(dispatcher) {
 
-    data class Params(
+    data class SetLocationParams(
         val runId: String,
         val documentName: String,
         val model: LocationModel
     )
 
-    override suspend fun execute(parameters: Params) {
+    override suspend fun execute(parameters: SetLocationParams) {
 
         val result = runningRepository.setLocation(
             parameters.runId,
