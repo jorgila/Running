@@ -21,6 +21,18 @@ import com.estholon.running.common.SharedPreferencesKeys
 import com.estholon.running.domain.model.LocationModel
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.domain.model.TotalModel
+import com.estholon.running.domain.useCase.audio.GetProgressUseCase
+import com.estholon.running.domain.useCase.audio.HandleRunningIntervalUseCase
+import com.estholon.running.domain.useCase.audio.HandleRunningStateChangeUseCase
+import com.estholon.running.domain.useCase.audio.InitializeAudioUseCase
+import com.estholon.running.domain.useCase.audio.PauseAudioUseCase
+import com.estholon.running.domain.useCase.audio.PlayAudioUseCase
+import com.estholon.running.domain.useCase.audio.ReleaseAudioUseCase
+import com.estholon.running.domain.useCase.audio.SeekAudioUseCase
+import com.estholon.running.domain.useCase.audio.SetAudioVolumeUseCase
+import com.estholon.running.domain.useCase.audio.StopAllAudioUseCase
+import com.estholon.running.domain.useCase.audio.StopAudioUseCase
+import com.estholon.running.domain.useCase.audio.UpdateAllVolumesUseCase
 import com.estholon.running.domain.useCase.authentication.SignOutResultUseCase
 import com.estholon.running.domain.useCase.firestore.GetLevelsResultUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsResultUseCase
@@ -68,10 +80,25 @@ import kotlin.math.roundToInt
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+
+    // Authentication Use Cases
     private val signOutUseCase: SignOutResultUseCase,
-    private val getUserInfoUseCase: GetUserInfoUseCase,
-    private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
+
+    // Others Use Cases
     private val getFormattedStopWatchUseCase: GetFormattedStopWatchUseCase,
+    private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
+    private val getUserInfoUseCase: GetUserInfoUseCase,
+    private val roundNumberUseCase: RoundNumberUseCase,
+    private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
+
+    // Firestore Use Cases
+    private val getTotalsUseCase: GetTotalsResultUseCase,
+    private val getLevelsUseCase: GetLevelsResultUseCase,
+    private val setTotalsUseCase: SetTotalsSuspendResultUseCase,
+    private val setRunUseCase: SetRunSuspendResultUseCase,
+    private val setLocationUseCase: SetLocationSuspendResultUseCase,
+
+    // Preferences Use Cases
     private val preferencesGetBooleanUseCase: PreferencesGetBooleanUseCase,
     private val preferencesPutBooleanUseCase: PreferencesPutBooleanUseCase,
     private val preferencesGetFloatUseCase: PreferencesGetFloatUseCase,
@@ -79,14 +106,24 @@ class HomeViewModel @Inject constructor(
     private val preferencesGetIntUseCase: PreferencesGetIntUseCase,
     private val preferencesPutIntUseCase: PreferencesPutIntUseCase,
     private val preferencesResetUseCase: PreferencesResetUseCase,
-    private val getTotalsUseCase: GetTotalsResultUseCase,
-    private val getLevelsUseCase: GetLevelsResultUseCase,
-    private val setTotalsUseCase: SetTotalsSuspendResultUseCase,
-    private val setRunUseCase: SetRunSuspendResultUseCase,
-    private val setLocationUseCase: SetLocationSuspendResultUseCase,
-    private val roundNumberUseCase: RoundNumberUseCase,
-    private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
+
+    // Audio Use Cases
+    private val initializeAudioUseCase: InitializeAudioUseCase,
+    private val playAudioUseCase: PlayAudioUseCase,
+    private val pauseAudioUseCase: PauseAudioUseCase,
+    private val stopAudioUseCase: StopAudioUseCase,
+    private val stopAllAudioUseCase: StopAllAudioUseCase,
+    private val setAudioVolumeUseCase: SetAudioVolumeUseCase,
+    private val seekAudioUseCase: SeekAudioUseCase,
+    private val getAudioProgressUseCase: GetProgressUseCase,
+    private val releaseAudioUseCase: ReleaseAudioUseCase,
+    private val handleRunningIntervalUseCase: HandleRunningIntervalUseCase,
+    private val updateAllAudioVolumesUseCase: UpdateAllVolumesUseCase,
+    private val handleRunningStateChangeUseCase: HandleRunningStateChangeUseCase,
+
+    // Context
     @ApplicationContext private val context: Context
+
 ) : ViewModel() {
 
     companion object {
@@ -142,6 +179,7 @@ class HomeViewModel @Inject constructor(
     private val _totalTime = MutableStateFlow<Double>(0.00)
     val totalTime : StateFlow<Double> get() = _totalTime
 
+    private var isAudioInitialized = false
 
     private val PERMISSION_ID = 42
     private var flagSavedLocation = false
@@ -181,10 +219,6 @@ class HomeViewModel @Inject constructor(
 
     init {
 
-
-
-
-
         getUserInfo()
         setKPI()
         mHandler = Handler()
@@ -192,6 +226,23 @@ class HomeViewModel @Inject constructor(
         initPreferences()
         initTotals()
         initLevels()
+        initAudio()
+    }
+
+    fun initAudio(){
+        viewModelScope.launch {
+            initializeAudioUseCase().fold(
+                onSuccess = {
+                    isAudioInitialized = true
+                    updateAudioVolumes()
+                    startAudioProgressTracking()
+                },
+                onFailure = { exception ->
+                    Log.e("HomeViewModel", "Failed to initialize audio", exception)
+                    isAudioInitialized = false
+                }
+            )
+        }
     }
 
     fun initPreferences(){
