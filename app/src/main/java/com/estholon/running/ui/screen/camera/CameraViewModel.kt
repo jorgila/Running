@@ -54,7 +54,7 @@ class CameraViewModel @Inject constructor(
         viewModelScope.launch {
             Log.d("CameraViewModel","Starting initialization coroutine")
             initializeCameraResultUseCase(
-                InitializeCameraResultUseCase.Params(surfaceProvider, lifecycleOwner)
+                InitializeCameraResultUseCase.InitializeCameraParams(surfaceProvider, lifecycleOwner)
             )
                 .onSuccess {
                     Log.d("CameraViewModel","Successfully initialized camera")
@@ -123,7 +123,7 @@ class CameraViewModel @Inject constructor(
     fun switchCamera(surfaceProvider: Any, lifecycleOwner: Any) {
         viewModelScope.launch {
             switchCameraResultUseCase(
-                SwitchCameraResultUseCase.Params(surfaceProvider, lifecycleOwner)
+                SwitchCameraResultUseCase.SwitchCameraParams(surfaceProvider, lifecycleOwner)
             )
         }
     }

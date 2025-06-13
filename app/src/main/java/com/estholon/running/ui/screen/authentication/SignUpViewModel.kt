@@ -41,7 +41,7 @@ class SignUpViewModel @Inject constructor(
         viewModelScope.launch {
 
             val signUp = signUpEmailResultUseCase(
-                SignUpEmailResultUseCase.Params(email,password)
+                SignUpEmailResultUseCase.SignUpEmailParams(email,password)
             )
             signUp.fold(
                 onSuccess = { navigateToSignIn() },

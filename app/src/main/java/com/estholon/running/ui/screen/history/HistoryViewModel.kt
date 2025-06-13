@@ -113,7 +113,7 @@ class HistoryViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                deleteRunAndLinkedDataUseCase(DeleteRunAndLinkedDataResultUseCase.Params(id))
+                deleteRunAndLinkedDataUseCase(DeleteRunAndLinkedDataResultUseCase.DeleteRunParams(id))
                     .onSuccess {
                         viewModelScope.launch {
                             processSuccessfulDeletion(true,id,runDistance,runDuration)
@@ -152,7 +152,7 @@ class HistoryViewModel @Inject constructor(
 
             // Update totals
             setTotalsUseCase(
-                SetTotalsSuspendResultUseCase.Params(
+                SetTotalsSuspendResultUseCase.SetTotalsParams(
                     TotalModel(
                         newAvgSpeedRecord,
                         newDistanceRecord,
@@ -165,7 +165,7 @@ class HistoryViewModel @Inject constructor(
             )
 
             // Delete locations
-            deleteLocationsUseCase(DeleteLocationsResultUseCase.Params(id))
+            deleteLocationsUseCase(DeleteLocationsResultUseCase.DeleteLocationsParams(id))
                 .onSuccess {
                     message = true
                 }

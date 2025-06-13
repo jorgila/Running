@@ -1,5 +1,6 @@
 package com.estholon.running.domain.useCase.camera
 
+import com.estholon.running.domain.model.AudioProgress
 import com.estholon.running.domain.repository.CameraRepository
 import com.estholon.running.domain.useCase.BaseSuspendResultUseCase
 import javax.inject.Inject

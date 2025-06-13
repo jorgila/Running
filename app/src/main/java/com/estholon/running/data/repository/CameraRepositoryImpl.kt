@@ -64,7 +64,7 @@ class CameraRepositoryImpl @Inject constructor(
     override suspend fun initializeCamera(
         surfaceProvider: Any,
         lifecycleOwner: Any
-    ): Result<Unit> {
+    ) : Result<Unit> {
         Log.d("CameraRepository","InitializeCamera called on instance: ${this.hashCode()}")
         if(_cameraState.value.isInitialized){
             Log.d("CameraRepository","Camera already initialized, skipping...")

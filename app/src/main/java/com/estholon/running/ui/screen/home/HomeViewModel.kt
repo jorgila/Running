@@ -18,6 +18,7 @@ import com.estholon.running.R
 import com.estholon.running.common.Constants.INTERVAL_LOCATION
 import com.estholon.running.common.Constants.LIMIT_DISTANCE_ACCEPTED
 import com.estholon.running.common.SharedPreferencesKeys
+import com.estholon.running.domain.model.AudioModel
 import com.estholon.running.domain.model.LocationModel
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.domain.model.TotalModel
@@ -64,6 +65,7 @@ import com.google.maps.android.compose.MapType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -72,6 +74,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Date
@@ -179,8 +182,11 @@ class HomeViewModel @Inject constructor(
     private val _totalTime = MutableStateFlow<Double>(0.00)
     val totalTime : StateFlow<Double> get() = _totalTime
 
+    // AUDIO
+    private var audioProgressJob: Job? = null
     private var isAudioInitialized = false
 
+    // OTROS
     private val PERMISSION_ID = 42
     private var flagSavedLocation = false
     private var latitude: Double = 0.0
@@ -346,19 +352,90 @@ class HomeViewModel @Inject constructor(
         ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
     }
 
-    private fun setVolumes() {
-        mpNotify?.setVolume(
-            _homeUIState.value.audioNotificationVolume/100.0f,
-            _homeUIState.value.audioNotificationVolume/100.0f
-        )
-        mpSoft?.setVolume(
-            _homeUIState.value.audioWalkVolume/100.0f,
-            _homeUIState.value.audioWalkVolume/100.0f
-        )
-        mpHard?.setVolume(
-            _homeUIState.value.audioRunVolume/100.0f,
-            _homeUIState.value.audioRunVolume/100.0f
-        )
+
+    private fun updateAudioVolumes() {
+        if (!isAudioInitialized) return
+
+        viewModelScope.launch {
+            updateAllAudioVolumesUseCase(
+                UpdateAllVolumesUseCase.VolumeParams(
+                    runVolume = _homeUIState.value.audioRunVolume,
+                    walkVolume = _homeUIState.value.audioWalkVolume,
+                    notificationVolume = _homeUIState.value.audioNotificationVolume
+                )
+            ).fold(
+                onSuccess = {
+                    Log.d("HomeViewModel", "Audio volumes updated successfully")
+                },
+                onFailure = { exception ->
+                    Log.e("HomeViewModel", "Failed to update audio volumes", exception)
+                }
+            )
+        }
+    }
+
+    private fun startAudioProgressTracking() {
+        audioProgressJob?.cancel()
+        audioProgressJob = viewModelScope.launch {
+            while (isAudioInitialized && isActive) {
+                getAudioProgressUseCase(GetProgressUseCase.GetProgressParams(AudioModel.RUN))
+                    .getOrNull()?.let { progress ->
+                        _homeUIState.update { currentState ->
+                            currentState.copy(
+                                audioRunTrack = progress.progressPercentage,
+                                audioRunTrackPosition = getFormattedStopWatchUseCase(progress.currentPosition),
+                                audioRunRemainingTrackPosition = getFormattedStopWatchUseCase(progress.duration - progress.currentPosition)
+                            )
+                        }
+
+                        _homeUIState.update { homeUIState ->
+                            homeUIState.copy(
+                                audioRunTrack = progress.progressPercentage,
+                                audioRunTrackPosition = getFormattedStopWatchUseCase(progress.currentPosition),
+                                audioRunRemainingTrackPosition = getFormattedStopWatchUseCase(progress.duration - progress.currentPosition)
+                            )
+                        }
+                    }
+
+                getAudioProgressUseCase(GetProgressUseCase.GetProgressParams(AudioModel.WALK))
+                    .getOrNull()?.let { progress ->
+                        _homeUIState.update { currentState ->
+                            currentState.copy(
+                                audioWalkTrack = progress.progressPercentage,
+                                audioWalkTrackPosition = getFormattedStopWatchUseCase(progress.currentPosition),
+                                audioWalkRemainingTrackPosition = getFormattedStopWatchUseCase(progress.duration - progress.currentPosition)
+                            )
+                        }
+
+                        _homeUIState.update { homeUIState ->
+                            homeUIState.copy(
+                                audioWalkTrack = progress.progressPercentage,
+                                audioWalkTrackPosition = getFormattedStopWatchUseCase(progress.currentPosition),
+                                audioWalkRemainingTrackPosition = getFormattedStopWatchUseCase(progress.duration - progress.currentPosition)
+                            )
+                        }
+                    }
+
+            }
+        }
+    }
+
+    private fun handleIntervalChange(isWalkingInterval: Boolean) {
+        viewModelScope.launch {
+            handleRunningIntervalUseCase(
+                HandleRunningIntervalUseCase.IntervalParams(
+                    isWalkingInterval = isWalkingInterval,
+                    audioEnabled = _homeUIState.value.audioSwitch
+                )
+            ).fold(
+                onSuccess = {
+                    _isWalkingInterval.value = isWalkingInterval
+                },
+                onFailure = { exception ->
+                    Log.e("HomeViewModel", "Failed to handle interval change", exception)
+                }
+            )
+        }
     }
 
     fun logout() {
@@ -478,27 +555,7 @@ class HomeViewModel @Inject constructor(
         override fun run() {
             try {
 
-                if(mpHard!!.isPlaying){
-
-                    _homeUIState.update { homeUIState ->
-                        homeUIState.copy(
-                            audioRunTrack = (mpHard!!.currentPosition.toFloat() / mpHard!!.duration.toFloat())*100
-                        )
-                    }
-
-                }
-
-                if(mpSoft!!.isPlaying){
-
-                    _homeUIState.update { homeUIState ->
-                        homeUIState.copy(
-                            audioWalkTrack = (mpSoft!!.currentPosition.toFloat() / mpSoft!!.duration.toFloat())*100
-                        )
-                    }
-
-                }
-
-                updateTimesTrack(true,true)
+                startAudioProgressTracking()
 
                 if(timeInSeconds==0L){
 
@@ -526,7 +583,11 @@ class HomeViewModel @Inject constructor(
                     checkStopRun(timeInSeconds)
                     checkNewRun(timeInSeconds)
                 } else {
-                    mpHard?.start()
+                    if (homeUIState.value.audioSwitch && isAudioInitialized) {
+                        viewModelScope.launch {
+                            playAudioUseCase(PlayAudioUseCase.PlayAudioParams(AudioModel.RUN))
+                        }
+                    }
                 }
                 timeInSeconds += 1
 
@@ -752,44 +813,45 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun checkStopRun(secs: Long){
+
         var seconds : Long = secs
         while(seconds > _intervalDuration.value) seconds -= _intervalDuration.value
         _timeRunning.value = getSecondsFromWatchUseCase(_homeUIState.value.intervalRunDuration).toLong()
 
-
-
         if(seconds ==_timeRunning.value){
-            _isWalkingInterval.value = true
-            mpHard?.pause()
-            mpNotify?.start()
-            mpSoft?.start()
+            handleIntervalChange(true)
         } else {
             updateProgressBarRound(seconds)
         }
+
     }
 
     private fun checkNewRun(secs: Long){
+
         var seconds : Long = secs
         if(seconds.toInt() % _intervalDuration.value.toInt() == 0){
             if(secs > 0){
-
                 _homeUIState.update { homeUIState ->
                     homeUIState.copy(
                         rounds = _homeUIState.value.rounds + 1
                     )
                 }
-
-                _isWalkingInterval.value = false
+                handleIntervalChange(false)
             }
-            mpSoft?.start()
-            mpSoft?.pause()
-            mpNotify?.start()
-            mpHard?.start()
         } else {
             updateProgressBarRound(seconds)
         }
 
+    }
 
+    override fun onCleared() {
+        super.onCleared()
+        audioProgressJob?.cancel()
+        viewModelScope.launch {
+            if (isAudioInitialized) {
+                releaseAudioUseCase()
+            }
+        }
     }
 
     private fun updateProgressBarRound(secs: Long) {
@@ -820,10 +882,7 @@ class HomeViewModel @Inject constructor(
 
         if(b){
             refreshInterfaceData()
-            if(mpNotify==null){
-                initMusic()
-            }
-
+            initAudio()
         } else {
             setTotals()
             setRun()
@@ -893,12 +952,32 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun resetVariables(){
-        mpHard?.stop()
-        mpSoft?.stop()
-        mpNotify?.stop()
-        mpNotify = null
-        mpHard = null
-        mpSoft = null
+
+        viewModelScope.launch {
+            if (isAudioInitialized) {
+                stopAllAudioUseCase().fold(
+                    onSuccess = {
+                        Log.d("HomeViewModel", "All audio stopped successfully")
+                    },
+                    onFailure = { exception ->
+                        Log.e("HomeViewModel", "Failed to stop all audio", exception)
+                    }
+                )
+
+                releaseAudioUseCase().fold(
+                    onSuccess = {
+                        isAudioInitialized = false
+                        Log.d("HomeViewModel", "Audio resources released successfully")
+                    },
+                    onFailure = { exception ->
+                        Log.e("HomeViewModel", "Failed to release audio resources", exception)
+                    }
+                )
+            }
+        }
+
+        audioProgressJob?.cancel()
+
         distance = 0.0
         avgSpeed = 0.0
         speed = 0.0
@@ -923,82 +1002,67 @@ class HomeViewModel @Inject constructor(
     fun changeStopped(b: Boolean) {
         _stopped.value = b
 
-        if(_stopped.value){
-            if(_isWalkingInterval.value){
-                mpSoft?.pause()
-            } else {
-                mpHard?.pause()
-            }
-        } else {
-            if(_isWalkingInterval.value){
-                mpSoft?.start()
-            } else {
-                mpHard?.start()
-            }
-        }
-
-
-    }
-
-    private fun initMusic() {
-        mpNotify = MediaPlayer.create(context,R.raw.micmic)
-        mpHard = MediaPlayer.create(context,R.raw.hardmusic)
-        mpSoft = MediaPlayer.create(context,R.raw.softmusic)
-
-        mpHard?.isLooping = true
-        mpSoft?.isLooping = true
-
-        setVolumes()
-        updateTimesTrack(true,true)
-    }
-
-    private fun updateTimesTrack(timesH: Boolean, timesS: Boolean){
-        if(timesH){
-
-            _homeUIState.update { homeUIState ->
-                homeUIState.copy(
-                    audioRunTrackPosition = getFormattedStopWatchUseCase((mpHard!!.currentPosition).toLong()),
-                    audioRunRemainingTrackPosition = getFormattedStopWatchUseCase((mpHard!!.duration - mpHard!!.currentPosition).toLong())
+        viewModelScope.launch {
+            handleRunningStateChangeUseCase(
+                HandleRunningStateChangeUseCase.StateChangeParams(
+                    isPaused = b,
+                    isWalkingInterval = _isWalkingInterval.value,
+                    audioEnabled = _homeUIState.value.audioSwitch
                 )
-            }
-
+            ).fold(
+                onSuccess = {
+                    Log.d("HomeViewModel", "Running state changed successfully")
+                },
+                onFailure = { exception ->
+                    Log.e("HomeViewModel", "Failed to change running state", exception)
+                }
+            )
         }
-        if(timesS){
 
-            _homeUIState.update { homeUIState ->
-                homeUIState.copy(
-                    audioWalkTrackPosition = getFormattedStopWatchUseCase((mpSoft!!.currentPosition).toLong()),
-                    audioWalkRemainingTrackPosition = getFormattedStopWatchUseCase((mpSoft!!.duration - mpSoft!!.currentPosition).toLong())
-                )
-            }
-
-        }
     }
 
     // CHANGES
 
     fun changePositionHardTrack(newPosition: Float) {
-        if (_started.value){
-            if (!_isWalkingInterval.value){
 
-                mpHard?.pause()
-                mpHard?.seekTo(((mpHard!!.duration.toFloat())*newPosition/100).toInt())
-                mpHard?.start()
+        if(!_started.value || _isWalkingInterval.value || !isAudioInitialized) return
 
-                updateTimesTrack(true,false)
-            }
+        viewModelScope.launch {
+            seekAudioUseCase(
+                SeekAudioUseCase.SeekAudioParams(
+                    audio = AudioModel.RUN,
+                    position = newPosition
+                )
+            ).fold(
+                onSuccess = {
+                    Log.d("HomeViewModel","Run track position changed to $newPosition")
+                },
+                onFailure = { exception ->
+                    Log.e("HomeViewModel","Failed to seek run track", exception)
+                }
+            )
         }
+
     }
 
     fun changePositionSoftTrack(newPosition: Float) {
-        if(_started.value){
-            if(_isWalkingInterval.value){
-                mpSoft?.pause()
-                mpSoft?.seekTo(((mpSoft!!.duration.toFloat())*newPosition/100).toInt())
-                mpSoft?.start()
 
-                updateTimesTrack(false,true)
-            }
+        if(!_started.value || _isWalkingInterval.value || !isAudioInitialized) return
+
+        viewModelScope.launch {
+            seekAudioUseCase(
+                SeekAudioUseCase.SeekAudioParams(
+                    audio = AudioModel.WALK,
+                    position = newPosition
+                )
+            ).fold(
+                onSuccess = {
+                    Log.d("HomeViewModel","Walk track position changed to $newPosition")
+                },
+                onFailure = { exception ->
+                    Log.e("HomeViewModel","Failed to seek walk track", exception)
+                }
+            )
         }
     }
 
@@ -1187,50 +1251,81 @@ class HomeViewModel @Inject constructor(
 
     }
 
-    fun changeNotificationVolume(newPosition: Float) {
+    fun changeNotificationVolume(newVolume: Float) {
 
         viewModelScope.launch {
-            preferencesPutFloatUseCase(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME,newPosition)
+            preferencesPutFloatUseCase(SharedPreferencesKeys.SP_NOTIFICATION_VOLUME, newVolume)
+
+            if (isAudioInitialized) {
+                setAudioVolumeUseCase(
+                    SetAudioVolumeUseCase.SetVolumeParams(
+                        audio = AudioModel.NOTIFICATION,
+                        volume = newVolume
+                    )
+                ).fold(
+                    onSuccess = {
+                        _homeUIState.update { it.copy(audioNotificationVolume = newVolume) }
+                    },
+                    onFailure = { exception ->
+                        Log.e("HomeViewModel", "Failed to set notification volume", exception)
+                    }
+                )
+            } else {
+                _homeUIState.update { it.copy(audioNotificationVolume = newVolume) }
+            }
         }
 
-        _homeUIState.update {homeUIState ->
-            homeUIState.copy(
-                audioNotificationVolume = newPosition
-            )
-        }
-
-        setVolumes()
     }
 
-    fun changeRunVolume(newPosition: Float) {
+    fun changeRunVolume(newVolume: Float) {
 
         viewModelScope.launch {
-            preferencesPutFloatUseCase(SharedPreferencesKeys.SP_RUN_VOLUME,newPosition)
+            preferencesPutFloatUseCase(SharedPreferencesKeys.SP_RUN_VOLUME, newVolume)
+
+            if (isAudioInitialized) {
+                setAudioVolumeUseCase(
+                    SetAudioVolumeUseCase.SetVolumeParams(
+                        audio = AudioModel.RUN,
+                        volume = newVolume
+                    )
+                ).fold(
+                    onSuccess = {
+                        _homeUIState.update { it.copy(audioRunVolume = newVolume) }
+                    },
+                    onFailure = { exception ->
+                        Log.e("HomeViewModel", "Failed to set run volume", exception)
+                    }
+                )
+            } else {
+                _homeUIState.update { it.copy(audioRunVolume = newVolume) }
+            }
         }
 
-        _homeUIState.update { homeUIState ->
-            homeUIState.copy(
-                audioRunVolume = newPosition
-            )
-        }
-
-        setVolumes()
     }
 
-    fun changeWalkVolume(newPosition: Float) {
+    fun changeWalkVolume(newVolume: Float) {
 
         viewModelScope.launch {
-            preferencesPutFloatUseCase(SharedPreferencesKeys.SP_WALK_VOLUME,newPosition)
+            preferencesPutFloatUseCase(SharedPreferencesKeys.SP_WALK_VOLUME, newVolume)
+
+            if (isAudioInitialized) {
+                setAudioVolumeUseCase(
+                    SetAudioVolumeUseCase.SetVolumeParams(
+                        audio = AudioModel.WALK,
+                        volume = newVolume
+                    )
+                ).fold(
+                    onSuccess = {
+                        _homeUIState.update { it.copy(audioWalkVolume = newVolume) }
+                    },
+                    onFailure = { exception ->
+                        Log.e("HomeViewModel", "Failed to set walk volume", exception)
+                    }
+                )
+            } else {
+                _homeUIState.update { it.copy(audioWalkVolume = newVolume) }
+            }
         }
-
-        _homeUIState.update { homeUIState ->
-            homeUIState.copy(
-                audioWalkVolume = newPosition
-            )
-        }
-
-        setVolumes()
-
     }
 
     // GOOGLE MAPS

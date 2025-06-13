@@ -1,6 +1,7 @@
 package com.estholon.running.domain.repository
 
 import androidx.lifecycle.LifecycleOwner
+import com.estholon.running.domain.model.AudioProgress
 import com.estholon.running.domain.model.CameraModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow

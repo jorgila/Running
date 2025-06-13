@@ -39,7 +39,7 @@ class SignInViewModel @Inject constructor(
         _isLoading.value = true
         viewModelScope.launch {
             val signIn = signInEmailResultUseCase(
-                SignInEmailResultUseCase.Params(email,password)
+                SignInEmailResultUseCase.SignInEmailParams(email,password)
             )
             signIn.fold(
                 onSuccess = { navigateToHome()},

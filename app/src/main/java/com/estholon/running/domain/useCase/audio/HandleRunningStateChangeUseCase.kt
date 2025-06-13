@@ -16,6 +16,7 @@ class HandleRunningStateChangeUseCase @Inject constructor(
     )
 
     override suspend fun execute(parameters: StateChangeParams) : Result<Unit> {
+
         if (!parameters.audioEnabled) return Result.success(Unit)
 
         return try {

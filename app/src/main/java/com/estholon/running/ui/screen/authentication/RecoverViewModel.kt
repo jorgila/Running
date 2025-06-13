@@ -38,7 +38,7 @@ class RecoverViewModel @Inject constructor(
 
         viewModelScope.launch {
 
-            val reset = resetPasswordUseCase(ResetPasswordResultUseCase.Params(email))
+            val reset = resetPasswordUseCase(ResetPasswordResultUseCase.ResetPasswordParams(email))
 
             reset.fold(
                 onSuccess = {
