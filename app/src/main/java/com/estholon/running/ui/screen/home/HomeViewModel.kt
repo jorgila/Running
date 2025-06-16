@@ -6,7 +6,9 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.icu.text.SimpleDateFormat
 import android.location.Location
+import android.media.AudioManager
 import android.media.MediaPlayer
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -22,6 +24,7 @@ import com.estholon.running.domain.model.AudioModel
 import com.estholon.running.domain.model.LocationModel
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.domain.model.TotalModel
+import com.estholon.running.domain.repository.AudioRepository
 import com.estholon.running.domain.useCase.audio.GetProgressUseCase
 import com.estholon.running.domain.useCase.audio.HandleRunningIntervalUseCase
 import com.estholon.running.domain.useCase.audio.HandleRunningStateChangeUseCase
@@ -67,6 +70,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -169,11 +173,6 @@ class HomeViewModel @Inject constructor(
     private var mInterval = 1000
     private var timeInSeconds = 0L
 
-
-    private var mpNotify : MediaPlayer? = null
-    private var mpHard : MediaPlayer? = null
-    private var mpSoft : MediaPlayer? = null
-
     private val _locationStatus = MutableStateFlow<Boolean>(false)
     val locationStatus : StateFlow<Boolean> get() = _locationStatus
 
@@ -236,15 +235,24 @@ class HomeViewModel @Inject constructor(
     }
 
     fun initAudio(){
+        Log.d("HomeViewModel", "initAudio() called")
         viewModelScope.launch {
+            Log.d("HomeViewModel", "About to call initializeAudioUseCase")
             initializeAudioUseCase().fold(
                 onSuccess = {
+                    Log.d("HomeViewModel", "✅ Audio initialized successfully")
                     isAudioInitialized = true
+
+                    Log.d("HomeViewModel", "About to update audio volumes...")
                     updateAudioVolumes()
+
+                    Log.d("HomeViewModel", "About to start audio progress tracking...")
                     startAudioProgressTracking()
+
+                    Log.d("HomeViewModel", "Audio initialization complete")
                 },
                 onFailure = { exception ->
-                    Log.e("HomeViewModel", "Failed to initialize audio", exception)
+                    Log.e("HomeViewModel", "❌ Failed to initialize audio", exception)
                     isAudioInitialized = false
                 }
             )
@@ -417,6 +425,7 @@ class HomeViewModel @Inject constructor(
                     }
 
             }
+            delay(1000)
         }
     }
 
@@ -425,7 +434,6 @@ class HomeViewModel @Inject constructor(
             handleRunningIntervalUseCase(
                 HandleRunningIntervalUseCase.IntervalParams(
                     isWalkingInterval = isWalkingInterval,
-                    audioEnabled = _homeUIState.value.audioSwitch
                 )
             ).fold(
                 onSuccess = {
@@ -555,8 +563,6 @@ class HomeViewModel @Inject constructor(
         override fun run() {
             try {
 
-                startAudioProgressTracking()
-
                 if(timeInSeconds==0L){
 
                     startDate = SimpleDateFormat("yyyy/MM/dd").format(Date())
@@ -580,13 +586,25 @@ class HomeViewModel @Inject constructor(
                 ) manageLocation()
 
                 if( homeUIState.value.intervalSwitch ){
+                    Log.v("HomeViewModel", "Interval mode is ON")
                     checkStopRun(timeInSeconds)
                     checkNewRun(timeInSeconds)
                 } else {
-                    if (homeUIState.value.audioSwitch && isAudioInitialized) {
+                    Log.v("HomeViewModel", "Interval mode is OFF")
+                    if (isAudioInitialized && !_stopped.value) {
+                        Log.v("HomeViewModel", "Ensuring RUN music is playing...")
                         viewModelScope.launch {
-                            playAudioUseCase(PlayAudioUseCase.PlayAudioParams(AudioModel.RUN))
+                            playAudioUseCase(PlayAudioUseCase.PlayAudioParams(AudioModel.RUN)).fold(
+                                onSuccess = {
+                                    Log.v("HomeViewModel", "✅ RUN music playing")
+                                },
+                                onFailure = { exception ->
+                                    Log.e("HomeViewModel", "❌ Failed to play RUN music", exception)
+                                }
+                            )
                         }
+                    } else {
+                        Log.v("HomeViewModel", "Not playing music - isAudioInitialized: $isAudioInitialized, stopped: ${_stopped.value}")
                     }
                 }
                 timeInSeconds += 1
@@ -871,24 +889,54 @@ class HomeViewModel @Inject constructor(
     }
 
     fun changeStarted(b: Boolean) {
+        Log.d("HomeViewModel", "changeStarted called with: $b")
 
         _started.value = b
-
         _homeUIState.update { homeUIState ->
-            homeUIState.copy(
-                isStarted = b
-            )
+            homeUIState.copy(isStarted = b)
         }
 
         if(b){
+            Log.d("HomeViewModel", "Starting training session")
             refreshInterfaceData()
-            initAudio()
+
+            viewModelScope.launch {
+                Log.d("HomeViewModel", "About to initialize audio...")
+                initializeAudioUseCase().fold(
+                    onSuccess = {
+                        Log.d("HomeViewModel", "✅ Audio initialized successfully")
+                        isAudioInitialized = true
+                        updateAudioVolumes()
+                        startAudioProgressTracking()
+
+                        // NUEVO: SIEMPRE iniciar reproducción, independientemente del audioSwitch
+                        Log.d("HomeViewModel", "Starting music playback (audioSwitch: ${_homeUIState.value.audioSwitch})")
+                        Log.d("HomeViewModel", "isWalkingInterval: ${_isWalkingInterval.value}")
+
+                        val audioModel = if (_isWalkingInterval.value) AudioModel.WALK else AudioModel.RUN
+                        Log.d("HomeViewModel", "Selected audio model: $audioModel")
+
+                        playAudioUseCase(PlayAudioUseCase.PlayAudioParams(audioModel)).fold(
+                            onSuccess = {
+                                Log.d("HomeViewModel", "✅ Music started successfully for $audioModel")
+                            },
+                            onFailure = { exception ->
+                                Log.e("HomeViewModel", "❌ Failed to start music for $audioModel", exception)
+                            }
+                        )
+                    },
+                    onFailure = { exception ->
+                        Log.e("HomeViewModel", "❌ Failed to initialize audio", exception)
+                        isAudioInitialized = false
+                    }
+                )
+            }
         } else {
+            Log.d("HomeViewModel", "Stopping training session")
             setTotals()
             setRun()
             resetVariables()
         }
-
     }
 
     private fun setRun(){
@@ -1000,14 +1048,18 @@ class HomeViewModel @Inject constructor(
     }
 
     fun changeStopped(b: Boolean) {
+        Log.d("HomeViewModel", "changeStopped called with: $b (true=stopped/paused, false=running)")
+
         _stopped.value = b
 
         viewModelScope.launch {
+            Log.d("HomeViewModel", "About to handle running state change")
+            Log.d("HomeViewModel", "isPaused: $b, isWalkingInterval: ${_isWalkingInterval.value}, audioEnabled: ${_homeUIState.value.audioSwitch}")
+
             handleRunningStateChangeUseCase(
                 HandleRunningStateChangeUseCase.StateChangeParams(
                     isPaused = b,
-                    isWalkingInterval = _isWalkingInterval.value,
-                    audioEnabled = _homeUIState.value.audioSwitch
+                    isWalkingInterval = _isWalkingInterval.value
                 )
             ).fold(
                 onSuccess = {
@@ -1018,7 +1070,6 @@ class HomeViewModel @Inject constructor(
                 }
             )
         }
-
     }
 
     // CHANGES
@@ -1386,6 +1437,5 @@ class HomeViewModel @Inject constructor(
         }
         return isSuccessful
     }
-
 
 }

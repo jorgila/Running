@@ -10,13 +10,10 @@ class HandleRunningIntervalUseCase @Inject constructor(
 ) : BaseSuspendResultUseCase<HandleRunningIntervalUseCase.IntervalParams, Result<Unit>>() {
 
     data class IntervalParams(
-        val isWalkingInterval: Boolean,
-        val audioEnabled: Boolean
+        val isWalkingInterval: Boolean
     )
 
     override suspend fun execute(parameters: IntervalParams) : Result<Unit> {
-        if (!parameters.audioEnabled) return Result.success(Unit)
-
         return try {
             if (parameters.isWalkingInterval) {
                 // Change from running to walking

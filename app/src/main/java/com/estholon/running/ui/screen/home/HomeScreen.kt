@@ -333,6 +333,7 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
+
         val intervalColor = if(isWalkingInterval) Color.Blue else Color.Red
         LinearProgressIndicator(
             progress = { runningProgress },

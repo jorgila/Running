@@ -11,14 +11,10 @@ class HandleRunningStateChangeUseCase @Inject constructor(
 
     data class StateChangeParams(
         val isPaused: Boolean,
-        val isWalkingInterval: Boolean,
-        val audioEnabled: Boolean
+        val isWalkingInterval: Boolean
     )
 
     override suspend fun execute(parameters: StateChangeParams) : Result<Unit> {
-
-        if (!parameters.audioEnabled) return Result.success(Unit)
-
         return try {
             val audioModel = if (parameters.isWalkingInterval) AudioModel.WALK else AudioModel.RUN
 
@@ -27,6 +23,7 @@ class HandleRunningStateChangeUseCase @Inject constructor(
             } else {
                 playAudioUseCase(PlayAudioUseCase.PlayAudioParams(audioModel)).getOrThrow()
             }
+
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
