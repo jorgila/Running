@@ -1,4 +1,6 @@
-🏃‍♂️ Running App
+<div align="center">
+<h1 align="center">🏃‍♂️ Running App</h1>
+</div>
 
 ## Descripción
 
@@ -92,7 +94,7 @@ Eliminación de datos: Posibilidad de eliminar carreras del historial
 <img src="https://img.shields.io/badge/MVVM-8A2BE2">
 <img src="https://img.shields.io/badge/Clean%20Architecture-8A2BE2">
 <img src="https://img.shields.io/badge/Repository%20Pattern-8A2BE2">
-<img src="https://img.shields.io/badge/Hilt-Dagger-8A2BE2">
+<img src="https://img.shields.io/badge/Hilt%20Dagger-8A2BE2">
 
 <img src="https://img.shields.io/badge/Kotlin%20Coroutines-8A2BE2">
 <img src="https://img.shields.io/badge/LiveData-8A2BE2">
