@@ -77,6 +77,13 @@ class RunningRepositoryImpl @Inject constructor(
             return databaseDataSource.setLocation(runId,docName,dto)
     }
 
+    override fun getLocations(
+        runId: String
+    ) : Flow<List<LocationModel>> {
+        return databaseDataSource.getLocations(runId)
+            .map { dtos -> dtos.mapNotNull { locationMapper.locationDtoToDomain(it) } }
+    }
+
     override suspend fun deleteLocations(runId: String): Result<Unit> {
         return databaseDataSource.deleteLocations(runId)
     }

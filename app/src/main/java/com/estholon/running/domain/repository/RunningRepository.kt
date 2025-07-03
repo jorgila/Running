@@ -19,6 +19,7 @@ interface RunningRepository {
     suspend fun getAvgSpeedRecord() : Result<Double>
     suspend fun getSpeedRecord() : Result<Double>
     suspend fun setLocation(runId: String, docName: String, location: LocationModel) : Result<Unit>
+    fun getLocations(runId: String) : Flow<List<LocationModel>>
     suspend fun deleteLocations(runId: String) : Result<Unit>
 
 }

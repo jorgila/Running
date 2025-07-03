@@ -1,19 +1,23 @@
 package com.estholon.running.data.datasource
 
+import android.util.Log
 import com.estholon.running.data.dto.LevelDto
 import com.estholon.running.data.dto.LocationDto
 import com.estholon.running.data.dto.RunDto
 import com.estholon.running.data.dto.TotalDto
 import com.estholon.running.data.mapper.LevelMapper
+import com.estholon.running.data.mapper.LocationMapper
 import com.estholon.running.data.mapper.RunMapper
 import com.estholon.running.data.mapper.TotalMapper
 import com.estholon.running.data.network.response.LevelResponse
 import com.estholon.running.data.network.response.RunResponse
 import com.estholon.running.data.network.response.TotalResponse
+import com.estholon.running.data.response.LocationResponse
 import com.estholon.running.domain.exception.RunningException
 import com.estholon.running.domain.repository.AuthenticationRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.snapshots
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -26,7 +30,8 @@ class FirebaseFirestoreDataSource @Inject constructor(
     private val authenticationRepository: AuthenticationRepository,
     private val runMapper : RunMapper,
     private val levelMapper : LevelMapper,
-    private val totalMapper: TotalMapper
+    private val totalMapper: TotalMapper,
+    private val locationMapper: LocationMapper
 ): DatabaseDataSource {
 
     companion object {
@@ -291,6 +296,32 @@ class FirebaseFirestoreDataSource @Inject constructor(
         } catch (e: Exception) {
             Result.failure(RunningException.NetworkException("Error: ${e.message}"))
         }
+    }
+
+    override fun getLocations(runId: String): Flow<List<LocationDto>> {
+
+        val user = authenticationRepository.getCurrentEmail()
+        return firestore
+            .collection("locations/$user/$runId")
+            .snapshots()
+            .mapNotNull { querySnapshot ->
+                val list = mutableListOf<LocationDto>()
+                for( document in querySnapshot.documents) {
+                    try {
+                        document.toObject(LocationResponse::class.java)?.let { response ->
+                            locationMapper.locationResponseToDto(response)?.let { dto ->
+                                list.add(dto)
+                            }
+                            }
+                    } catch (e: Exception) {
+                        continue
+                    }
+                }
+                list.sortedBy { it.time }
+            }
+            .catch { exception ->
+                emit(emptyList())
+            }
     }
 
     override suspend fun deleteLocations(runId: String) : Result<Unit> {

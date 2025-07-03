@@ -19,6 +19,7 @@ interface DatabaseDataSource {
     suspend fun getAvgSpeedRecord() : Result<Double>
     suspend fun getSpeedRecord() : Result<Double>
     suspend fun setLocation(runId: String, docName: String, location: LocationDto): Result<Unit>
+    fun getLocations(runId: String) : Flow<List<LocationDto>>
     suspend fun deleteLocations(runId: String) : Result<Unit>
 
 }

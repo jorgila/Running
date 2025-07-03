@@ -12,17 +12,29 @@ import com.estholon.running.domain.useCase.firestore.DeleteRunAndLinkedDataResul
 import com.estholon.running.domain.useCase.firestore.GetAllRunsResultUseCase
 import com.estholon.running.domain.useCase.firestore.GetAvgSpeedRecordResultUseCase
 import com.estholon.running.domain.useCase.firestore.GetDistanceRecordResultUseCase
+import com.estholon.running.domain.useCase.firestore.GetLocationsResultUseCase
 import com.estholon.running.domain.useCase.firestore.GetSpeedRecordResultUseCase
 import com.estholon.running.domain.useCase.firestore.GetTotalsResultUseCase
 import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendResultUseCase
 import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
+import com.estholon.running.ui.screen.history.HistoryScreenEvent
+import com.estholon.running.ui.screen.history.HistoryScreenViewState
+import com.estholon.running.ui.screen.history.HistoryViewModelEvent
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.maps.android.compose.MapType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -37,6 +49,7 @@ class HistoryViewModel @Inject constructor(
     private val getAvgSpeedRecordUseCase: GetAvgSpeedRecordResultUseCase,
     private val getSpeedRecordUseCase: GetSpeedRecordResultUseCase,
     private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataResultUseCase,
+    private val getLocationsResultUseCase: GetLocationsResultUseCase,
     private val deleteLocationsUseCase: DeleteLocationsResultUseCase,
     private val getMillisecondsFromStringWithDHMSUseCase: GetMillisecondsFromStringWithDHMSUseCase,
     private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
@@ -259,5 +272,90 @@ class HistoryViewModel @Inject constructor(
             }
         }
     }
-    
+
+    // GOOGLE MAP
+    private val _coordinates = MutableStateFlow(emptyList<LatLng>())
+    val coordinates: StateFlow<List<LatLng>> = _coordinates
+
+    fun getLocations(runId: String) {
+        viewModelScope.launch {
+            getLocationsResultUseCase(GetLocationsResultUseCase.GetLocationsParams(runId)).collect{ result ->
+                result.fold(
+                    onSuccess = { locations ->
+                        var locationList = mutableListOf<LatLng>()
+                        for (location in locations){
+                            val latLng = LatLng(location.latitude,location.longitude)
+                            locationList.add(latLng)
+                        }
+                        _coordinates.value = locationList
+                    },
+                    onFailure = { exception ->
+                        Log.e("HistoryViewModel","Error loading locations", exception)
+                    }
+                )
+            }
+        }
+    }
+
+
+
+
+    // Whether or not to show all of the high peaks
+    private var showAllCoordinates = MutableStateFlow(false)
+
+    // Event channel to send events to the UI
+    private val _eventChannel = Channel<HistoryScreenEvent>()
+
+    internal fun getEventChannel() = _eventChannel.receiveAsFlow()
+
+    val historyScreenViewState =
+
+        coordinates.combine(showAllCoordinates){ allCoordinates, showAllCoordinates ->
+            if(allCoordinates.isEmpty()){
+                HistoryScreenViewState.Loading
+            } else {
+
+                val listOfLatLng = if (showAllCoordinates) allCoordinates.map { LatLng(it.latitude,it.longitude) } else allCoordinates.map { LatLng(it.latitude,it.longitude) }
+                val boundingBox = LatLngBounds.Builder().apply {
+                    listOfLatLng.forEach{ include(it)}
+                }.build()
+                HistoryScreenViewState.LatLongList(
+                    coordinates = allCoordinates,
+                    boundingBox = boundingBox
+                )
+
+            }
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HistoryScreenViewState.Loading
+        )
+
+    fun onEvent(event: HistoryViewModelEvent){
+        when(event){
+            HistoryViewModelEvent.OnZoomAll -> onZoomAll()
+        }
+    }
+
+    private fun onZoomAll(){
+        sendScreenEvent(HistoryScreenEvent.OnZoomAll)
+    }
+
+    private fun sendScreenEvent(event: HistoryScreenEvent){
+        viewModelScope.launch { _eventChannel.send(event) }
+    }
+
+    fun showAllCoordinates(){
+        showAllCoordinates.value = true
+    }
+
+    fun changeMapType(b:Boolean){
+
+        _historyUIState.update { historyUIState ->
+            historyUIState.copy(
+                mapType = if(b) MapType.NORMAL else MapType.HYBRID
+            )
+        }
+
+    }
 }
