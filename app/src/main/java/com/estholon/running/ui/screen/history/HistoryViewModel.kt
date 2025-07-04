@@ -19,9 +19,6 @@ import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendResultUseCa
 import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
-import com.estholon.running.ui.screen.history.HistoryScreenEvent
-import com.estholon.running.ui.screen.history.HistoryScreenViewState
-import com.estholon.running.ui.screen.history.HistoryViewModelEvent
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.MapType
@@ -274,20 +271,30 @@ class HistoryViewModel @Inject constructor(
     }
 
     // GOOGLE MAP
+
     private val _coordinates = MutableStateFlow(emptyList<LatLng>())
     val coordinates: StateFlow<List<LatLng>> = _coordinates
 
-    fun getLocations(runId: String) {
+    private val _runCoordinates = MutableStateFlow<Map<String, List<LatLng>>>(emptyMap())
+    val runCoordinates: StateFlow<Map<String, List<LatLng>>> = _runCoordinates
+
+
+    fun getLocationsForRun(runId: String) {
         viewModelScope.launch {
             getLocationsResultUseCase(GetLocationsResultUseCase.GetLocationsParams(runId)).collect{ result ->
                 result.fold(
                     onSuccess = { locations ->
-                        var locationList = mutableListOf<LatLng>()
-                        for (location in locations){
-                            val latLng = LatLng(location.latitude,location.longitude)
-                            locationList.add(latLng)
+
+                        val locationList = locations.map { location ->
+                            LatLng(location.latitude,location.longitude)
                         }
-                        _coordinates.value = locationList
+
+                        _runCoordinates.update { currentMap ->
+                            currentMap.toMutableMap().apply {
+                                put(runId, locationList)
+                            }
+                        }
+
                     },
                     onFailure = { exception ->
                         Log.e("HistoryViewModel","Error loading locations", exception)
@@ -297,8 +304,14 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
+    fun getCoordinatesForRun(runId: String): List<LatLng> {
+        _coordinates.value= _runCoordinates.value[runId] ?: emptyList()
+        return _runCoordinates.value[runId] ?: emptyList()
+    }
 
-
+    fun areCoordinatesLoadedForRun(runId: String): Boolean {
+        return _runCoordinates.value.containsKey(runId)
+    }
 
     // Whether or not to show all of the high peaks
     private var showAllCoordinates = MutableStateFlow(false)

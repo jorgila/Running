@@ -1,5 +1,6 @@
 package com.estholon.running.ui.screen.history
 
+import com.estholon.running.domain.model.LocationModel
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.ui.screen.home.HomeScreenViewState
 import com.google.android.gms.maps.model.LatLng

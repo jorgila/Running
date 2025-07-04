@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.CameraPositionState
 import com.google.maps.android.compose.GoogleMap
@@ -34,10 +35,10 @@ import kotlinx.coroutines.launch
 @Composable
 fun HistoryScreenMap(
     modifier: Modifier,
+    coordinates: List<LatLng>,
     cameraPositionState: CameraPositionState,
     mapType: MapType,
     content: @Composable () -> Unit = {},
-    viewState: HistoryScreenViewState.LatLongList,
     eventFlow: Flow<HistoryScreenEvent>
 ){
 
@@ -57,17 +58,32 @@ fun HistoryScreenMap(
     // Create scope
     val scope = rememberCoroutineScope()
 
-    // Add LaunchedEffect to zoom when the bounding box changes
-    LaunchedEffect(key1 = viewState.boundingBox) {
-        zoomAll(scope, cameraPositionState, viewState.boundingBox)
+    // Calcular bounds para esta carrera específica
+    val boundingBox = remember(coordinates) {
+        if (coordinates.isNotEmpty()) {
+            LatLngBounds.Builder().apply {
+                coordinates.forEach { include(it) }
+            }.build()
+        } else null
     }
 
-    // LaunchedEffect to react to events from the ViewModel
-    LaunchedEffect(true) {
-        eventFlow.collect { event ->
-            when(event){
-                HistoryScreenEvent.OnZoomAll -> {
-                    zoomAll(scope, cameraPositionState, viewState.boundingBox)
+    // Centrar el mapa en las coordenadas de esta carrera específica
+    LaunchedEffect(boundingBox) {
+        boundingBox?.let { bounds ->
+            scope.launch {
+                try {
+                    cameraPositionState.animate(
+                        update = CameraUpdateFactory.newLatLngBounds(bounds, 64),
+                        durationMs = 1000
+                    )
+                } catch (e: Exception) {
+                    // Fallback si hay error con bounds
+                    if (coordinates.isNotEmpty()) {
+                        cameraPositionState.animate(
+                            update = CameraUpdateFactory.newLatLngZoom(coordinates.first(), 15f),
+                            durationMs = 1000
+                        )
+                    }
                 }
             }
         }

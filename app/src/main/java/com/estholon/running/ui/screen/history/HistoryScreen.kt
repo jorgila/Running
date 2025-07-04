@@ -1,6 +1,5 @@
 package com.estholon.running.ui.screen.history
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -27,6 +26,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -37,10 +37,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.estholon.running.R
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.ui.screen.components.BigSpinner
-import com.estholon.running.ui.screen.home.HomeCoordinatesMap
 import com.estholon.running.ui.theme.White
 import com.google.android.gms.maps.model.CameraPosition
-import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberCameraPositionState
 
@@ -82,22 +80,30 @@ fun RunItem(
 
     //// MAP
 
-    val cameraPositionState = rememberCameraPositionState{
-        position = CameraPosition.fromLatLngZoom(historyUIState.mapLatLongTarget, 10f)
-    }
-    val coordinates = historyViewModel.coordinates.collectAsState().value
+    val runCoordinatesMap by historyViewModel.runCoordinates.collectAsState()
+    val coordinates = runCoordinatesMap[run.runId] ?: emptyList()
+    val areCoordinatesLoaded = historyViewModel.areCoordinatesLoadedForRun(run.runId)
 
-    LaunchedEffect(coordinates) {
-        Toast.makeText(context,coordinates.toString(),Toast.LENGTH_LONG).show()
+    val mapLatLng = if(coordinates.isNullOrEmpty()){
+        historyUIState.mapLatLongTarget
+    } else {
+        coordinates.first()
+    }
+
+    val cameraPositionState = rememberCameraPositionState{
+        position = CameraPosition.fromLatLngZoom(mapLatLng, 10f)
     }
 
     var showDetail by rememberSaveable { mutableStateOf(false) }
     val showDetailIcon = if(showDetail) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown
 
-    Column {
-        Button(onClick = {historyViewModel.getLocations(run.runId)}){
-            Text(coordinates.toString())
+    LaunchedEffect(showDetail) {
+        if (showDetail && !areCoordinatesLoaded) {
+            historyViewModel.getLocationsForRun(run.runId)
         }
+    }
+
+    Column {
 
         Card(
 
@@ -193,25 +199,36 @@ fun RunItem(
                     )
                 }
             }
-            Box(modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-            ) {
+            if(!coordinates.isNullOrEmpty()){
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(300.dp)
+                ) {
 
-                when(viewState) {
-                    is HistoryScreenViewState.HistoryUIState -> BigSpinner()
-                    is HistoryScreenViewState.LatLongList -> HistoryScreenMap(
-                        modifier = Modifier.fillMaxSize(),
-                        cameraPositionState = cameraPositionState,
-                        mapType = historyUIState.mapType,
-                        content = {
-                            Polyline(coordinates)
-                        },
-                        viewState = viewState,
-                        eventFlow = historyViewModel.getEventChannel()
-                    )
-
-                    HistoryScreenViewState.Loading -> {
+                    when {
+                        coordinates.isEmpty() && areCoordinatesLoaded -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ){
+                                Text("No hay coordenadas disponibles para esta carrera")
+                            }
+                        }
+                        coordinates.isEmpty() -> {
+                            BigSpinner()
+                        }
+                        else -> {
+                            HistoryScreenMap(
+                                modifier = Modifier.fillMaxSize(),
+                                coordinates = coordinates,
+                                cameraPositionState = cameraPositionState,
+                                mapType = historyUIState.mapType,
+                                content = {
+                                    Polyline(coordinates)
+                                },
+                                eventFlow = historyViewModel.getEventChannel()
+                            )
+                        }
                     }
                 }
             }
