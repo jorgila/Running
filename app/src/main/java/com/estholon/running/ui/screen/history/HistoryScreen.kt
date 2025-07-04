@@ -74,8 +74,6 @@ fun RunItem(
     val context = LocalContext.current
 
     // VIEW STATE
-    val screenViewState = historyViewModel.historyScreenViewState.collectAsState()
-    val viewState = screenViewState.value
     val historyUIState = historyViewModel.historyUIState.collectAsState().value
 
     //// MAP

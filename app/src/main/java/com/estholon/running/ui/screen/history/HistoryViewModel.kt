@@ -304,71 +304,13 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    fun getCoordinatesForRun(runId: String): List<LatLng> {
-        _coordinates.value= _runCoordinates.value[runId] ?: emptyList()
-        return _runCoordinates.value[runId] ?: emptyList()
-    }
-
     fun areCoordinatesLoadedForRun(runId: String): Boolean {
         return _runCoordinates.value.containsKey(runId)
     }
-
-    // Whether or not to show all of the high peaks
-    private var showAllCoordinates = MutableStateFlow(false)
 
     // Event channel to send events to the UI
     private val _eventChannel = Channel<HistoryScreenEvent>()
 
     internal fun getEventChannel() = _eventChannel.receiveAsFlow()
 
-    val historyScreenViewState =
-
-        coordinates.combine(showAllCoordinates){ allCoordinates, showAllCoordinates ->
-            if(allCoordinates.isEmpty()){
-                HistoryScreenViewState.Loading
-            } else {
-
-                val listOfLatLng = if (showAllCoordinates) allCoordinates.map { LatLng(it.latitude,it.longitude) } else allCoordinates.map { LatLng(it.latitude,it.longitude) }
-                val boundingBox = LatLngBounds.Builder().apply {
-                    listOfLatLng.forEach{ include(it)}
-                }.build()
-                HistoryScreenViewState.LatLongList(
-                    coordinates = allCoordinates,
-                    boundingBox = boundingBox
-                )
-
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = HistoryScreenViewState.Loading
-        )
-
-    fun onEvent(event: HistoryViewModelEvent){
-        when(event){
-            HistoryViewModelEvent.OnZoomAll -> onZoomAll()
-        }
-    }
-
-    private fun onZoomAll(){
-        sendScreenEvent(HistoryScreenEvent.OnZoomAll)
-    }
-
-    private fun sendScreenEvent(event: HistoryScreenEvent){
-        viewModelScope.launch { _eventChannel.send(event) }
-    }
-
-    fun showAllCoordinates(){
-        showAllCoordinates.value = true
-    }
-
-    fun changeMapType(b:Boolean){
-
-        _historyUIState.update { historyUIState ->
-            historyUIState.copy(
-                mapType = if(b) MapType.NORMAL else MapType.HYBRID
-            )
-        }
-
-    }
 }
