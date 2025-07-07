@@ -2,6 +2,7 @@ package com.estholon.running.data.repository
 
 import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
@@ -78,10 +79,12 @@ class CameraRepositoryImpl @Inject constructor(
             cameraProvider = cameraProviderFuture.get()
             Log.d("CameraRepository","Camera provider obtained sucessfully")
             Log.d("CameraRepository","Setting up camera...")
-            setupCamera(
-                surfaceProvider as androidx.camera.core.Preview.SurfaceProvider,
-                lifecycleOwner as LifecycleOwner
-            )
+            withContext(Dispatchers.Main) {
+                setupCamera(
+                    surfaceProvider as androidx.camera.core.Preview.SurfaceProvider,
+                    lifecycleOwner as LifecycleOwner
+                )
+            }
             Log.d("CameraRepository","Camera setup completed")
             Log.d("CameraRepository", "Updating camera state to initialized on instance: ${this.hashCode()}")
 
@@ -180,14 +183,14 @@ class CameraRepositoryImpl @Inject constructor(
         camera?.cameraControl?.enableTorch(_cameraState.value.isFlashEnabled)
     }
 
-    override suspend fun capturePhoto(): Result<String> {
+    override suspend fun capturePhoto(): Result<Uri> {
 
         val imageCapture = imageCapture ?: return Result.failure(
             CameraException.PhotoCaptureFailed("Camera not initialized")
         )
 
         return try {
-            val name = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.getDefault())
+            val name = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.getDefault())
                 .format(System.currentTimeMillis())
 
             val contentValues = ContentValues().apply {
@@ -205,7 +208,7 @@ class CameraRepositoryImpl @Inject constructor(
             ).build()
 
             // Suspend function wrapper for callback
-            val capturedUri: String = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+            val capturedUri: Uri = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
                 imageCapture.takePicture(
                     outputOptions,
                     ContextCompat.getMainExecutor(context),
@@ -217,11 +220,11 @@ class CameraRepositoryImpl @Inject constructor(
                         }
 
                         override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                            val uri = output.savedUri?.toString()
+                            val uri = output.savedUri
                             if (uri != null) {
                                 Toast.makeText(context,"Photo capture succeeded: $uri",Toast.LENGTH_LONG).show()
                                 _cameraState.value = _cameraState.value.copy(
-                                    lastCapturedPhotoUri = uri,
+                                    lastCapturedPhotoUri = uri.toString(),
                                     error = null
                                 )
                                 continuation.resume(uri)

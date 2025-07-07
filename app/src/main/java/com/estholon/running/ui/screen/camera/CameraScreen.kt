@@ -86,6 +86,11 @@ fun CameraScreen(
     runId: String,
     viewModel: CameraViewModel = hiltViewModel()
 ) {
+
+    LaunchedEffect(runId) {
+        viewModel.setRunId(runId)
+    }
+
     val permissionsState = rememberMultiplePermissionsState(
         permissions = listOf(
             Manifest.permission.CAMERA,

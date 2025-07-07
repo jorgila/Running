@@ -15,8 +15,10 @@ import com.estholon.running.domain.useCase.camera.StartVideoRecordingResultUseCa
 import com.estholon.running.domain.useCase.camera.StopVideoRecordingResultUseCase
 import com.estholon.running.domain.useCase.camera.SwitchCameraResultUseCase
 import com.estholon.running.domain.useCase.camera.ToggleFlashResultUseCase
+import com.estholon.running.domain.useCase.storage.UploadImageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,10 +35,14 @@ class CameraViewModel @Inject constructor(
     private val switchCameraResultUseCase: SwitchCameraResultUseCase,
     private val toggleFlashUseCase: ToggleFlashResultUseCase,
     private val clearErrorResultUseCase: ClearErrorResultUseCase,
-    private val cameraRepository: CameraRepository
+    private val cameraRepository: CameraRepository,
+    private val uploadImageUseCase: UploadImageUseCase
 ) : ViewModel() {
-    
+
     val uiState: StateFlow<CameraModel> = cameraRepository.cameraState
+
+    private val _runId = MutableStateFlow<String>("ERROR")
+    val runId : StateFlow<String> = _runId
 
     init {
         Log.d("CameraViewModel", "ViewModel created with repository instance: ${cameraRepository.hashCode()}")
@@ -79,6 +85,7 @@ class CameraViewModel @Inject constructor(
 
             capturePhotoUseCase()
                 .onSuccess { uri ->
+                    uploadImageUseCase(_runId.value,uri)
                     Log.d("CameraViewModel", "Photo captured: $uri")
                 }
                 .onFailure { exception ->
@@ -145,6 +152,8 @@ class CameraViewModel @Inject constructor(
         cameraRepository.cleanup()
     }
 
-
+    fun setRunId(runId: String) {
+        _runId.value = runId
+    }
 
 }

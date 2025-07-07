@@ -71,6 +71,7 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.storage)
 
     // ICONS
     implementation(libs.androidx.material.icons.extended)
