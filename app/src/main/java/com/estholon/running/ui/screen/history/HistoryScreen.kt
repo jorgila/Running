@@ -1,16 +1,21 @@
 package com.estholon.running.ui.screen.history
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -22,9 +27,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -269,22 +278,66 @@ fun RunItem(
                 }
             }
             if(historyViewModel.getVideosForRun(run.runId).isNotEmpty()){
-                Text(text = stringResource(R.string.videos))
-                Row(modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)) {
-                    LazyHorizontalGrid(
-                        rows = GridCells.Adaptive(minSize = 150.dp),
-                        horizontalArrangement = Arrangement.spacedBy(18.dp),
-                        verticalArrangement = Arrangement.spacedBy(18.dp),
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    ) {
-                        items(historyViewModel.getVideosForRun(run.runId)) {
-                            Card(modifier = Modifier.fillMaxSize()) {
-                                VideoPlayer(
-                                    videoUri = it,
-                                    modifier = Modifier.fillMaxSize()
-                                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(R.string.videos),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+
+                    val videos = historyViewModel.getVideosForRun(run.runId)
+                    Log.d("HistoryScreen", "Displaying ${videos.size} videos for run ${run.runId}")
+
+                    if (videos.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (historyUIState.isLoading) {
+                                CircularProgressIndicator()
+                            } else {
+                                Text("No hay videos disponibles")
+                            }
+                        }
+                    } else {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            modifier = Modifier.height(200.dp)
+                        ) {
+                            items(videos) { videoUri ->
+                                Card(
+                                    modifier = Modifier
+                                        .width(300.dp)
+                                        .fillMaxHeight(),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                ) {
+                                    Box(modifier = Modifier.fillMaxSize()) {
+                                        VideoPlayer(
+                                            videoUri = videoUri,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .background(
+                                                    Color.Black.copy(alpha = 0.7f),
+                                                    RoundedCornerShape(bottomStart = 8.dp)
+                                                )
+                                                .padding(4.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.PlayArrow,
+                                                contentDescription = "Video",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

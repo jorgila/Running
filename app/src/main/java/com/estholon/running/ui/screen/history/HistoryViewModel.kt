@@ -1,6 +1,7 @@
 package com.estholon.running.ui.screen.history
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
@@ -75,8 +76,8 @@ class HistoryViewModel @Inject constructor(
     val runImages: StateFlow<Map<String, List<String>>> = _runImages
 
     // VIDEOS
-    private val _runVideos = MutableStateFlow<Map<String, List<String>>>(emptyMap())
-    val runVideos : StateFlow<Map<String, List<String>>> = _runVideos
+    private val _runVideos = MutableStateFlow<Map<String, List<Uri>>>(emptyMap())
+    val runVideos : StateFlow<Map<String, List<Uri>>> = _runVideos
 
     init {
         initRuns()
@@ -360,21 +361,30 @@ class HistoryViewModel @Inject constructor(
         viewModelScope.launch {
             _historyUIState.update { it.copy(isLoading = true) }
 
-            val result = withContext(Dispatchers.IO) {
-                downloadVideosUseCase(runId).map { it.toString() }
-            }
-
-            _runVideos.update { currentMap ->
-                currentMap.toMutableMap().apply {
-                    put(runId, result)
+            try {
+                val result = withContext(Dispatchers.IO){
+                    downloadVideosUseCase(runId)
                 }
-            }
+                Log.d("HistoryViewModel","Videos downloaded for run $runId: ${result.size}")
+                result.forEach { uri ->
+                    Log.d("HistoryViewModel","Video URI: $uri")
+                }
 
-            _historyUIState.update { it.copy(isLoading = false) }
+                _runVideos.update { currentMap ->
+                    currentMap.toMutableMap().apply {
+                        put(runId, result)
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e("HistoryViewModel","Error downloading videos for fun $runId",e)
+            } finally {
+                _historyUIState.update { it.copy(isLoading = false) }
+            }
         }
     }
 
-    fun getVideosForRun(runId: String): List<String> {
+    fun getVideosForRun(runId: String): List<Uri> {
         return _runVideos.value[runId] ?: emptyList()
     }
 
