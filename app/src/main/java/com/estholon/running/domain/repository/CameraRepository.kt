@@ -10,7 +10,7 @@ interface CameraRepository {
     suspend fun initializeCamera(surfaceProvider: Any, lifecycleOwner: Any) : Result<Unit>
     suspend fun capturePhoto() : Result<Uri>
     suspend fun startVideoRecording() : Result<Unit>
-    suspend fun stopVideoRecording() : Result<String>
+    suspend fun stopVideoRecording() : Result<Uri>
     suspend fun pauseVideoRecording() : Result<Unit>
     suspend fun resumeVideoRecording() : Result<Unit>
     suspend fun switchCamera(surfaceProvider: Any, lifecycleOwner: Any) : Result<Unit>

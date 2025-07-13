@@ -73,4 +73,6 @@
     <string name="errormessage_exception_obtaining_speed_record">Exception obtaining speed record: %1$s</string>
     <string name="sign_out">Sign Out</string>
     <string name="if_you_want_to_close_your_session_click_in_sign_out">If you want to close your session click in Sign Out</string>
+    <string name="images">Images</string>
+    <string name="videos">Videos</string>
 </resources>

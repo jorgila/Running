@@ -13,8 +13,16 @@ class StorageRepositoryImpl @Inject constructor(
         storageDataSource.uploadImage(runId,uri)
     }
 
+    override fun uploadVideo(runId: String, uri: Uri) {
+        storageDataSource.uploadVideo(runId,uri)
+    }
+
     override suspend fun downloadImages(runId: String): List<Uri> {
         return storageDataSource.downloadImages(runId)
+    }
+
+    override suspend fun downloadVideos(runId: String): List<Uri> {
+        return storageDataSource.downloadVideos(runId)
     }
 
 }

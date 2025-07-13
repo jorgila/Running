@@ -23,17 +23,24 @@ import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.LifecycleOwner
+import com.estholon.running.data.di.ApplicationScope
+import com.estholon.running.data.di.DefaultDispatcher
 import com.estholon.running.domain.exception.CameraException
 import com.estholon.running.domain.model.CameraLensFacing
 import com.estholon.running.domain.model.CameraModel
 import com.estholon.running.domain.repository.CameraRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
@@ -46,8 +53,11 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class CameraRepositoryImpl @Inject constructor(
-    @ApplicationContext private val context: Context
+    @ApplicationContext private val context: Context,
+    @DefaultDispatcher private val defaultDispatcher: CoroutineDispatcher
 ) : CameraRepository {
+
+    private val repositoryScope = CoroutineScope(SupervisorJob() + defaultDispatcher)
 
     private val _cameraState = MutableStateFlow(CameraModel())
     override val cameraState: StateFlow<CameraModel> = _cameraState.asStateFlow()
@@ -275,21 +285,30 @@ class CameraRepositoryImpl @Inject constructor(
             val name = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.getDefault())
                 .format(System.currentTimeMillis())
 
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-                put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                    put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/Running-Video")
-                }
+            val cacheDir = File(context.cacheDir,"temp_videos")
+            if(!cacheDir.exists()){
+                cacheDir.mkdirs()
             }
 
-            val mediaStoreOutputOptions = MediaStoreOutputOptions.Builder(
-                context.contentResolver,
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-            ).setContentValues(contentValues).build()
+            val tempVideoFile = File(cacheDir,"$name.mp4")
+
+            val outputOptions = androidx.camera.video.FileOutputOptions.Builder(tempVideoFile).build()
+
+//            val contentValues = ContentValues().apply {
+//                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+//                put(MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+//                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+//                    put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/Running-Video")
+//                }
+//            }
+//
+//            val outputOptions = MediaStoreOutputOptions.Builder(
+//                context.contentResolver,
+//                MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+//            ).setContentValues(contentValues).build()
 
             recording = videoCapture.output
-                .prepareRecording(context, mediaStoreOutputOptions)
+                .prepareRecording(context, outputOptions)
                 .apply {
                     if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO)
                         == android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -302,7 +321,7 @@ class CameraRepositoryImpl @Inject constructor(
                             _cameraState.value = _cameraState.value.copy(isRecording = true)
                         }
                         is VideoRecordEvent.Finalize -> {
-                            handleRecordingFinalized(recordEvent)
+                            handleRecordingFinalized(recordEvent, tempVideoFile)
                         }
                     }
                 }
@@ -313,15 +332,22 @@ class CameraRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun handleRecordingFinalized(recordEvent: VideoRecordEvent.Finalize) {
+    private fun handleRecordingFinalized(recordEvent: VideoRecordEvent.Finalize, tempVideoFile: File) {
         if (!recordEvent.hasError()) {
-            val uri = recordEvent.outputResults.outputUri.toString()
+
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                tempVideoFile
+            )
+
+//            val uri = recordEvent.outputResults.outputUri
             Toast.makeText(context,"Video capture succeeded: $uri",Toast.LENGTH_LONG).show()
 
             _cameraState.value = _cameraState.value.copy(
                 isRecording = false,
                 isPaused = false,
-                lastRecordedVideoUri = uri,
+                lastRecordedVideoUri = uri.toString(),
                 recordingDuration = 0L
             )
         } else {
@@ -336,14 +362,31 @@ class CameraRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun stopVideoRecording(): Result<String> {
+    override suspend fun stopVideoRecording(): Result<Uri> {
         return try {
             val currentRecording = recording
             if (currentRecording != null) {
                 currentRecording.stop()
                 recording = null
-                // Note: The actual URI will be provided in the VideoRecordEvent.Finalize callback
-                Result.success("Recording stopped") // Placeholder - real URI comes from callback
+                val uri : Uri = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+                    val originalState = _cameraState.value
+                    repositoryScope.launch {
+                        _cameraState.collect{ state ->
+                            if(!state.isRecording && state.lastRecordedVideoUri != originalState.lastRecordedVideoUri){
+                                if(state.error != null){
+                                    continuation.resumeWithException(
+                                        CameraException.VideoRecordingFailed(state.error)
+                                    )
+                                } else {
+                                    continuation.resume(Uri.parse(state.lastRecordedVideoUri))
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                Result.success(uri)
             } else {
                 Result.failure(CameraException.VideoRecordingFailed("No active recording"))
             }

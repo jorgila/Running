@@ -17,6 +17,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import javax.inject.Singleton
 
 @Module
@@ -26,9 +28,10 @@ object CameraModule {
     @Provides
     @Singleton
     fun provideCameraRepository(
-        @ApplicationContext context: Context
+        @ApplicationContext context: Context,
+        @DefaultDispatcher defaultDispatcher: CoroutineDispatcher
     ): CameraRepository {
-        return CameraRepositoryImpl(context)
+        return CameraRepositoryImpl(context, defaultDispatcher)
     }
 
     @Provides

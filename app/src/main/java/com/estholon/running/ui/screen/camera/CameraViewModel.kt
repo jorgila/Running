@@ -16,6 +16,7 @@ import com.estholon.running.domain.useCase.camera.StopVideoRecordingResultUseCas
 import com.estholon.running.domain.useCase.camera.SwitchCameraResultUseCase
 import com.estholon.running.domain.useCase.camera.ToggleFlashResultUseCase
 import com.estholon.running.domain.useCase.storage.UploadImageUseCase
+import com.estholon.running.domain.useCase.storage.UploadVideoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +37,8 @@ class CameraViewModel @Inject constructor(
     private val toggleFlashUseCase: ToggleFlashResultUseCase,
     private val clearErrorResultUseCase: ClearErrorResultUseCase,
     private val cameraRepository: CameraRepository,
-    private val uploadImageUseCase: UploadImageUseCase
+    private val uploadImageUseCase: UploadImageUseCase,
+    private val uploadVideoUseCase: UploadVideoUseCase
 ) : ViewModel() {
 
     val uiState: StateFlow<CameraModel> = cameraRepository.cameraState
@@ -107,6 +109,7 @@ class CameraViewModel @Inject constructor(
         viewModelScope.launch {
             stopVideoRecordingUseCase()
                 .onSuccess { uri ->
+                    uploadVideoUseCase(_runId.value,uri)
                     android.util.Log.d("CameraViewModel", "Recording stopped: $uri")
                 }
                 .onFailure { exception ->

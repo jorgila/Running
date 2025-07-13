@@ -20,6 +20,7 @@ import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithD
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
 import com.estholon.running.domain.useCase.storage.DownloadImagesUseCase
+import com.estholon.running.domain.useCase.storage.DownloadVideosUseCase
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.MapType
@@ -50,6 +51,7 @@ class HistoryViewModel @Inject constructor(
     private val getLocationsResultUseCase: GetLocationsResultUseCase,
     private val deleteLocationsUseCase: DeleteLocationsResultUseCase,
     private val downloadImagesUseCase: DownloadImagesUseCase,
+    private val downloadVideosUseCase: DownloadVideosUseCase,
     private val getMillisecondsFromStringWithDHMSUseCase: GetMillisecondsFromStringWithDHMSUseCase,
     private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
@@ -72,6 +74,9 @@ class HistoryViewModel @Inject constructor(
     private val _runImages = MutableStateFlow<Map<String, List<String>>>(emptyMap())
     val runImages: StateFlow<Map<String, List<String>>> = _runImages
 
+    // VIDEOS
+    private val _runVideos = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val runVideos : StateFlow<Map<String, List<String>>> = _runVideos
 
     init {
         initRuns()
@@ -343,12 +348,34 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    fun areImagesLoadedForRun(runId: String): Boolean {
-        return _runImages.value.containsKey(runId)
-    }
-
     fun getImagesForRun(runId: String): List<String> {
         return _runImages.value[runId] ?: emptyList()
+    }
+
+    fun getAllVideos(runId: String) {
+        if (_runVideos.value.containsKey(runId)) {
+            return
+        }
+
+        viewModelScope.launch {
+            _historyUIState.update { it.copy(isLoading = true) }
+
+            val result = withContext(Dispatchers.IO) {
+                downloadVideosUseCase(runId).map { it.toString() }
+            }
+
+            _runVideos.update { currentMap ->
+                currentMap.toMutableMap().apply {
+                    put(runId, result)
+                }
+            }
+
+            _historyUIState.update { it.copy(isLoading = false) }
+        }
+    }
+
+    fun getVideosForRun(runId: String): List<String> {
+        return _runVideos.value[runId] ?: emptyList()
     }
 
 }

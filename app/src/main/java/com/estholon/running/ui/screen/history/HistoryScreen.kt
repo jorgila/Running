@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -45,6 +46,7 @@ import coil.compose.AsyncImage
 import com.estholon.running.R
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.ui.screen.components.BigSpinner
+import com.estholon.running.ui.screen.components.VideoPlayer
 import com.estholon.running.ui.theme.White
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.Polyline
@@ -109,6 +111,7 @@ fun RunItem(
         }
         if(showDetail){
             historyViewModel.getAllImages(run.runId)
+            historyViewModel.getAllVideos(run.runId)
         }
     }
 
@@ -242,7 +245,10 @@ fun RunItem(
                 }
             }
             if(historyViewModel.getImagesForRun(run.runId).isNotEmpty()){
-                Row(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+                Text(text = stringResource(R.string.images))
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)) {
                     LazyHorizontalGrid(
                         rows = GridCells.Adaptive(minSize = 150.dp),
                         horizontalArrangement = Arrangement.spacedBy(18.dp),
@@ -256,6 +262,28 @@ fun RunItem(
                                     contentDescription = "",
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+            if(historyViewModel.getVideosForRun(run.runId).isNotEmpty()){
+                Text(text = stringResource(R.string.videos))
+                Row(modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)) {
+                    LazyHorizontalGrid(
+                        rows = GridCells.Adaptive(minSize = 150.dp),
+                        horizontalArrangement = Arrangement.spacedBy(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    ) {
+                        items(historyViewModel.getVideosForRun(run.runId)) {
+                            Card(modifier = Modifier.fillMaxSize()) {
+                                VideoPlayer(
+                                    videoUri = it,
+                                    modifier = Modifier.fillMaxSize()
                                 )
                             }
                         }

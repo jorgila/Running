@@ -24,8 +24,25 @@ class FirebaseStorageDataSource @Inject constructor(
         reference.putFile(uri)
     }
 
+    override fun uploadVideo(runId: String,uri: Uri) {
+        val name = SimpleDateFormat("yyyyMMddHHmmssSSS",Locale.getDefault())
+            .format(System.currentTimeMillis())
+
+        val reference = storage.reference
+            .child("videos/")
+            .child("$runId/")
+            .child("$name.mp4")
+        reference.putFile(uri)
+    }
+
     override suspend fun downloadImages(runId: String): List<Uri> {
         val reference = storage.reference.child("images/$runId/")
         return reference.listAll().await().items.map { it.downloadUrl.await() }
     }
+
+    override suspend fun downloadVideos(runId: String) : List<Uri> {
+        val reference = storage.reference.child("videos/$runId/")
+        return reference.listAll().await().items.map { it.downloadUrl.await() }
+    }
+
 }
