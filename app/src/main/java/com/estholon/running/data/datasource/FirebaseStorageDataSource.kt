@@ -2,6 +2,7 @@ package com.estholon.running.data.datasource
 
 import android.net.Uri
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -24,6 +25,7 @@ class FirebaseStorageDataSource @Inject constructor(
     }
 
     override suspend fun downloadImages(runId: String): List<Uri> {
-        return listOf(Uri.EMPTY,Uri.EMPTY)
+        val reference = storage.reference.child("images/$runId/")
+        return reference.listAll().await().items.map { it.downloadUrl.await() }
     }
 }

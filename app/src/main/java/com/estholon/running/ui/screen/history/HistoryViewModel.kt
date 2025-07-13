@@ -19,6 +19,7 @@ import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendResultUseCa
 import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
+import com.estholon.running.domain.useCase.storage.DownloadImagesUseCase
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.maps.android.compose.MapType
@@ -48,6 +49,7 @@ class HistoryViewModel @Inject constructor(
     private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataResultUseCase,
     private val getLocationsResultUseCase: GetLocationsResultUseCase,
     private val deleteLocationsUseCase: DeleteLocationsResultUseCase,
+    private val downloadImagesUseCase: DownloadImagesUseCase,
     private val getMillisecondsFromStringWithDHMSUseCase: GetMillisecondsFromStringWithDHMSUseCase,
     private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
@@ -312,5 +314,23 @@ class HistoryViewModel @Inject constructor(
     private val _eventChannel = Channel<HistoryScreenEvent>()
 
     internal fun getEventChannel() = _eventChannel.receiveAsFlow()
+
+
+    fun getAllImages(runId: String) {
+        viewModelScope.launch {
+            _historyUIState.value = _historyUIState.value.copy(
+                isLoading = true
+            )
+            val result = withContext(Dispatchers.IO) {
+                downloadImagesUseCase(runId).map { it.toString() }
+            }
+            _historyUIState.value = _historyUIState.value.copy(
+                isLoading = false,
+                images = result
+            )
+        }
+    }
+
+
 
 }

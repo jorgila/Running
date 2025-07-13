@@ -2,6 +2,7 @@ package com.estholon.running.ui.screen.history
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,7 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -29,11 +35,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.estholon.running.R
 import com.estholon.running.domain.model.RunModel
 import com.estholon.running.ui.screen.components.BigSpinner
@@ -98,6 +106,9 @@ fun RunItem(
     LaunchedEffect(showDetail) {
         if (showDetail && !areCoordinatesLoaded) {
             historyViewModel.getLocationsForRun(run.runId)
+        }
+        if(showDetail){
+            historyViewModel.getAllImages(run.runId)
         }
     }
 
@@ -226,6 +237,27 @@ fun RunItem(
                                 },
                                 eventFlow = historyViewModel.getEventChannel()
                             )
+                        }
+                    }
+                }
+            }
+            if(historyUIState.images.isNotEmpty()){
+                Row(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+                    LazyHorizontalGrid(
+                        rows = GridCells.Adaptive(minSize = 150.dp),
+                        horizontalArrangement = Arrangement.spacedBy(18.dp),
+                        verticalArrangement = Arrangement.spacedBy(18.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    ) {
+                        items(historyUIState.images) {
+                            Card(modifier = Modifier.fillMaxSize(), shape = RoundedCornerShape(24)) {
+                                AsyncImage(
+                                    model = it,
+                                    contentDescription = "",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
                         }
                     }
                 }
