@@ -21,6 +21,7 @@ import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.LifecycleOwner
 import com.estholon.running.domain.exception.CameraException
 import com.estholon.running.domain.model.CameraLensFacing
@@ -34,6 +35,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -193,19 +195,30 @@ class CameraRepositoryImpl @Inject constructor(
             val name = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.getDefault())
                 .format(System.currentTimeMillis())
 
-            val contentValues = ContentValues().apply {
-                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Running-Image")
-                }
-            }
+            // Create temporal file in internal cache
 
-            val outputOptions = ImageCapture.OutputFileOptions.Builder(
-                context.contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                contentValues
-            ).build()
+            val cacheDir = File(context.cacheDir,"temp_images")
+            if(!cacheDir.exists()){
+                cacheDir.mkdirs()
+            }
+            val tempImageFile = File(cacheDir, "$name.jpg")
+
+            val outputOptions = ImageCapture.OutputFileOptions.Builder(tempImageFile).build()
+
+//            Create file in device storage
+//            val contentValues = ContentValues().apply {
+//                put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+//                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+//                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+//                    put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Running-Image")
+//                }
+//            }
+//
+//            val outputOptions = ImageCapture.OutputFileOptions.Builder(
+//                context.contentResolver,
+//                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+//                contentValues
+//            ).build()
 
             // Suspend function wrapper for callback
             val capturedUri: Uri = kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
@@ -220,7 +233,15 @@ class CameraRepositoryImpl @Inject constructor(
                         }
 
                         override fun onImageSaved(output: ImageCapture.OutputFileResults) {
-                            val uri = output.savedUri
+
+                            // Create URI from temporal file
+                            val uri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                tempImageFile
+                            )
+//                            // Create URI from saved file
+//                            val uri = output.savedUri
                             if (uri != null) {
                                 Toast.makeText(context,"Photo capture succeeded: $uri",Toast.LENGTH_LONG).show()
                                 _cameraState.value = _cameraState.value.copy(
@@ -251,7 +272,7 @@ class CameraRepositoryImpl @Inject constructor(
         )
 
         return try {
-            val name = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss-SSS", Locale.getDefault())
+            val name = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.getDefault())
                 .format(System.currentTimeMillis())
 
             val contentValues = ContentValues().apply {
