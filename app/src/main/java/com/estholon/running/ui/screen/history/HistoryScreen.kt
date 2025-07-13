@@ -241,7 +241,7 @@ fun RunItem(
                     }
                 }
             }
-            if(historyUIState.images.isNotEmpty()){
+            if(historyViewModel.getImagesForRun(run.runId).isNotEmpty()){
                 Row(modifier = Modifier.fillMaxWidth().height(150.dp)) {
                     LazyHorizontalGrid(
                         rows = GridCells.Adaptive(minSize = 150.dp),
@@ -249,8 +249,8 @@ fun RunItem(
                         verticalArrangement = Arrangement.spacedBy(18.dp),
                         modifier = Modifier.padding(horizontal = 16.dp)
                     ) {
-                        items(historyUIState.images) {
-                            Card(modifier = Modifier.fillMaxSize(), shape = RoundedCornerShape(24)) {
+                        items(historyViewModel.getImagesForRun(run.runId)) {
+                            Card(modifier = Modifier.fillMaxSize()) {
                                 AsyncImage(
                                     model = it,
                                     contentDescription = "",

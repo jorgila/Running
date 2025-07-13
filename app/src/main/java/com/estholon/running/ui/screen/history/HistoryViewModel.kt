@@ -59,6 +59,20 @@ class HistoryViewModel @Inject constructor(
     private val _historyUIState = MutableStateFlow<HistoryScreenViewState.HistoryUIState>(HistoryScreenViewState.HistoryUIState())
     val historyUIState : StateFlow<HistoryScreenViewState.HistoryUIState> get() = _historyUIState
 
+    // GOOGLE MAP
+
+    private val _coordinates = MutableStateFlow(emptyList<LatLng>())
+    val coordinates: StateFlow<List<LatLng>> = _coordinates
+
+    private val _runCoordinates = MutableStateFlow<Map<String, List<LatLng>>>(emptyMap())
+    val runCoordinates: StateFlow<Map<String, List<LatLng>>> = _runCoordinates
+
+    // IMAGES
+
+    private val _runImages = MutableStateFlow<Map<String, List<String>>>(emptyMap())
+    val runImages: StateFlow<Map<String, List<String>>> = _runImages
+
+
     init {
         initRuns()
         initTotals()
@@ -272,15 +286,6 @@ class HistoryViewModel @Inject constructor(
         }
     }
 
-    // GOOGLE MAP
-
-    private val _coordinates = MutableStateFlow(emptyList<LatLng>())
-    val coordinates: StateFlow<List<LatLng>> = _coordinates
-
-    private val _runCoordinates = MutableStateFlow<Map<String, List<LatLng>>>(emptyMap())
-    val runCoordinates: StateFlow<Map<String, List<LatLng>>> = _runCoordinates
-
-
     fun getLocationsForRun(runId: String) {
         viewModelScope.launch {
             getLocationsResultUseCase(GetLocationsResultUseCase.GetLocationsParams(runId)).collect{ result ->
@@ -317,20 +322,33 @@ class HistoryViewModel @Inject constructor(
 
 
     fun getAllImages(runId: String) {
+        if (_runImages.value.containsKey(runId)) {
+            return
+        }
+
         viewModelScope.launch {
-            _historyUIState.value = _historyUIState.value.copy(
-                isLoading = true
-            )
+            _historyUIState.value = _historyUIState.value.copy(isLoading = true)
+
             val result = withContext(Dispatchers.IO) {
                 downloadImagesUseCase(runId).map { it.toString() }
             }
-            _historyUIState.value = _historyUIState.value.copy(
-                isLoading = false,
-                images = result
-            )
+
+            _runImages.update { currentMap ->
+                currentMap.toMutableMap().apply {
+                    put(runId, result)
+                }
+            }
+
+            _historyUIState.value = _historyUIState.value.copy(isLoading = false)
         }
     }
 
+    fun areImagesLoadedForRun(runId: String): Boolean {
+        return _runImages.value.containsKey(runId)
+    }
 
+    fun getImagesForRun(runId: String): List<String> {
+        return _runImages.value[runId] ?: emptyList()
+    }
 
 }
