@@ -45,4 +45,16 @@ class FirebaseStorageDataSource @Inject constructor(
         return reference.listAll().await().items.map { it.downloadUrl.await() }
     }
 
+    override suspend fun deleteImages(runId: String): Boolean {
+        val reference = storage.reference.child("images/$runId/")
+        reference.listAll().await().items.map { it.delete() }
+        return reference.listAll().isSuccessful
+    }
+
+    override suspend fun deleteVideos(runId: String): Boolean {
+        val reference = storage.reference.child("videos/$runId/")
+        reference.listAll().await().items.map { it.delete() }
+        return reference.listAll().isSuccessful
+    }
+
 }

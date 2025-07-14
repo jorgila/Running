@@ -20,6 +20,8 @@ import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendResultUseCa
 import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
+import com.estholon.running.domain.useCase.storage.DeleteImagesUseCase
+import com.estholon.running.domain.useCase.storage.DeleteVideosUseCase
 import com.estholon.running.domain.useCase.storage.DownloadImagesUseCase
 import com.estholon.running.domain.useCase.storage.DownloadVideosUseCase
 import com.google.android.gms.maps.model.LatLng
@@ -53,6 +55,8 @@ class HistoryViewModel @Inject constructor(
     private val deleteLocationsUseCase: DeleteLocationsResultUseCase,
     private val downloadImagesUseCase: DownloadImagesUseCase,
     private val downloadVideosUseCase: DownloadVideosUseCase,
+    private val deleteImagesUseCase: DeleteImagesUseCase,
+    private val deleteVideosUseCase: DeleteVideosUseCase,
     private val getMillisecondsFromStringWithDHMSUseCase: GetMillisecondsFromStringWithDHMSUseCase,
     private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
     private val getSecondsFromWatchUseCase: GetSecondsFromWatchUseCase,
@@ -204,6 +208,10 @@ class HistoryViewModel @Inject constructor(
                 .onFailure {
                     message = false
                 }
+
+            // Delete Images
+            deleteImagesUseCase(runId = id)
+            deleteVideosUseCase(runId = id)
 
             // Update UI state
             _historyUIState.update { historyUIState ->

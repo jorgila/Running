@@ -25,4 +25,12 @@ class StorageRepositoryImpl @Inject constructor(
         return storageDataSource.downloadVideos(runId)
     }
 
+    override suspend fun deleteImages(runId: String) : Boolean {
+        return storageDataSource.deleteImages(runId)
+    }
+
+    override suspend fun deleteVideos(runId: String) : Boolean {
+        return storageDataSource.deleteVideos(runId)
+    }
+
 }

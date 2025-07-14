@@ -20,6 +20,8 @@ import com.estholon.running.domain.useCase.firestore.SetTotalsSuspendResultUseCa
 import com.estholon.running.domain.useCase.others.GetMillisecondsFromStringWithDHMSUseCase
 import com.estholon.running.domain.useCase.others.GetSecondsFromWatchUseCase
 import com.estholon.running.domain.useCase.others.GetStringWithDHMSFromMilisecondsUseCase
+import com.estholon.running.domain.useCase.storage.DeleteImagesUseCase
+import com.estholon.running.domain.useCase.storage.DeleteVideosUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +44,8 @@ class FinishedViewModel @Inject constructor(
     private val getAvgSpeedRecordUseCase: GetAvgSpeedRecordResultUseCase,
     private val getSpeedRecordUseCase: GetSpeedRecordResultUseCase,
     private val deleteRunAndLinkedDataUseCase: DeleteRunAndLinkedDataResultUseCase,
+    private val deleteImagesUseCase: DeleteImagesUseCase,
+    private val deleteVideosUseCase: DeleteVideosUseCase,
     private val deleteLocationsUseCase: DeleteLocationsResultUseCase,
     private val getMillisecondsFromStringWithDHMSUseCase: GetMillisecondsFromStringWithDHMSUseCase,
     private val getStringWithDHMSFromMilisecondsUseCase: GetStringWithDHMSFromMilisecondsUseCase,
@@ -228,6 +232,18 @@ class FinishedViewModel @Inject constructor(
                 .onFailure {
                     message = false
                 }
+
+            // Delete Images
+
+            if(runId != null){
+                deleteImagesUseCase(runId = runId)
+            }
+
+            // Delete Videos
+
+            if(runId != null){
+                deleteVideosUseCase(runId = runId)
+            }
 
             // Update UI state
             _finishedUIState.update { finishedUIState ->
