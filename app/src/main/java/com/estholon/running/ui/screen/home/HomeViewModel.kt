@@ -1438,4 +1438,12 @@ class HomeViewModel @Inject constructor(
         return isSuccessful
     }
 
+    fun changeShowFinishRunDialog() {
+        _homeUIState.update { homeUIState ->
+            homeUIState.copy(
+                showFinishRunDialog = !_homeUIState.value.showFinishRunDialog
+            )
+        }
+    }
+
 }

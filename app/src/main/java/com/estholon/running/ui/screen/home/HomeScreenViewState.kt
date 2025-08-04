@@ -65,8 +65,8 @@ sealed class HomeScreenViewState {
         val audioWalkTrackPosition : String = "00:00:00",
         val audioWalkRemainingTrackPosition : String = "00:00:00",
         val isRunMusicPlaying: Boolean = false,
-        val isWalkMusicPlaying: Boolean = false
-
+        val isWalkMusicPlaying: Boolean = false,
+        val showFinishRunDialog: Boolean = false,
 
         ) : HomeScreenViewState()
 

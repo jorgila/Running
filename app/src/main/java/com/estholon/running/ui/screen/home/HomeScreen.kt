@@ -921,14 +921,7 @@ fun HomeScreen(
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd){
             FloatingActionButton(
                 onClick = {
-                    navigateToFinishedScreen(
-                        homeUIState.runId
-                    )
-                    homeViewModel.stopChrono()
-                    homeViewModel.changeStopped(true)
-                    homeViewModel.changeStarted(false)
-                    homeViewModel.changeLocationStatus(false)
-
+                    homeViewModel.changeShowFinishRunDialog()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -939,6 +932,10 @@ fun HomeScreen(
                 )
             }
         }
+    }
+
+    if(homeUIState.showFinishRunDialog){
+        FinishRunDialog(homeUIState.showFinishRunDialog, navigateToFinishedScreen)
     }
 
     // LOADING
@@ -1011,4 +1008,45 @@ fun CheckLocationServices(context: Context) : Boolean {
             locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 }
 
+@Composable
+fun FinishRunDialog(
+    showFinishRunDialog: Boolean,
+    navigateToFinishedScreen: (String?) -> Unit,
+    homeViewModel: HomeViewModel = hiltViewModel()
+){
 
+    val homeUIState by homeViewModel.homeUIState.collectAsState()
+
+    AlertDialog(
+        onDismissRequest = {
+            homeViewModel.changeShowFinishRunDialog()
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    navigateToFinishedScreen(
+                        homeUIState.runId
+                    )
+                    homeViewModel.stopChrono()
+                    homeViewModel.changeStopped(true)
+                    homeViewModel.changeStarted(false)
+                    homeViewModel.changeLocationStatus(false)
+                    homeViewModel.changeShowFinishRunDialog()
+                }
+            ) {
+                Text("Finish")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = {
+                    homeViewModel.changeShowFinishRunDialog()
+                }
+            ) {
+                Text("Cancel")
+            }
+        },
+        title = { Text("Do you want to finish the run?") },
+        text = { Text("You can select between finishing the run or cancel to get back") }
+    )
+}
