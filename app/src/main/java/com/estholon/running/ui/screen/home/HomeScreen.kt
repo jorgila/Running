@@ -935,7 +935,7 @@ fun HomeScreen(
     }
 
     if(homeUIState.showFinishRunDialog){
-        FinishRunDialog(homeUIState.showFinishRunDialog, navigateToFinishedScreen)
+        FinishRunDialog(navigateToFinishedScreen)
     }
 
     // LOADING
@@ -1010,7 +1010,6 @@ fun CheckLocationServices(context: Context) : Boolean {
 
 @Composable
 fun FinishRunDialog(
-    showFinishRunDialog: Boolean,
     navigateToFinishedScreen: (String?) -> Unit,
     homeViewModel: HomeViewModel = hiltViewModel()
 ){
